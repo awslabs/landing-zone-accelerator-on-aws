@@ -23,7 +23,18 @@ export interface IAutoscalingGroupResource extends cdk.IResource {
 }
 
 export interface AutoscalingGroupProps {
-  readonly name: string;
+  /**
+   * The name of the Auto Scaling group. This name must be unique per Region per account.
+   *
+   * @remarks
+   * When undefined, CloudFormation generates a unique physical name for the Auto Scaling group.
+   * When set, the provided value is used as the physical name. Changing this value on an existing
+   * Auto Scaling group forces CloudFormation to replace the resource, which terminates and
+   * recreates the underlying instances.
+   *
+   * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-autoscaling-autoscalinggroup.html#aws-resource-autoscaling-autoscalinggroup-properties}
+   */
+  readonly autoScalingGroupName?: string;
   readonly minSize: number;
   readonly maxSize: number;
   readonly desiredSize: number;
@@ -75,7 +86,7 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
       vpcZoneIdentifier: props.subnets,
       maxInstanceLifetime: props.maxInstanceLifetime,
       tags: props.tags ? this.processTags(props.tags) : undefined,
-      // autoScalingGroupName: props.name,
+      autoScalingGroupName: props.autoScalingGroupName,
     });
     this.autoscalingGroupName = resource.ref;
   }

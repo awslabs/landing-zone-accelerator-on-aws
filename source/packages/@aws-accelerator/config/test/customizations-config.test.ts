@@ -113,6 +113,9 @@ describe('CustomizationsConfig', () => {
 
     expect(autoScalingConfig.maxInstanceLifetime).toEqual(undefined);
 
+    // autoScalingGroupName is optional and defaults to undefined (issue #3088)
+    expect(autoScalingConfig.autoScalingGroupName).toEqual(undefined);
+
     const appConfigItem = new AppConfigItem();
     expect(appConfigItem.targetGroups).toEqual(undefined);
   });

@@ -22,7 +22,6 @@ const testNamePrefix = 'Construct(AutoscalingGroup): ';
 const stack = new cdk.Stack();
 
 new AutoscalingGroup(stack, 'Test', {
-  name: 'string',
   minSize: 1,
   maxSize: 4,
   desiredSize: 2,

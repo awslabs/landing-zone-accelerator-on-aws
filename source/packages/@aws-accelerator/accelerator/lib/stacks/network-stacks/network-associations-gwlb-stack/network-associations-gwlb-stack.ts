@@ -702,6 +702,7 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
   private processAutoScalingReplacements(group: AutoScalingConfig, vpc: string): AutoScalingConfig {
     return {
       name: group.name,
+      autoScalingGroupName: group.autoScalingGroupName,
       minSize: group.minSize,
       maxSize: group.maxSize,
       desiredSize: group.desiredSize,

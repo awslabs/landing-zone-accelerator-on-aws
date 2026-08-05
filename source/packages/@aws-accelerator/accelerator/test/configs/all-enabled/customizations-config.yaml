@@ -787,6 +787,9 @@ firewalls:
     - name: test-asg
       autoscaling:
         name: firewall-asg
+        # issue #3088: exercises the optional physical name passthrough through
+        # NetworkAssociationsGwlbStack.processAutoScalingReplacements for firewall ASGs
+        autoScalingGroupName: firewall-custom-asg-name
         minSize: 1
         maxSize: 4
         desiredSize: 2

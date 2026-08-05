@@ -304,6 +304,73 @@ describe('FirewallValidator', () => {
       expect(errors).toEqual([]);
     });
   });
+
+  describe('validateFirewallAsgs autoScalingGroupName', () => {
+    const baseAsg = {
+      name: 'TheAsg',
+      vpc: 'default-vpc',
+      launchTemplate: {
+        networkInterfaces: [{}],
+      },
+      autoscaling: {
+        name: 'asg-config',
+        minSize: 1,
+        maxSize: 2,
+        desiredSize: 1,
+        launchTemplate: 'lt',
+        subnets: [],
+        targetGroups: undefined,
+      },
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } as any;
+
+    function getAsgNameErrors(autoScalingGroupName: string | undefined): string[] {
+      const errors: string[] = [];
+      createFirewallValidator(errors, {
+        ...emptyFirewalls,
+        autoscalingGroups: [
+          {
+            ...baseAsg,
+            autoscaling: {
+              ...baseAsg.autoscaling,
+              autoScalingGroupName,
+            },
+          },
+        ],
+      });
+      return errors.filter(e => e.includes('autoScalingGroupName'));
+    }
+
+    test('should not add errors when autoScalingGroupName is undefined', () => {
+      expect(getAsgNameErrors(undefined)).toEqual([]);
+    });
+
+    test('should not add errors when autoScalingGroupName is valid', () => {
+      expect(getAsgNameErrors('prod-checkpoint-firewall-asg')).toEqual([]);
+    });
+
+    test('should add an error when autoScalingGroupName contains a colon', () => {
+      const errors = getAsgNameErrors('prod:firewall:asg');
+      expect(errors).toEqual([
+        `Autoscaling group asg-config has an invalid autoScalingGroupName "prod:firewall:asg": name cannot contain a colon (:)`,
+      ]);
+    });
+
+    test('should add an error when autoScalingGroupName contains a space (non-ASCII 33-126)', () => {
+      const errors = getAsgNameErrors('prod firewall asg');
+      expect(errors).toEqual([
+        `Autoscaling group asg-config has an invalid autoScalingGroupName "prod firewall asg": name can only contain ASCII characters 33 to 126`,
+      ]);
+    });
+
+    test('should add an error when autoScalingGroupName exceeds 255 characters', () => {
+      const longName = 'a'.repeat(256);
+      const errors = getAsgNameErrors(longName);
+      expect(errors).toEqual([
+        `Autoscaling group asg-config has an invalid autoScalingGroupName "${longName}": name must be between 1 and 255 characters`,
+      ]);
+    });
+  });
 });
 
 function createFirewallValidator(
@@ -551,5 +618,78 @@ describe('CustomizationsConfigValidator - ALB listener targetGroup requirements'
         },
       ]),
     ).toThrow(/listener fixed is type 'fixed-response' but has a targetGroup/);
+  });
+});
+
+describe('CustomizationsConfigValidator - application autoScalingGroupName validation', () => {
+  function runValidator(autoScalingGroupName: string | undefined) {
+    const values: CustomizationsConfig = {
+      applications: [
+        {
+          name: 'app-asg-test',
+          vpc: 'asg-vpc',
+          deploymentTargets: { accounts: ['Network'], organizationalUnits: [] },
+          autoscaling: {
+            name: 'app-asg-config',
+            autoScalingGroupName,
+            minSize: 1,
+            maxSize: 2,
+            desiredSize: 1,
+            launchTemplate: 'lt',
+            subnets: [],
+            targetGroups: undefined,
+          },
+        },
+      ],
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } as any;
+    const accountsConfig: AccountsConfig = {
+      mandatoryAccounts: [{ name: 'Network' }],
+      workloadAccounts: [],
+      getManagementAccount: () => ({}),
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const networkConfig: NetworkConfig = { vpcs: [{ name: 'asg-vpc' }] } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const globalConfig: GlobalConfig = { homeRegion: 'us-east-1', enabledRegions: ['us-east-1'] } as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const iamConfig: IamConfig = {} as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const securityConfig: SecurityConfig = {} as any;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const organizationConfig: OrganizationConfig = { organizationalUnits: [] } as any;
+    return () =>
+      new CustomizationsConfigValidator(
+        values,
+        accountsConfig,
+        globalConfig,
+        iamConfig,
+        networkConfig,
+        organizationConfig,
+        securityConfig,
+        '',
+      );
+  }
+
+  test('application ASG with a colon in autoScalingGroupName fails config validation', () => {
+    expect(runValidator('prod:app:asg')).toThrow(
+      /Autoscaling group app-asg-config has an invalid autoScalingGroupName "prod:app:asg": name cannot contain a colon/,
+    );
+  });
+
+  test('application ASG with a >255 character autoScalingGroupName fails config validation', () => {
+    const longName = 'a'.repeat(256);
+    expect(runValidator(longName)).toThrow(
+      /Autoscaling group app-asg-config has an invalid autoScalingGroupName ".*": name must be between 1 and 255 characters/,
+    );
+  });
+
+  test('application ASG with a valid autoScalingGroupName produces no autoScalingGroupName error', () => {
+    try {
+      runValidator('prod-app-asg')();
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/invalid autoScalingGroupName/);
+    }
   });
 });

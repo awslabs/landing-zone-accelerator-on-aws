@@ -93,6 +93,8 @@ applications:
         - us-west-2
     autoscaling:
       name: appA-asg
+      # issue #3088: exercises the optional physical name passthrough for application ASGs
+      autoScalingGroupName: appA-custom-asg-name
       maxSize: 2
       minSize: 0
       desiredSize: 1

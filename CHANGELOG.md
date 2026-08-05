@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(identity-center): retry account assignment create and delete on ConflictException so concurrent assignments no longer fail the deployment (issue #2437)
 - fix(s3): add explicit DependsOn between bucket policy and bucket to prevent CloudFormation race condition (issue #402)
 - fix(securityhub): skip deploymentTargets validation for disabled standards (issue #537)
+- fix(customizations): support optional autoScalingGroupName for firewall and application auto scaling groups (note: setting this value on an existing auto scaling group forces resource replacement)
+- docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
 
 ## [1.16.0] - 2026-07-24
 

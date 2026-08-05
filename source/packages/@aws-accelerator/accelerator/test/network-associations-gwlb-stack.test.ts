@@ -11,7 +11,8 @@
  *  and limitations under the License.
  */
 
-import { describe } from 'vitest';
+import { describe, test } from 'vitest';
+import { Template } from 'aws-cdk-lib/assertions';
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { snapShotTest } from './snapshot-test';
@@ -22,4 +23,26 @@ describe('NetworkAssociationsGwlbStack', () => {
     'Construct(NetworkAssociationsGwlbStack): ',
     Create.stackProvider(`Network-us-east-1`, AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB),
   );
+});
+
+describe('NetworkAssociationsGwlbStack firewall autoScalingGroupName', () => {
+  // issue #3088: the firewall ASG name flows exclusively through
+  // processAutoScalingReplacements, which rebuilds the AutoScalingConfig field by field.
+  // The all-enabled test-asg sets autoScalingGroupName; assert it survives that reconstruction
+  // and reaches the physical AWS::AutoScaling::AutoScalingGroup name.
+  const getTemplate = () =>
+    Template.fromStack(
+      Create.stack('Network-us-east-1', [
+        AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB,
+        'aws',
+        'us-east-1',
+        'all-enabled',
+      ])!,
+    );
+
+  test('passes the configured autoScalingGroupName through to the firewall ASG', () => {
+    getTemplate().hasResourceProperties('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: 'firewall-custom-asg-name',
+    });
+  });
 });

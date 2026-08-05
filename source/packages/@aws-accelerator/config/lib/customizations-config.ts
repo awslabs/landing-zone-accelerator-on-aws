@@ -271,6 +271,7 @@ export class LaunchTemplateConfig implements i.ILaunchTemplateConfig {
 
 export class AutoScalingConfig implements i.IAutoScalingConfig {
   readonly name: string = '';
+  readonly autoScalingGroupName: string | undefined = undefined;
   readonly minSize: number = 0;
   readonly maxSize: number = 4;
   readonly desiredSize: number = 2;

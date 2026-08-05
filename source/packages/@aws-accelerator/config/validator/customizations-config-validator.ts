@@ -45,6 +45,45 @@ import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 import { isIpV4, isIpV6 } from './common/ip-address-validation';
+
+/**
+ * Validates the optional autoScalingGroupName against the AWS Auto Scaling group naming constraints.
+ *
+ * The name must be 1-255 characters, contain only ASCII characters 33-126, and must not contain
+ * a colon (:). When undefined, CloudFormation generates the physical name so no validation is needed.
+ *
+ * @see {@link https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CreateAutoScalingGroup.html}
+ * @param autoScalingGroupName the configured physical name, if any
+ * @param configName the logical autoscaling config name used for error context
+ * @param errors string[]
+ */
+function validateAutoScalingGroupName(
+  autoScalingGroupName: string | undefined,
+  configName: string,
+  errors: string[],
+): void {
+  if (autoScalingGroupName === undefined) {
+    return;
+  }
+  if (autoScalingGroupName.length < 1 || autoScalingGroupName.length > 255) {
+    errors.push(
+      `Autoscaling group ${configName} has an invalid autoScalingGroupName "${autoScalingGroupName}": name must be between 1 and 255 characters`,
+    );
+  }
+  if (autoScalingGroupName.includes(':')) {
+    errors.push(
+      `Autoscaling group ${configName} has an invalid autoScalingGroupName "${autoScalingGroupName}": name cannot contain a colon (:)`,
+    );
+  }
+  // ASCII characters 33 to 126 (no spaces or control characters)
+  const validAsgNamePattern = /^[\x21-\x7e]+$/;
+  if (!validAsgNamePattern.test(autoScalingGroupName)) {
+    errors.push(
+      `Autoscaling group ${configName} has an invalid autoScalingGroupName "${autoScalingGroupName}": name can only contain ASCII characters 33 to 126`,
+    );
+  }
+}
+
 /**
  * Customizations Configuration validator.
  * Validates customization configuration
@@ -649,6 +688,7 @@ class CustomizationValidator {
     errors: string[],
   ) {
     if (app.autoscaling) {
+      validateAutoScalingGroupName(app.autoscaling.autoScalingGroupName, app.autoscaling.name, errors);
       const allTargetGroupNames = app.targetGroups?.map(tg => tg.name);
       const asgTargetGroupNames = app.autoscaling.targetGroups ?? [];
       const compareTargetGroupNames = helpers.compareArrays(asgTargetGroupNames, allTargetGroupNames ?? []);
@@ -1369,6 +1409,8 @@ export class FirewallValidator {
     errors: string[],
   ) {
     for (const group of values.firewalls?.autoscalingGroups ?? []) {
+      // Validate autoscaling group name
+      validateAutoScalingGroupName(group.autoscaling.autoScalingGroupName, group.autoscaling.name, errors);
       // Validate VPC
       const vpc = helpers.checkVpcInConfig(group.vpc, networkConfig);
       if (!vpc) {

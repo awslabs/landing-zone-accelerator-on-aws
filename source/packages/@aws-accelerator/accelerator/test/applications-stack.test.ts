@@ -52,3 +52,21 @@ describe('ApplicationsStack ALB with no targetGroup', () => {
     });
   });
 });
+
+describe('ApplicationsStack autoScalingGroupName', () => {
+  // issue #3088: the application ASG path must pass the optional autoScalingGroupName through to
+  // the physical AWS::AutoScaling::AutoScalingGroup name. appA sets it; appB leaves it undefined.
+  test('sets AutoScalingGroupName when the application autoscaling config provides one', () => {
+    const template = Template.fromStack(getStacks().stacks.get('App-appA-us-east-1')! as cdk.Stack);
+    template.hasResourceProperties('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: 'appA-custom-asg-name',
+    });
+  });
+
+  test('omits AutoScalingGroupName when the application autoscaling config does not set one', () => {
+    const template = Template.fromStack(getStacks().stacks.get('App-appB-us-east-1')! as cdk.Stack);
+    template.hasResourceProperties('AWS::AutoScaling::AutoScalingGroup', {
+      AutoScalingGroupName: Match.absent(),
+    });
+  });
+});

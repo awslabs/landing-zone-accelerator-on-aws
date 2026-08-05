@@ -858,11 +858,27 @@ export type AutoScalingHealthCheckTypeEnum = 'EC2' | 'ELB';
  */
 export interface IAutoScalingConfig {
   /**
-   * The name of the Auto Scaling group. This name must be unique per Region per account.
-   * The name can contain any ASCII character 33 to 126 including most punctuation characters, digits, and upper and lowercased letters.
-   * *Note* You cannot use a colon (:) in the name.
+   * A logical name used to identify this Auto Scaling group within the accelerator configuration. This is not the physical
+   * name of the Auto Scaling group in AWS; use the autoScalingGroupName property to control the physical name. For
+   * application Auto Scaling groups, this value is used to construct the CloudFormation logical ID of the resource, so
+   * changing it on an existing deployment forces a replacement of the Auto Scaling group.
+   *
+   * @see {@link IAutoScalingConfig.autoScalingGroupName}
    */
   readonly name: t.NonEmptyString;
+  /**
+   * (OPTIONAL) The physical name of the Auto Scaling group resource. This name must be unique per Region per account.
+   * The name must be between 1 and 255 characters, can contain any ASCII character 33 to 126 including most punctuation
+   * characters, digits, and upper and lowercased letters, and cannot contain a colon (:).
+   * **CAUTION**: When this property is left undefined, CloudFormation automatically generates a unique physical name for
+   * the Auto Scaling group. Setting or changing this value on an existing Auto Scaling group (including setting it for the
+   * first time on a group that previously had a CloudFormation-generated name) forces a replacement of the Auto Scaling
+   * group. This terminates the existing instances and recreates the group, which can interrupt running workloads. Only set
+   * this property if you are prepared for that replacement.
+   *
+   * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-autoscaling-autoscalinggroup.html#aws-resource-autoscaling-autoscalinggroup-properties}
+   */
+  readonly autoScalingGroupName?: t.NonEmptyString;
   /**
    * The minimum size of the group.
    */

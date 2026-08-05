@@ -52,7 +52,7 @@ export class FirewallAutoScalingGroup extends Firewall implements IFirewallAutoS
     const tags = props.tags ? [{ key: 'Name', value: this.name }, ...props.tags] : [{ key: 'Name', value: this.name }];
 
     const asg = new AutoscalingGroup(this, 'Resource', {
-      name: props.autoscaling.name,
+      autoScalingGroupName: props.autoscaling.autoScalingGroupName,
       minSize: props.autoscaling.minSize,
       maxSize: props.autoscaling.maxSize,
       desiredSize: props.autoscaling.desiredSize,

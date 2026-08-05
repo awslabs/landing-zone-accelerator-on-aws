@@ -522,7 +522,7 @@ export class ApplicationsStack extends AcceleratorStack {
       this,
       `AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(appConfigItem.autoscaling.name)}`,
       {
-        name: appConfigItem.autoscaling.name,
+        autoScalingGroupName: appConfigItem.autoscaling.autoScalingGroupName,
         minSize: appConfigItem.autoscaling.minSize,
         maxSize: appConfigItem.autoscaling.maxSize,
         desiredSize: appConfigItem.autoscaling.desiredSize,
