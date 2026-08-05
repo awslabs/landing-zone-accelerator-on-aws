@@ -274,6 +274,13 @@ export class Bucket extends Construct {
           props.nagSuppressionPrefix !== undefined ? `${props.nagSuppressionPrefix}/${id}Prefix` : undefined,
       });
     }
+
+    // Add explicit DependsOn between BucketPolicy and Bucket to prevent
+    // CloudFormation race condition where the policy attempts to resolve
+    // the bucket ARN before the bucket is fully created (aws/aws-cdk#28659).
+    if (this.bucket.policy) {
+      this.bucket.policy.node.addDependency(this.bucket);
+    }
   }
 
   public getS3Bucket(): s3.IBucket {

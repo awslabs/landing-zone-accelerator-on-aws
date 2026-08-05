@@ -2171,6 +2171,9 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineSecureBucketPolicy1BD98DDB": {
+      "DependsOn": [
+        "PipelineSecureBucketB3EEB324",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",
@@ -5184,6 +5187,9 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineSecureBucketPolicy1BD98DDB": {
+      "DependsOn": [
+        "PipelineSecureBucketB3EEB324",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",
@@ -7743,6 +7749,9 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineSecureBucketPolicy1BD98DDB": {
+      "DependsOn": [
+        "PipelineSecureBucketB3EEB324",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",
@@ -9734,6 +9743,9 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineConfigRepositorySecureBucketPolicyD3A8A242": {
+      "DependsOn": [
+        "PipelineConfigRepositorySecureBucket87451DF5",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineConfigRepositorySecureBucket87451DF5",
@@ -10399,6 +10411,9 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineSecureBucketPolicy1BD98DDB": {
+      "DependsOn": [
+        "PipelineSecureBucketB3EEB324",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",
@@ -13092,6 +13107,9 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
       "UpdateReplacePolicy": "Retain",
     },
     "PipelineSecureBucketPolicy1BD98DDB": {
+      "DependsOn": [
+        "PipelineSecureBucketB3EEB324",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "PipelineSecureBucketB3EEB324",

@@ -610,6 +610,9 @@ def script_handler(events, context):
       "Type": "AWS::IAM::Policy",
     },
     "AuditManagerPublishingDestinationBucketPolicy3992854B": {
+      "DependsOn": [
+        "AuditManagerPublishingDestinationBucket74974FCF",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
@@ -3263,6 +3266,9 @@ def script_handler(events, context):
       "Type": "AWS::IAM::Policy",
     },
     "AuditManagerPublishingDestinationBucketPolicy3992854B": {
+      "DependsOn": [
+        "AuditManagerPublishingDestinationBucket74974FCF",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
@@ -5942,6 +5948,9 @@ def script_handler(events, context):
       "UpdateReplacePolicy": "Delete",
     },
     "AuditManagerPublishingDestinationBucketPolicy3992854B": {
+      "DependsOn": [
+        "AuditManagerPublishingDestinationBucket74974FCF",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AuditManagerPublishingDestinationBucket74974FCF",

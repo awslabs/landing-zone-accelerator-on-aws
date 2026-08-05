@@ -391,5 +391,31 @@ describe('Bucket', () => {
     });
   });
 
+  it('test bucket policy has explicit DependsOn on the bucket resource to prevent cfn race condition', () => {
+    const dependencyStack = new cdk.Stack();
+    new Bucket(dependencyStack, 'BucketWithPolicyDependency', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: 'test-policy-dependency',
+      kmsKey: new cdk.aws_kms.Key(dependencyStack, 'DepKey', {}),
+      serverAccessLogsBucketName: 'test-access-logs',
+    });
+    const template = cdk.assertions.Template.fromStack(dependencyStack);
+    // The BucketPolicy resource must have an explicit DependsOn the Bucket resource
+    // to prevent CloudFormation race condition (aws/aws-cdk#28659)
+    const bucketPolicies = template.findResources('AWS::S3::BucketPolicy');
+    const bucketPolicyLogicalIds = Object.keys(bucketPolicies);
+    expect(bucketPolicyLogicalIds.length).toBeGreaterThan(0);
+    for (const logicalId of bucketPolicyLogicalIds) {
+      const resource = bucketPolicies[logicalId];
+      expect(resource.DependsOn).toBeDefined();
+      // DependsOn should include at least one S3 Bucket resource
+      const dependsOn = Array.isArray(resource.DependsOn) ? resource.DependsOn : [resource.DependsOn];
+      const buckets = template.findResources('AWS::S3::Bucket');
+      const bucketLogicalIds = Object.keys(buckets);
+      const hasBucketDependency = dependsOn.some((dep: string) => bucketLogicalIds.includes(dep));
+      expect(hasBucketDependency).toBe(true);
+    }
+  });
+
   snapShotTest(testNamePrefix, stack);
 });

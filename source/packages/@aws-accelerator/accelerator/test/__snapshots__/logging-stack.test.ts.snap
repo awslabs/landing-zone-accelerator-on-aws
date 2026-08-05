@@ -1338,6 +1338,9 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "AcceleratorMetadataBucketPolicyAE23D97C": {
+      "DependsOn": [
+        "AcceleratorMetadataBucket1A53514B",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AcceleratorMetadataBucket1A53514B",
@@ -2032,6 +2035,9 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "AcceleratorVpcFlowLogsBucketPolicy1B925920": {
+      "DependsOn": [
+        "AcceleratorVpcFlowLogsBucketC222BC85",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AcceleratorVpcFlowLogsBucketC222BC85",
@@ -6682,6 +6688,9 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 2`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "AcceleratorVpcFlowLogsBucketPolicy1B925920": {
+      "DependsOn": [
+        "AcceleratorVpcFlowLogsBucketC222BC85",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AcceleratorVpcFlowLogsBucketC222BC85",
@@ -12410,6 +12419,9 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "UpdateReplacePolicy": "Retain",
     },
     "AccessLogsBucketPolicy00F12803": {
+      "DependsOn": [
+        "AccessLogsBucketFA218D2A",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AccessLogsBucketFA218D2A",
@@ -13119,6 +13131,9 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "Type": "AWS::IAM::Role",
     },
     "CentralLogsBucketPolicyC0B90E7C": {
+      "DependsOn": [
+        "CentralLogsBucket447B5C59",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "CentralLogsBucket447B5C59",
@@ -14457,6 +14472,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
         "CentralLogsBucketResourcePrefixS3CreateBucketPrefixframeworkonEventServiceRoleD85E2686",
         "CentralLogsBucketResourcePrefixS3CreateBucketPrefixS3CreateBucketPrefixResource8CAF910B",
         "CentralLogsBucketSsmParamCentralAccountBucketKMSArn57B61EA3",
+        "ElbAccessLogsBucketD6CD6A5D",
       ],
       "Properties": {
         "Bucket": {
@@ -17103,6 +17119,9 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "UpdateReplacePolicy": "Retain",
     },
     "AcceleratorMetadataBucketPolicyAE23D97C": {
+      "DependsOn": [
+        "AcceleratorMetadataBucket1A53514B",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AcceleratorMetadataBucket1A53514B",
@@ -17595,6 +17614,9 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "UpdateReplacePolicy": "Retain",
     },
     "AccessLogsBucketPolicy00F12803": {
+      "DependsOn": [
+        "AccessLogsBucketFA218D2A",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AccessLogsBucketFA218D2A",
@@ -18778,6 +18800,9 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "UpdateReplacePolicy": "Delete",
     },
     "ElbAccessLogsBucketPolicyC6AEEA2E": {
+      "DependsOn": [
+        "ElbAccessLogsBucketD6CD6A5D",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "ElbAccessLogsBucketD6CD6A5D",

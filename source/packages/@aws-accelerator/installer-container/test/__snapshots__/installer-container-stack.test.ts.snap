@@ -1026,6 +1026,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -3976,6 +3979,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -6963,6 +6969,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -9906,6 +9915,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -12902,6 +12914,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -15823,6 +15838,9 @@ def handler(event, context):
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",

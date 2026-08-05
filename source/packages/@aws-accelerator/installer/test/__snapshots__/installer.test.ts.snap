@@ -1097,6 +1097,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -2783,6 +2786,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -5219,6 +5225,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -6895,6 +6904,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -9360,6 +9372,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -11051,6 +11066,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -13503,6 +13521,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -15184,6 +15205,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -17636,6 +17660,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -19322,6 +19349,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -21757,6 +21787,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -23440,6 +23473,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -25912,6 +25948,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -27963,6 +28002,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -30450,6 +30492,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -32508,6 +32553,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",
@@ -35019,6 +35067,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
       "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": {
+      "DependsOn": [
+        "InstallerAccessLogsBucket647700E9",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -37096,6 +37147,9 @@ phases:
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": {
+      "DependsOn": [
+        "SecureBucket747CD8C0",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "SecureBucket747CD8C0",

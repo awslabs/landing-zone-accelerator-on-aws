@@ -743,6 +743,9 @@ exports[`TesterPipelineStack > Construct(TesterPipelineStack):  Snapshot Test 1`
       "UpdateReplacePolicy": "Retain",
     },
     "TesterPipelineSecureBucketPolicyD3292C3A": {
+      "DependsOn": [
+        "TesterPipelineSecureBucket8740FCE8",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "TesterPipelineSecureBucket8740FCE8",

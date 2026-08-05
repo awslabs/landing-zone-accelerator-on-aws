@@ -2536,6 +2536,9 @@ exports[`MultiOuOrganizationsStack > Construct(OrganizationsStack):  Snapshot Te
       "UpdateReplacePolicy": "Retain",
     },
     "ReportBucketPolicyC1DDDC0D": {
+      "DependsOn": [
+        "ReportBucket93428221",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "ReportBucket93428221",
@@ -6035,6 +6038,9 @@ exports[`OrganizationsStack > Construct(OrganizationsStack):  Snapshot Test 1`] 
       "UpdateReplacePolicy": "Retain",
     },
     "ReportBucketPolicyC1DDDC0D": {
+      "DependsOn": [
+        "ReportBucket93428221",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "ReportBucket93428221",
@@ -9740,6 +9746,9 @@ exports[`OrganizationsStack with SkipMacie > Construct(OrganizationsStack with S
       "UpdateReplacePolicy": "Retain",
     },
     "ReportBucketPolicyC1DDDC0D": {
+      "DependsOn": [
+        "ReportBucket93428221",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "ReportBucket93428221",
@@ -12980,6 +12989,9 @@ exports[`delegatedAdminStack > Construct(OrganizationsStack):  Snapshot Test 1`]
       "UpdateReplacePolicy": "Retain",
     },
     "ReportBucketPolicyC1DDDC0D": {
+      "DependsOn": [
+        "ReportBucket93428221",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "ReportBucket93428221",

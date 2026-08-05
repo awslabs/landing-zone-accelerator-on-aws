@@ -94,6 +94,9 @@ exports[`CentralLogsBucket > Construct(CentralLogsBucket):  Snapshot Test 1`] = 
       "UpdateReplacePolicy": "Retain",
     },
     "AccessLogsBucketPolicy00F12803": {
+      "DependsOn": [
+        "AccessLogsBucketFA218D2A",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "AccessLogsBucketFA218D2A",
@@ -510,6 +513,9 @@ exports[`CentralLogsBucket > Construct(CentralLogsBucket):  Snapshot Test 1`] = 
       "Type": "AWS::IAM::Role",
     },
     "CentralLogsBucketPolicyC0B90E7C": {
+      "DependsOn": [
+        "CentralLogsBucket447B5C59",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "CentralLogsBucket447B5C59",

@@ -312,6 +312,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "Type": "AWS::IAM::Policy",
     },
     "BucketAwsPrincipalAccessPolicy62349E94": {
+      "DependsOn": [
+        "BucketAwsPrincipalAccess2BA6D9C4",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketAwsPrincipalAccess2BA6D9C4",
@@ -956,6 +959,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "BucketLifeCycleProvidedPolicy6ED87BA2": {
+      "DependsOn": [
+        "BucketLifeCycleProvidedBC4D367D",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketLifeCycleProvidedBC4D367D",
@@ -1164,6 +1170,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "Type": "AWS::S3::BucketPolicy",
     },
     "BucketPolicy8005AAB0": {
+      "DependsOn": [
+        "BucketE75EA64C",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketE75EA64C",
@@ -1448,6 +1457,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "BucketServerAccessBucketPolicyD3D884B3": {
+      "DependsOn": [
+        "BucketServerAccessBucketFC17BBE8",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketServerAccessBucketFC17BBE8",
@@ -1838,6 +1850,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "BucketSseNoKmsPolicyBBB4A613": {
+      "DependsOn": [
+        "BucketSseNoKms034DA0EB",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketSseNoKms034DA0EB",
@@ -2133,6 +2148,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Retain",
     },
     "BucketSseS3Policy60624C99": {
+      "DependsOn": [
+        "BucketSseS3ECFEB958",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketSseS3ECFEB958",
@@ -2475,6 +2493,9 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "BucketWithRemovalPolicyPolicyA63BFCB5": {
+      "DependsOn": [
+        "BucketWithRemovalPolicy3930798A",
+      ],
       "Properties": {
         "Bucket": {
           "Ref": "BucketWithRemovalPolicy3930798A",
