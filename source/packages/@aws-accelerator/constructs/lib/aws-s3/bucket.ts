@@ -33,12 +33,12 @@ interface Transition {
 }
 
 export interface S3LifeCycleRule {
-  abortIncompleteMultipartUploadAfter: number;
+  abortIncompleteMultipartUploadAfter?: number;
   enabled: boolean;
   expiration?: number;
   expiredObjectDeleteMarker: boolean;
   id: string;
-  noncurrentVersionExpiration: number;
+  noncurrentVersionExpiration?: number;
   transitions: Transition[];
   noncurrentVersionTransitions: Transition[];
   prefix?: string;
@@ -435,9 +435,10 @@ export class Bucket extends Construct {
         }
 
         this.lifecycleRules.push({
-          abortIncompleteMultipartUploadAfter: cdk.Duration.days(
-            lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
-          ),
+          abortIncompleteMultipartUploadAfter:
+            lifecycleRuleConfig.abortIncompleteMultipartUploadAfter !== undefined
+              ? cdk.Duration.days(lifecycleRuleConfig.abortIncompleteMultipartUploadAfter)
+              : undefined,
           enabled: lifecycleRuleConfig.enabled,
           expiration:
             lifecycleRuleConfig.expiration !== undefined
@@ -445,7 +446,10 @@ export class Bucket extends Construct {
               : undefined,
           transitions,
           noncurrentVersionTransitions,
-          noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
+          noncurrentVersionExpiration:
+            lifecycleRuleConfig.noncurrentVersionExpiration !== undefined
+              ? cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration)
+              : undefined,
           expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
           id: `LifecycleRule${this.props.s3BucketName}${lifecycleRuleConfig.id}`,
           prefix: lifecycleRuleConfig.prefix,

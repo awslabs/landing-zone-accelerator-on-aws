@@ -419,3 +419,150 @@ describe('Bucket', () => {
 
   snapShotTest(testNamePrefix, stack);
 });
+
+/**
+ * Lifecycle rule rendering tests.
+ *
+ * Regression coverage for the case where a lifecycle rule only removes expired
+ * object delete markers (issue #3672). Such a rule does not provide
+ * abortIncompleteMultipartUploadAfter, noncurrentVersionExpiration or
+ * expiration, and must not crash the construct nor inject unintended values.
+ */
+describe('Bucket lifecycle rules', () => {
+  it('renders an expired-object-delete-marker-only rule without abort or expiration values', () => {
+    const lifecycleStack = new cdk.Stack();
+    new Bucket(lifecycleStack, 'BucketDeleteMarkerOnly', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: 'delete-marker-only',
+      serverAccessLogsBucketName: 'access-logs',
+      s3LifeCycleRules: [
+        {
+          id: 'DeleteMarkerOnly',
+          enabled: true,
+          expiredObjectDeleteMarker: true,
+          transitions: [],
+          noncurrentVersionTransitions: [],
+        },
+      ],
+    });
+
+    const template = cdk.assertions.Template.fromStack(lifecycleStack);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      LifecycleConfiguration: {
+        Rules: cdk.assertions.Match.arrayWith([
+          cdk.assertions.Match.objectLike({
+            ExpiredObjectDeleteMarker: true,
+            Status: 'Enabled',
+            // Must not inject defaulted day-based values for a delete-marker rule
+            AbortIncompleteMultipartUpload: cdk.assertions.Match.absent(),
+            NoncurrentVersionExpiration: cdk.assertions.Match.absent(),
+            ExpirationInDays: cdk.assertions.Match.absent(),
+          }),
+        ]),
+      },
+    });
+  });
+
+  it('does not throw when abort and noncurrent version expiration are omitted', () => {
+    const lifecycleStack = new cdk.Stack();
+    function createBucket() {
+      new Bucket(lifecycleStack, 'BucketNoAbort', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: 'no-abort',
+        serverAccessLogsBucketName: 'access-logs',
+        s3LifeCycleRules: [
+          {
+            id: 'DeleteMarkerOnly',
+            enabled: true,
+            expiredObjectDeleteMarker: true,
+            transitions: [],
+            noncurrentVersionTransitions: [],
+          },
+        ],
+      });
+    }
+    expect(createBucket).not.toThrow();
+  });
+
+  it('renders abort and noncurrent version expiration when provided', () => {
+    const lifecycleStack = new cdk.Stack();
+    new Bucket(lifecycleStack, 'BucketWithAbort', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: 'with-abort',
+      serverAccessLogsBucketName: 'access-logs',
+      s3LifeCycleRules: [
+        {
+          id: 'Full',
+          enabled: true,
+          abortIncompleteMultipartUploadAfter: 7,
+          expiration: 365,
+          expiredObjectDeleteMarker: false,
+          noncurrentVersionExpiration: 1,
+          transitions: [],
+          noncurrentVersionTransitions: [],
+        },
+      ],
+    });
+
+    const template = cdk.assertions.Template.fromStack(lifecycleStack);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      LifecycleConfiguration: {
+        Rules: cdk.assertions.Match.arrayWith([
+          cdk.assertions.Match.objectLike({
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 },
+            ExpirationInDays: 365,
+            NoncurrentVersionExpiration: { NoncurrentDays: 1 },
+            ExpiredObjectDeleteMarker: false,
+            Status: 'Enabled',
+          }),
+        ]),
+      },
+    });
+  });
+
+  it('renders the mixed rule set from issue #3672 (expiration rule plus delete-marker rule)', () => {
+    const lifecycleStack = new cdk.Stack();
+    new Bucket(lifecycleStack, 'BucketMixedRules', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: 'mixed-rules',
+      serverAccessLogsBucketName: 'access-logs',
+      s3LifeCycleRules: [
+        {
+          id: 'Expire',
+          enabled: true,
+          abortIncompleteMultipartUploadAfter: 7,
+          expiration: 365,
+          expiredObjectDeleteMarker: false,
+          noncurrentVersionExpiration: 1,
+          transitions: [],
+          noncurrentVersionTransitions: [],
+        },
+        {
+          id: 'DeleteMarker',
+          enabled: true,
+          expiredObjectDeleteMarker: true,
+          transitions: [],
+          noncurrentVersionTransitions: [],
+        },
+      ],
+    });
+
+    const template = cdk.assertions.Template.fromStack(lifecycleStack);
+    template.hasResourceProperties('AWS::S3::Bucket', {
+      LifecycleConfiguration: {
+        Rules: cdk.assertions.Match.arrayWith([
+          cdk.assertions.Match.objectLike({
+            ExpirationInDays: 365,
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 },
+            ExpiredObjectDeleteMarker: false,
+          }),
+          cdk.assertions.Match.objectLike({
+            ExpiredObjectDeleteMarker: true,
+            AbortIncompleteMultipartUpload: cdk.assertions.Match.absent(),
+            ExpirationInDays: cdk.assertions.Match.absent(),
+          }),
+        ]),
+      },
+    });
+  });
+});

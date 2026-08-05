@@ -14,8 +14,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 import { SecurityConfigValidator } from '../../validator/security-config-validator';
-import { IAwsConfigRuleSet, IConfigRule, ICustomRuleConfigType } from '../../lib/models/security-config';
-import { DeploymentTargets } from '../../lib/common';
+import {
+  IAwsConfigRuleSet,
+  IConfigRule,
+  ICustomRuleConfigType,
+  ISecurityConfig,
+} from '../../lib/models/security-config';
+import { DeploymentTargets, ILifecycleRule } from '../../lib/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateConfigRuleAssets = (SecurityConfigValidator.prototype as any)['validateConfigRuleAssets'].bind({});
@@ -92,6 +97,98 @@ function createRuleSet(rules: IConfigRule[]): IAwsConfigRuleSet {
 }
 
 describe('SecurityConfigValidator', () => {
+  describe('lifecycle rule validation', () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const proto = SecurityConfigValidator.prototype as any;
+    const validateMacie = proto['macieLifecycleRules'].bind(proto);
+    const validateGuardDuty = proto['guarddutyLifecycleRules'].bind(proto);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    const macieConfig = (lifecycleRules: Partial<ILifecycleRule>[]) =>
+      ({ centralSecurityServices: { macie: { lifecycleRules } } }) as unknown as ISecurityConfig;
+    const guardDutyConfig = (lifecycleRules: Partial<ILifecycleRule>[]) =>
+      ({ centralSecurityServices: { guardduty: { lifecycleRules } } }) as unknown as ISecurityConfig;
+
+    const deleteMarkerOnlyRule = { id: 'DeleteMarkerOnly', enabled: true, expiredObjectDeleteMarker: true };
+    const fullRule = {
+      id: 'Full',
+      enabled: true,
+      abortIncompleteMultipartUpload: 7,
+      expiration: 365,
+      noncurrentVersionExpiration: 1,
+    };
+
+    describe.each([
+      ['Macie', validateMacie, macieConfig],
+      ['GuardDuty', validateGuardDuty, guardDutyConfig],
+    ])('%s', (label, validate, makeConfig) => {
+      it('does not require abortIncompleteMultipartUpload for an expired-object-delete-marker-only rule', () => {
+        const errors: string[] = [];
+        validate(makeConfig([deleteMarkerOnlyRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
+
+      it('accepts a fully specified rule', () => {
+        const errors: string[] = [];
+        validate(makeConfig([fullRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
+
+      it('rejects expiredObjectDeleteMarker combined with expiration', () => {
+        const errors: string[] = [];
+        validate(makeConfig([{ id: 'Bad', enabled: true, expiration: 365, expiredObjectDeleteMarker: true }]), errors);
+        expect(errors).toContain(`You may not configure expiredObjectDeleteMarker with expiration. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload for a plain expiration rule', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([{ id: 'Expire', enabled: true, expiration: 365, noncurrentVersionExpiration: 1 }]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload when expiredObjectDeleteMarker is combined with transitions', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([
+            {
+              id: 'DeleteMarkerWithTransition',
+              enabled: true,
+              expiredObjectDeleteMarker: true,
+              transitions: [{ storageClass: 'GLACIER', transitionAfter: 365 }],
+            },
+          ]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload when expiredObjectDeleteMarker is combined with noncurrentVersionTransitions', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([
+            {
+              id: 'DeleteMarkerWithNoncurrentTransition',
+              enabled: true,
+              expiredObjectDeleteMarker: true,
+              noncurrentVersionTransitions: [{ storageClass: 'GLACIER', transitionAfter: 365 }],
+            },
+          ]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('accepts the mixed rule set from issue #3672', () => {
+        const errors: string[] = [];
+        validate(makeConfig([fullRule, deleteMarkerOnlyRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
+    });
+  });
+
   describe('validateConfigRuleAssets - lookupType and lookupKey validation', () => {
     const configDir = '/mock/config';
 

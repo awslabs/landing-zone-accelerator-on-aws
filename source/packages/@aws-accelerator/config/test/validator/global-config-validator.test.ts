@@ -35,7 +35,7 @@ import {
 } from '../../lib/global-config';
 import { OrganizationConfig } from '../../lib/organization-config';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { DeploymentTargets } from '../../lib/common';
+import { DeploymentTargets, ILifecycleRule } from '../../lib/common';
 import { GlobalConfigValidator } from '../../validator/global-config-validator';
 import { IamConfig, RoleSetConfig } from '../../lib/iam-config';
 
@@ -435,6 +435,112 @@ describe('SecurityConfigValidator', () => {
             mockConfigDir,
           ),
       ).toBeDefined();
+    });
+  });
+
+  describe('lifecycle rule validation', () => {
+    // The lifecycle validation methods are private and only reference sibling
+    // helper methods on the prototype, so bind them to the prototype itself.
+
+    const proto = GlobalConfigValidator.prototype as any;
+    const validateCentralLogBucket = proto['validateLifecycleRuleExpirationForCentralLogBucket'].bind(proto);
+    const validateAccessLogBucket = proto['validateLifecycleRuleExpirationForAccessLogBucket'].bind(proto);
+    const validateReports = proto['validateLifecycleRuleExpirationForReports'].bind(proto);
+
+    const centralLogConfig = (lifecycleRules: Partial<ILifecycleRule>[]) =>
+      ({ logging: { centralLogBucket: { lifecycleRules } } }) as unknown as GlobalConfig;
+    const accessLogConfig = (lifecycleRules: Partial<ILifecycleRule>[]) =>
+      ({ logging: { accessLogBucket: { lifecycleRules } } }) as unknown as GlobalConfig;
+    const reportsConfig = (lifecycleRules: Partial<ILifecycleRule>[]) =>
+      ({ reports: { costAndUsageReport: { lifecycleRules } } }) as unknown as GlobalConfig;
+
+    const deleteMarkerOnlyRule = { id: 'DeleteMarkerOnly', enabled: true, expiredObjectDeleteMarker: true };
+    const fullRule = {
+      id: 'Full',
+      enabled: true,
+      abortIncompleteMultipartUpload: 7,
+      expiration: 365,
+      noncurrentVersionExpiration: 1,
+    };
+
+    describe.each([
+      ['Central Log Bucket', validateCentralLogBucket, centralLogConfig],
+      ['S3 Access Log Bucket', validateAccessLogBucket, accessLogConfig],
+      ['Cost Reporting', validateReports, reportsConfig],
+    ])('%s', (label, validate, makeConfig) => {
+      it('does not require abortIncompleteMultipartUpload for an expired-object-delete-marker-only rule', () => {
+        const errors: string[] = [];
+        validate(makeConfig([deleteMarkerOnlyRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
+
+      it('accepts a fully specified rule', () => {
+        const errors: string[] = [];
+        validate(makeConfig([fullRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
+
+      it('rejects expiredObjectDeleteMarker combined with expiration', () => {
+        const errors: string[] = [];
+        validate(makeConfig([{ id: 'Bad', enabled: true, expiration: 365, expiredObjectDeleteMarker: true }]), errors);
+        expect(errors).toContain(`You may not configure expiredObjectDeleteMarker with expiration. ${label}`);
+      });
+
+      it('requires noncurrentVersionExpiration when expiration is set', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([{ id: 'NoNoncurrent', enabled: true, abortIncompleteMultipartUpload: 7, expiration: 365 }]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for noncurrentVersionExpiration. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload for a transition/expiration rule', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([{ id: 'Expire', enabled: true, expiration: 365, noncurrentVersionExpiration: 1 }]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload when expiredObjectDeleteMarker is combined with transitions', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([
+            {
+              id: 'DeleteMarkerWithTransition',
+              enabled: true,
+              expiredObjectDeleteMarker: true,
+              transitions: [{ storageClass: 'GLACIER', transitionAfter: 365 }],
+            },
+          ]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('still requires abortIncompleteMultipartUpload when expiredObjectDeleteMarker is combined with noncurrentVersionTransitions', () => {
+        const errors: string[] = [];
+        validate(
+          makeConfig([
+            {
+              id: 'DeleteMarkerWithNoncurrentTransition',
+              enabled: true,
+              expiredObjectDeleteMarker: true,
+              noncurrentVersionTransitions: [{ storageClass: 'GLACIER', transitionAfter: 365 }],
+            },
+          ]),
+          errors,
+        );
+        expect(errors).toContain(`You must supply a value for abortIncompleteMultipartUpload. ${label}`);
+      });
+
+      it('accepts the mixed rule set from issue #3672', () => {
+        const errors: string[] = [];
+        validate(makeConfig([fullRule, deleteMarkerOnlyRule]), errors);
+        expect(errors).toHaveLength(0);
+      });
     });
   });
 

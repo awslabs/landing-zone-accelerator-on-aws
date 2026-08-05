@@ -209,4 +209,32 @@ export class CommonValidatorFunctions {
       });
     }
   }
+
+  /**
+   * Determines whether a lifecycle rule only removes expired object delete markers.
+   *
+   * Such a rule (expiredObjectDeleteMarker set, with no expiration, transition or
+   * abort behavior) is valid on its own and must not require an
+   * abortIncompleteMultipartUpload value. AWS also forbids combining
+   * expiredObjectDeleteMarker with an expiration, which is validated separately.
+   *
+   * @param lifecycleRule lifecycle rule to evaluate
+   * @returns true when the rule only expires delete markers
+   */
+  public static isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule: {
+    expiredObjectDeleteMarker?: boolean;
+    expiration?: number;
+    noncurrentVersionExpiration?: number;
+    transitions?: unknown[];
+    noncurrentVersionTransitions?: unknown[];
+  }): boolean {
+    return (
+      lifecycleRule.expiredObjectDeleteMarker === true &&
+      lifecycleRule.expiration === undefined &&
+      lifecycleRule.noncurrentVersionExpiration === undefined &&
+      (lifecycleRule.transitions === undefined || lifecycleRule.transitions.length === 0) &&
+      (lifecycleRule.noncurrentVersionTransitions === undefined ||
+        lifecycleRule.noncurrentVersionTransitions.length === 0)
+    );
+  }
 }

@@ -409,7 +409,10 @@ export class GlobalConfigValidator {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Cost Reporting');
       }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+      if (
+        !CommonValidatorFunctions.isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule) &&
+        !lifecycleRule.abortIncompleteMultipartUpload
+      ) {
         errors.push('You must supply a value for abortIncompleteMultipartUpload. Cost Reporting');
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
@@ -748,7 +751,10 @@ export class GlobalConfigValidator {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Central Log Bucket');
       }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+      if (
+        !CommonValidatorFunctions.isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule) &&
+        !lifecycleRule.abortIncompleteMultipartUpload
+      ) {
         errors.push('You must supply a value for abortIncompleteMultipartUpload. Central Log Bucket');
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
@@ -768,7 +774,10 @@ export class GlobalConfigValidator {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. S3 Access Log Bucket');
       }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+      if (
+        !CommonValidatorFunctions.isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule) &&
+        !lifecycleRule.abortIncompleteMultipartUpload
+      ) {
         errors.push('You must supply a value for abortIncompleteMultipartUpload. S3 Access Log Bucket');
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {

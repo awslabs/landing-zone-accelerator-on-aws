@@ -237,7 +237,10 @@ export class SecurityConfigValidator {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. Macie.');
       }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+      if (
+        !CommonValidatorFunctions.isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule) &&
+        !lifecycleRule.abortIncompleteMultipartUpload
+      ) {
         errors.push('You must supply a value for abortIncompleteMultipartUpload. Macie');
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
@@ -254,7 +257,10 @@ export class SecurityConfigValidator {
       if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
         errors.push('You must supply a value for noncurrentVersionExpiration. GuardDuty');
       }
-      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+      if (
+        !CommonValidatorFunctions.isExpiredObjectDeleteMarkerOnlyRule(lifecycleRule) &&
+        !lifecycleRule.abortIncompleteMultipartUpload
+      ) {
         errors.push('You must supply a value for abortIncompleteMultipartUpload. GuardDuty');
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
