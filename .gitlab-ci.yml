@@ -629,13 +629,23 @@ installer:
   script:
     - "cd source"
     - "cd packages/@aws-accelerator/installer"
-    - "yarn cdk synth"
-    - "cp cdk.out/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
+    # synth every installer stack variant produced by the official distributable build (deployment/build-s3-dist.sh): standard, custom permission boundary, external pipeline, node version
+    - "yarn cdk synth --output cdk.out-standard"
+    - "cp cdk.out-standard/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
+    - "yarn cdk synth --context use-permission-boundary=true --output cdk.out-custom-bp"
+    - "cp cdk.out-custom-bp/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack-CustomBp.template.json"
+    - "yarn cdk synth --context use-external-pipeline-account=true --output cdk.out-external-pipeline"
+    - "cp cdk.out-external-pipeline/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack-ExternalPipeline.template.json"
+    - "yarn cdk synth --context enable-set-node-version=true --output cdk.out-node-version"
+    - "cp cdk.out-node-version/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack-NodeVersionPipeline.template.json"
   artifacts:
     name: "installer-template"
     when: on_success
     paths:
       - AWSAccelerator-InstallerStack.template.json
+      - AWSAccelerator-InstallerStack-CustomBp.template.json
+      - AWSAccelerator-InstallerStack-ExternalPipeline.template.json
+      - AWSAccelerator-InstallerStack-NodeVersionPipeline.template.json
   rules:
     - if: $CI_COMMIT_BRANCH == "integ"
       when: always
@@ -661,6 +671,31 @@ installer-container:
     when: on_success
     paths:
       - AWSAccelerator-InstallerContainerStack.template.json
+  rules:
+    - if: $CI_COMMIT_BRANCH == "integ"
+      when: always
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+govcloud-account-vending:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
+  tags:
+    - arch:amd64
+  script:
+    - "cd source/packages/@aws-accelerator/govcloud-account-vending"
+    - "yarn cdk synth"
+    - "cp cdk.out/AWSAccelerator-GovCloudAccountVending.template.json $CI_PROJECT_DIR/AWSAccelerator-GovCloudAccountVending.template.json"
+  artifacts:
+    name: "installer-template"
+    when: on_success
+    paths:
+      - AWSAccelerator-GovCloudAccountVending.template.json
   rules:
     - if: $CI_COMMIT_BRANCH == "integ"
       when: always
@@ -911,10 +946,46 @@ release:artifact-al2023-upload:
       when: always
     - when: never
 
+# upload CloudFormation templates to the generic package registry for release assets
+release:templates-upload:
+  stage: pipeline
+  needs:
+    - job: installer
+      artifacts: true
+    - job: installer-container
+      artifacts: true
+    - job: govcloud-account-vending
+      artifacts: true
+  tags:
+    - arch:amd64
+  variables:
+    KUBERNETES_CPU_REQUEST: "2"
+    KUBERNETES_CPU_LIMIT: "2"
+    KUBERNETES_MEMORY_REQUEST: "4Gi"
+    KUBERNETES_MEMORY_LIMIT: "4Gi"
+  before_script:
+    # ensure templates exist before upload
+    - ls -lart $CI_PROJECT_DIR/*.template.json
+  script:
+    - |
+      for template in \
+        AWSAccelerator-InstallerStack.template.json \
+        AWSAccelerator-InstallerStack-CustomBp.template.json \
+        AWSAccelerator-InstallerStack-ExternalPipeline.template.json \
+        AWSAccelerator-InstallerStack-NodeVersionPipeline.template.json \
+        AWSAccelerator-InstallerContainerStack.template.json \
+        AWSAccelerator-GovCloudAccountVending.template.json; do
+        curl --fail --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "$CI_PROJECT_DIR/${template}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/${template}" || exit 1
+      done
+  rules:
+    - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
 # release based on commit tag
 release:artifact-al2023-release:
   stage: pipeline
-  needs: ["release:artifact-al2023-upload"]
+  needs: ["release:artifact-al2023-upload", "release:templates-upload"]
   variables:
     KUBERNETES_CPU_REQUEST: "4"
     KUBERNETES_CPU_LIMIT: "4"
@@ -931,6 +1002,12 @@ release:artifact-al2023-release:
       release-cli create --name "$CI_COMMIT_TAG" --tag-name $CI_COMMIT_TAG \
         --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz\"}" \
         --assets-link "{\"name\":\"lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-container/${CI_COMMIT_TAG}/lza-${CI_COMMIT_TAG}-al2023.tar.gz.sha1sum\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-InstallerStack.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-InstallerStack.template.json\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-InstallerStack-CustomBp.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-InstallerStack-CustomBp.template.json\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-InstallerStack-ExternalPipeline.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-InstallerStack-ExternalPipeline.template.json\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-InstallerStack-NodeVersionPipeline.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-InstallerStack-NodeVersionPipeline.template.json\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-InstallerContainerStack.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-InstallerContainerStack.template.json\"}" \
+        --assets-link "{\"name\":\"AWSAccelerator-GovCloudAccountVending.template.json\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/lza-templates/${CI_COMMIT_TAG}/AWSAccelerator-GovCloudAccountVending.template.json\"}" \
         --description "Landing Zone Accelerator on AWS container version $CI_COMMIT_TAG built on AL2023"
   rules:
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
