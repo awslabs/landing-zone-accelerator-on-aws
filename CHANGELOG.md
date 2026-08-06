@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(customizations): support optional autoScalingGroupName for firewall and application auto scaling groups (note: setting this value on an existing auto scaling group forces resource replacement)
 - docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
 - fix(s3): allow expired object delete marker only lifecycle rules
+- chore: upgrade to node24
 
 ## [1.16.0] - 2026-07-24
 

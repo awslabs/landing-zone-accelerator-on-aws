@@ -396,7 +396,7 @@ export class InstallerStack extends cdk.Stack {
     if (props.setNodeVersion) {
       this.acceleratorNodeVersion = new cdk.CfnParameter(this, 'AcceleratorNodeVersion', {
         type: 'String',
-        description: 'Set the node version in solution. For example, 20 would set node version to 20 in the solution.',
+        description: 'Set the node version in solution. For example, 24 would set node version to 24 in the solution.',
       });
 
       parameterGroups.push({

@@ -3,7 +3,7 @@ ENV NODE_OPTIONS=--max-old-space-size=16384
 
 ADD ./ /landing-zone-accelerator-on-aws-staging
 RUN dnf update -y
-RUN dnf install -y nodejs22 awscli zip tar gzip
+RUN dnf install -y nodejs24 awscli zip tar gzip
 RUN npm -g install yarn
 
 # Copy source and scripts from staging.
@@ -24,7 +24,7 @@ RUN cd /landing-zone-accelerator-on-aws/source \
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:minimal
 ENV NODE_OPTIONS=--max-old-space-size=16384
-RUN dnf update -y && dnf install -y nodejs22 awscli zip && dnf clean all
+RUN dnf update -y && dnf install -y nodejs24 awscli zip && dnf clean all
 RUN npm -g install yarn
 
 # Create directory for LZA (running as root)

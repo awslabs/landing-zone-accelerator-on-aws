@@ -2,6 +2,16 @@ import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorAspects, LambdaDefaultMemoryAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, test } from 'vitest';
+import { config } from '../../../../package.json';
+
+/**
+ * LambdaRuntimeAspect overrides runtimes to `nodejs${getNodeVersion()}.x`, which resolves to the
+ * configured default. Derive the expectations from config so a Node upgrade does not require
+ * editing every assertion in this file.
+ */
+const DEFAULT_NODE_RUNTIME = `nodejs${config.node.version.default}.x`;
+/** Lowest major still accepted by getNodeVersion(), used to exercise an explicit override. */
+const MINIMUM_NODE_RUNTIME = `nodejs${config.node.version.minimum}.x`;
 
 describe('AcceleratorAspects', () => {
   let app: cdk.App;
@@ -18,7 +28,7 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('LambdaRuntimeAspect', () => {
-    test('should upgrade nodejs14.x to nodejs22.x', () => {
+    test('should upgrade nodejs14.x to the configured default runtime', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -34,11 +44,11 @@ describe('AcceleratorAspects', () => {
       template = Template.fromStack(stack);
 
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
       });
     });
 
-    test('should upgrade nodejs16.x to nodejs22.x', () => {
+    test('should upgrade nodejs16.x to the configured default runtime', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
@@ -53,7 +63,7 @@ describe('AcceleratorAspects', () => {
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
       });
     });
 
@@ -72,7 +82,7 @@ describe('AcceleratorAspects', () => {
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
       });
     });
 
@@ -94,7 +104,7 @@ describe('AcceleratorAspects', () => {
       });
     });
 
-    test('should not update if environment variable is set to a lower version', () => {
+    test('should honor an explicit ACCELERATOR_NODE_VERSION below the default', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_16_X,
@@ -102,14 +112,15 @@ describe('AcceleratorAspects', () => {
         code: cdk.aws_lambda.Code.fromInline('exports.handler = function() { }'),
         description: 'AWS CDK resource provider framework test',
       });
-      process.env['ACCELERATOR_NODE_VERSION'] = '20';
+      // Must stay >= config.node.version.minimum, otherwise getNodeVersion() throws.
+      process.env['ACCELERATOR_NODE_VERSION'] = String(config.node.version.minimum);
       // WHEN
       new AcceleratorAspects(stack, 'aws', false);
 
       // THEN
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs20.x',
+        Runtime: MINIMUM_NODE_RUNTIME,
       });
     });
 
@@ -136,12 +147,12 @@ describe('AcceleratorAspects', () => {
       template = Template.fromStack(stack);
       template.resourceCountIs('AWS::Lambda::Function', 2);
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
         Handler: 'index.handler',
       });
 
       template.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
         Handler: 'index.handler',
       });
     });
@@ -173,11 +184,11 @@ describe('AcceleratorAspects', () => {
       const childTemplate = Template.fromStack(childStack);
 
       parentTemplate.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
       });
 
       childTemplate.hasResourceProperties('AWS::Lambda::Function', {
-        Runtime: 'nodejs22.x',
+        Runtime: DEFAULT_NODE_RUNTIME,
       });
     });
   });

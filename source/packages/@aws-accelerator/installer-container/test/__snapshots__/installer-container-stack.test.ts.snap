@@ -1923,7 +1923,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",
@@ -4877,7 +4877,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",
@@ -7866,7 +7866,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",
@@ -10813,7 +10813,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",
@@ -13811,7 +13811,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",
@@ -16735,7 +16735,7 @@ def handler(event, context):
             "Arn",
           ],
         },
-        "Runtime": "nodejs22.x",
+        "Runtime": "nodejs24.x",
         "Tags": [
           {
             "Key": "Accelerator",

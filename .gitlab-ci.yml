@@ -108,7 +108,7 @@
 #    - $: End of string
 #    - Examples: release-v1.0.0, feature-v2.3.4
 
-image: public.ecr.aws/docker/library/node:22.15.0
+image: public.ecr.aws/docker/library/node:24
 
 before_script:
   - rm -rf /var/lib/apt/lists/*
@@ -796,7 +796,7 @@ release:build-typedocs:
     KUBERNETES_MEMORY_LIMIT: "32Gi"
     VERSION: $CI_COMMIT_SHORT_SHA
   before_script:
-    - dnf install nodejs22 tar gzip findutils -y
+    - dnf install nodejs24 tar gzip findutils -y
     - npm install -g yarn
   image:
     name: public.ecr.aws/amazonlinux/amazonlinux:latest

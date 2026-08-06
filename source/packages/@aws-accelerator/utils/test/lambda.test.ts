@@ -15,19 +15,27 @@ import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { CustomResourceProviderRuntime } from 'aws-cdk-lib';
 import { Runtime, RuntimeFamily } from 'aws-cdk-lib/aws-lambda';
 import { DEFAULT_LAMBDA_RUNTIME, CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '../lib/lambda';
+import { config } from '../../../../package.json';
 
 describe('Lambda Runtime and Custom Resource Provider Runtime', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
+  // Both runtimes are derived from getNodeVersion(), so assert against the configured
+  // default rather than a literal major that goes stale on every Node upgrade.
+  const defaultNodeVersion = config.node.version.default;
+
   test('DEFAULT_LAMBDA_RUNTIME is created correctly', () => {
     expect(DEFAULT_LAMBDA_RUNTIME).toBeInstanceOf(Runtime);
-    expect(DEFAULT_LAMBDA_RUNTIME.name).toBe('nodejs22.x');
+    expect(DEFAULT_LAMBDA_RUNTIME.name).toBe(`nodejs${defaultNodeVersion}.x`);
     expect(DEFAULT_LAMBDA_RUNTIME.family).toBe(RuntimeFamily.NODEJS);
   });
 
   test('CUSTOM_RESOURCE_PROVIDER_RUNTIME is set correctly for supported version', () => {
-    expect(CUSTOM_RESOURCE_PROVIDER_RUNTIME).toBe(CustomResourceProviderRuntime.NODEJS_22_X);
+    const expectedRuntimeKey = `NODEJS_${defaultNodeVersion}_X` as keyof typeof CustomResourceProviderRuntime;
+    // Guards against a config bump to a major that aws-cdk-lib does not yet expose.
+    expect(CustomResourceProviderRuntime[expectedRuntimeKey]).toBeDefined();
+    expect(CUSTOM_RESOURCE_PROVIDER_RUNTIME).toBe(CustomResourceProviderRuntime[expectedRuntimeKey]);
   });
 });

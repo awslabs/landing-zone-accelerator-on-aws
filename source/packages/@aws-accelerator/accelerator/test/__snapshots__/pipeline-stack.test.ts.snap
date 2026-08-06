@@ -2422,7 +2422,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
 phases:
   install:
     commands:
-      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/22.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 22.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
+      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/24.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 24.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
   pre_build:
     commands:
       - node -v
@@ -5438,7 +5438,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
 phases:
   install:
     commands:
-      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/22.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 22.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
+      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/24.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 24.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
   pre_build:
     commands:
       - node -v
@@ -8000,7 +8000,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
 phases:
   install:
     commands:
-      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/22.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 22.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
+      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/24.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 24.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
   pre_build:
     commands:
       - node -v
@@ -10796,7 +10796,7 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
 phases:
   install:
     commands:
-      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/22.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 22.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
+      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/24.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 24.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
   pre_build:
     commands:
       - node -v
@@ -13358,7 +13358,7 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
 phases:
   install:
     commands:
-      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/22.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 22.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
+      - 'NODE_BIN="$(ls -d /usr/local/n/versions/node/24.*/bin 2>/dev/null | sort -V | tail -1)" && if [ -z "$NODE_BIN" ]; then echo "ERROR: Node.js 24.x is not pre-installed in this CodeBuild image" >&2; exit 1; fi && export PATH="$NODE_BIN:$PATH" && node --version'
   pre_build:
     commands:
       - node -v

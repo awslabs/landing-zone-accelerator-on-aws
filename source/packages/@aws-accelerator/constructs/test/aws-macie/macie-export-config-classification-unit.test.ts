@@ -18,6 +18,7 @@ import {
   MacieExportConfigClassification,
   MacieExportConfigClassificationProps,
 } from '../../lib/aws-macie/macie-export-config-classification';
+import { config } from '../../../../../package.json';
 
 describe('MacieExportConfigClassification', () => {
   let stack: cdk.Stack;
@@ -67,7 +68,8 @@ describe('MacieExportConfigClassification', () => {
 
   test('Lambda function is created for custom resource provider', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
-      Runtime: 'nodejs22.x',
+      // Derived from config so this tracks the accelerator's Node version instead of going stale.
+      Runtime: `nodejs${config.node.version.default}.x`,
     });
   });
 

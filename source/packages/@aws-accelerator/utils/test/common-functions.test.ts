@@ -95,12 +95,16 @@ describe('getNodeRuntimeActivationCommand', () => {
   });
 
   it('honors an explicit major (for example a CloudFormation parameter value)', () => {
-    expect(getNodeRuntimeActivationCommand('20')).toContain('/usr/local/n/versions/node/20.*/bin');
+    // Use the minimum rather than a literal so this stays distinct from the default as versions bump.
+    const explicitMajor = String(config.node.version.minimum);
+    expect(getNodeRuntimeActivationCommand(explicitMajor)).toContain(
+      `/usr/local/n/versions/node/${explicitMajor}.*/bin`,
+    );
   });
 
   it('only uses brace-free shell expansion so it stays safe inside CloudFormation Fn::Sub', () => {
     // A `${...}` sequence would be interpreted by Fn::Sub when the major is a CFN token.
-    expect(getNodeRuntimeActivationCommand('22')).not.toMatch(/\$\{/);
+    expect(getNodeRuntimeActivationCommand(String(config.node.version.minimum))).not.toMatch(/\$\{/);
   });
 });
 
@@ -117,8 +121,10 @@ describe('getNodeVersion', () => {
   });
 
   it('should return the ACCELERATOR_NODE_VERSION when set and no input is provided', () => {
-    process.env['ACCELERATOR_NODE_VERSION'] = '21';
-    expect(getNodeVersion()).toBe(21);
+    // Derived from config so bumping the supported majors does not require editing this test.
+    const overrideVersion = config.node.version.minimum;
+    process.env['ACCELERATOR_NODE_VERSION'] = String(overrideVersion);
+    expect(getNodeVersion()).toBe(overrideVersion);
   });
 
   it('should return the default version when no input or env var is provided', () => {
@@ -133,15 +139,22 @@ describe('getNodeVersion', () => {
   });
 
   it('should throw an error for version below minimum', () => {
-    process.env['ACCELERATOR_NODE_VERSION'] = '17';
+    const belowMinimum = config.node.version.minimum - 1;
+    process.env['ACCELERATOR_NODE_VERSION'] = String(belowMinimum);
     expect(() => getNodeVersion()).toThrow(
-      `Invalid or unsupported Node.js version: 17. Minimum supported version is ${config.node.version.minimum}.`,
+      `Invalid or unsupported Node.js version: ${belowMinimum}. Minimum supported version is ${config.node.version.minimum}.`,
     );
   });
 
-  it('should prioritize input over environment variable', () => {
-    process.env['ACCELERATOR_NODE_VERSION'] = '21';
-    expect(getNodeVersion()).toBe(21);
+  it('should let ACCELERATOR_NODE_VERSION take precedence over the default version', () => {
+    // Pick a supported major that differs from the default so precedence is actually observable,
+    // whatever the configured default/minimum happen to be.
+    const { default: defaultVersion, minimum: minimumVersion } = config.node.version;
+    const overrideVersion = defaultVersion === minimumVersion ? defaultVersion + 1 : minimumVersion;
+
+    process.env['ACCELERATOR_NODE_VERSION'] = String(overrideVersion);
+    expect(getNodeVersion()).toBe(overrideVersion);
+    expect(getNodeVersion()).not.toBe(defaultVersion);
   });
 });
 
