@@ -137,6 +137,26 @@ Stacks are grouped by section (Logging, Security, NetworkVpc, etc.) in a collaps
 
 The **CloudFormation Diff Summary** link at the top of the sidebar returns to the impact report. Its indentation matches the section headers below it and it underlines on hover to indicate it is a link.
 
+### Modules
+
+When a pipeline run includes module runner operations (e.g. transit gateway associations, Macie enablement, SSM operations), their dry-run output is surfaced in a dedicated **Modules** section in the sidebar, alongside the CloudFormation stack sections. This lets you review pending module changes without downloading and extracting the `*.tgz` diff archives.
+
+Each module appears as an entry under the **Modules** section. Clicking it opens the module's dry-run output rendered as a colorized text block:
+
+- **Added** lines (`[+]` or a leading `+`) — blue
+- **Removed** lines (`[-]` or a leading `-`) — red
+- **Context** lines (everything else) — muted
+
+Modules are classified for the sidebar the same way stacks are:
+
+- A module whose dry-run shows real adds/removes (`[+]`/`[-]`) is marked **changed**.
+- A module reported as `SKIPPED` (configuration unchanged) or with empty output is marked **no changes**, so the default *Unreviewed* filter hides it (and *Unchanged* surfaces it).
+
+Module entries flow through the same **filter**, **search**, and **review-tracking** machinery as stacks — they are searchable by name, respect the Changed/Unchanged/Reviewed filters, and carry a reviewed checkbox.
+
+!!! note "Comparison baseline"
+    Module dry-run output compares the desired state from your LZA configuration against the **current live AWS state** queried at diff time, so it reflects operations the module runner would perform to reconcile config with the account. It only reports resources within each module's management scope; resources not managed by LZA are not surfaced. This differs from the CloudFormation sections, which compare synthesized templates against the deployed stacks. The Modules section is excluded from the impact report totals (it covers module operations, not CloudFormation resources).
+
 ### Filtering and search
 
 Use the **Filter** button to show stacks by status:

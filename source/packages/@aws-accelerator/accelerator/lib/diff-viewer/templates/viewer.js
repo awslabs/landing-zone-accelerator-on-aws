@@ -10,6 +10,11 @@
 //   dataBlob      — base64-encoded gzipped JSON of StackDiffData[] (the full
 //                   per-stack diff payload, kept out of impactReport to keep
 //                   that inline JSON small).
+//   moduleBlob    — base64-encoded gzipped JSON of ModuleDiff[]
+//                   ({name, hasChanges, content}) holding module runner dry-run
+//                   output (*.module.diff). Decompressed alongside dataBlob and
+//                   rendered as a "Modules" sidebar section so module-only
+//                   changes are visible without downloading the .tgz archives.
 //
 // Architecture
 // ------------
@@ -380,8 +385,8 @@ summaryEl.textContent = 'Decompressing...';
 // Kick off the async pipeline: decompress → populate state → paint initial UI.
 // Runs exactly once on page load. `dataPromise` is awaited by showDiff() when
 // the user clicks a stack link before decompression finishes.
-var dataPromise = decompressBlob(dataBlob).then(function(data) {
-  stacks = data;
+var dataPromise = Promise.all([decompressBlob(dataBlob), decompressModuleBlob()]).then(function(results) {
+  stacks = results[0].concat(buildModuleStacks(results[1]));
   var sectionSet = {};
   for (var i = 0; i < stacks.length; i++) {
     var m = stacks[i].meta;
@@ -794,7 +799,10 @@ function renderImpactReport() {
 
   for (var si = 0; si < stacks.length; si++) {
     var s = stacks[si];
-    if (!s.meta.hasChanges) continue;
+    // Skip module pseudo-stacks: they carry `content` (raw dry-run text) but no
+    // structured `diff`, so dereferencing s.diff.resources below would throw and
+    // blank the whole report. The impact report covers CDK stacks only.
+    if (!s.meta.hasChanges || s.module) continue;
     var matching = s.diff.resources.filter(function(r) { return selectedSet[r.resourceType] && !isNoise(r); });
     if (matching.length > 0) {
       filteredStacks.push({ meta: s.meta, resources: matching });
@@ -1589,6 +1597,81 @@ function renderDiffBody(diff) {
   return h;
 }
 
+// ── Module runner dry-run rendering ──────────────────────────────────────
+
+/**
+ * Decompress the `moduleBlob` global into a ModuleDiff[]. Returns [] when the
+ * blob is absent (older payloads) or fails to decode — module output is
+ * supplementary, so a decode failure must not block the stack diff view.
+ */
+async function decompressModuleBlob() {
+  if (typeof moduleBlob === 'undefined' || !moduleBlob) return [];
+  try {
+    return await decompressBlob(moduleBlob);
+  } catch (e) {
+    return [];
+  }
+}
+
+/**
+ * Build pseudo-stack entries from decompressed module diffs so module runner
+ * dry-run output flows through the exact same sidebar / filter / review
+ * machinery as CDK stack diffs. Each entry is tagged `module: true` and carries
+ * the raw (ANSI-stripped) dry-run text in `content` instead of a structured
+ * `diff`. Grouped under the "Modules" sidebar section. Returns [] when there
+ * are no module diffs.
+ */
+function buildModuleStacks(mods) {
+  if (!mods || !mods.length) return [];
+  return mods.map(function(md) {
+    return {
+      meta: { section: 'Modules', name: md.name, hasChanges: !!md.hasChanges, account: '', region: '' },
+      module: true,
+      content: md.content || '',
+    };
+  });
+}
+
+/**
+ * Classify a module dry-run line for colorization. Added lines (`[+]` / `+`)
+ * render blue, removed lines (`[-]` / `-`) red, everything else muted context.
+ * Mirrors the vd-added / vd-removed palette used by structured diffs.
+ *
+ * NOTE: hand-mirrored copy of classifyModuleLine() in generate-diff-viewer.ts
+ * (the canonical, unit-tested implementation). Keep the two in sync — this
+ * script is inlined verbatim into the HTML and cannot import the TS module.
+ */
+function moduleLineClass(line) {
+  var t = line.replace(/^\s+/, '');
+  if (t.indexOf('[+]') === 0 || t.charAt(0) === '+') return 'module-add';
+  if (t.indexOf('[-]') === 0 || t.charAt(0) === '-') return 'module-del';
+  return 'module-ctx';
+}
+
+/**
+ * Render a module pseudo-stack's dry-run output as a colorized <pre> block.
+ * Content is already ANSI-stripped server-side; we escape every line and wrap
+ * it in a span so `<`, `>`, `&`, quotes cannot break out of the markup.
+ */
+function renderModuleBody(stackData) {
+  var content = stackData.content || '';
+  var h = '<div class="sd-section">';
+  h += '<div class="sd-section-title">Module Dry-Run Output</div>';
+  h += '<div class="sd-section-body">';
+  if (!content.trim()) {
+    h += '<p class="report-ok">No module dry-run output.</p>';
+  } else {
+    var lines = content.split('\n');
+    var body = '';
+    for (var i = 0; i < lines.length; i++) {
+      body += '<span class="' + moduleLineClass(lines[i]) + '">' + esc(lines[i]) + '</span>\n';
+    }
+    h += '<pre class="module-diff">' + body + '</pre>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
 // ── Show diff detail ─────────────────────────────────────────────────────
 
 /**
@@ -1638,7 +1721,7 @@ async function showDiff(stackData) {
   if (!cardCache[key]) {
     var card = document.createElement('div');
     card.className = 'diff-card open';
-    var bodyHtml = renderDiffBody(stackData.diff);
+    var bodyHtml = stackData.module ? renderModuleBody(stackData) : renderDiffBody(stackData.diff);
     card.innerHTML = '<div class="diff-header" role="button" tabindex="0" aria-expanded="true">' +
       '<div class="diff-title"><span class="chevron">\u25b6</span>' + esc(m.name) + '</div>' +
       '<span class="badge ' + (m.hasChanges ? 'changes' : 'no-changes') + '">' + (m.hasChanges ? 'Changes' : 'No Changes') + '</span>' +

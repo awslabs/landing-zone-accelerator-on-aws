@@ -249,6 +249,12 @@ a, a:visited { color: var(--blue); }
 .vd-added { color: var(--blue); border-left: 3px solid var(--blue); padding-left: 0.5rem; }
 .vd-context { color: var(--muted); font-style: italic; margin-top: 0.25rem; }
 .vd-unchanged { color: var(--muted); }
+
+/* Module runner dry-run output (Modules sidebar section) */
+.module-diff { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 0.78rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 0.6rem 0.75rem; border-radius: 3px; border: 1px solid var(--sidebar-border-item); max-height: 40rem; overflow: auto; margin: 0; }
+.module-diff .module-add { color: var(--blue); display: block; }
+.module-diff .module-del { color: var(--red); display: block; }
+.module-diff .module-ctx { color: var(--muted); display: block; }
 .sd-prop-raw { margin-top: 0.35rem; }
 .sd-prop-raw summary { font-size: 0.72rem; color: var(--muted); cursor: pointer; user-select: none; }
 .sd-prop-raw summary:hover { color: var(--text); }

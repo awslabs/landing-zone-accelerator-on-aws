@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(ec2): add blockPublicAmi configuration to block public access to AMIs across organization accounts
 - feat(networking): add encryptionSupport option to transit gateway config to enable VPC Encryption Controls support
 - feat(config): add support for AWS Config Custom Policy (Guard-based) rules via `awsConfig.ruleSets[].rules[].type: CustomPolicy`
+- feat(diff-viewer): render module runner dry-run output as a Modules section in the HTML diff viewer
 
 ### Fixed
 

@@ -68,6 +68,20 @@ export interface DiffEntry {
   content: string;
 }
 
+/**
+ * A module runner dry-run (`*.module.diff`) result surfaced in the viewer.
+ * Unlike CDK stack diffs (structured JSON), module diffs are raw text output
+ * from the module runner, so we carry the (ANSI-stripped) content verbatim.
+ */
+export interface ModuleDiff {
+  /** Module name derived from the `<name>.module.diff` filename. */
+  name: string;
+  /** True when the dry-run shows real adds/removes (see hasModuleChanges). */
+  hasChanges: boolean;
+  /** ANSI-stripped module dry-run output. */
+  content: string;
+}
+
 // ============================================================================
 // NOTABLE RESOURCE TYPES
 // ----------------------------------------------------------------------------
@@ -253,6 +267,26 @@ export function hasModuleChanges(content: string): boolean {
   return !content.includes('No changes') && !content.includes('0 change(s)');
 }
 
+/** CSS class applied to a single module dry-run line in the viewer. */
+export type ModuleLineClass = 'module-add' | 'module-del' | 'module-ctx';
+
+/**
+ * Classify a single module dry-run line for viewer colorization: added lines
+ * (`[+]` or leading `+`) → 'module-add', removed (`[-]` or leading `-`) →
+ * 'module-del', everything else → 'module-ctx' (context).
+ *
+ * Canonical implementation. `moduleLineClass()` in templates/viewer.js is a
+ * hand-mirrored copy (viewer.js is inlined verbatim into the HTML and cannot
+ * import this module) — keep the two in sync. This exported version exists so
+ * the branching logic is unit-testable in Node.
+ */
+export function classifyModuleLine(line: string): ModuleLineClass {
+  const t = line.replace(/^\s+/, '');
+  if (t.indexOf('[+]') === 0 || t.charAt(0) === '+') return 'module-add';
+  if (t.indexOf('[-]') === 0 || t.charAt(0) === '-') return 'module-del';
+  return 'module-ctx';
+}
+
 export function hasChanges(content: string): boolean {
   if (content.includes('There were no differences')) {
     return false;
@@ -414,6 +448,42 @@ export function readDiffFiles(diffDir: string): DiffEntry[] {
       content,
     };
   });
+}
+
+/**
+ * Read only `*.module.diff` files (module runner dry-run output) from a
+ * directory. Content is ANSI-stripped so it renders cleanly in the viewer's
+ * <pre> block, and `hasChanges` is derived from `hasModuleChanges` so SKIPPED
+ * (config-unchanged) modules are flagged as "no changes" in the sidebar.
+ *
+ * Empty / whitespace-only output is treated as "no changes" (hasModuleChanges
+ * would otherwise report true for an empty string, since it lacks the "No
+ * changes" marker).
+ *
+ * Resilience: module diffs are supplementary to the CDK stack diffs, so a
+ * single unreadable file must not take down the whole viewer. Files that fail
+ * to read are logged and skipped rather than propagated.
+ *
+ * Returns an empty array when the directory does not exist or contains no
+ * module diffs — the viewer tolerates an empty `moduleDiffs` global.
+ */
+export function readModuleDiffs(diffDir: string): ModuleDiff[] {
+  if (!fs.existsSync(diffDir)) return [];
+  const result: ModuleDiff[] = [];
+  for (const file of fs
+    .readdirSync(diffDir)
+    .filter(f => f.endsWith('.module.diff'))
+    .sort()) {
+    try {
+      const content = stripAnsi(fs.readFileSync(path.join(diffDir, file), 'utf-8'));
+      const name = file.replace(/\.module\.diff$/, '').replace(/^\d+-/, '');
+      result.push({ name, hasChanges: content.trim().length > 0 && hasModuleChanges(content), content });
+    } catch (e) {
+      // Skip an unreadable module diff rather than failing the entire viewer.
+      console.error(`Skipping unreadable module diff ${file}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return result;
 }
 
 // ============================================================================
@@ -610,13 +680,32 @@ export function generateImpactReport(stacks: StackDiffData[]): ImpactReport {
 // ============================================================================
 
 /**
+ * Gzip a JSON-serializable value and base64-encode it. Used to keep large
+ * payloads out of the initial DOM — the client decompresses via the browser's
+ * native DecompressionStream. Base64 output (A-Za-z0-9+/=) contains no HTML
+ * specials, so it is safe to embed inside a double-quoted inline JS string.
+ */
+function gzipBase64(value: unknown): string {
+  const json = JSON.stringify(value);
+  const compressed = zlib.gzipSync(Buffer.from(json, 'utf-8'));
+  return compressed.toString('base64');
+}
+
+/**
  * Compress all stack diff data into a single gzipped base64 blob.
  * The blob contains a JSON array of StackDiffData objects.
  */
 export function compressData(stacks: StackDiffData[]): string {
-  const json = JSON.stringify(stacks);
-  const compressed = zlib.gzipSync(Buffer.from(json, 'utf-8'));
-  return compressed.toString('base64');
+  return gzipBase64(stacks);
+}
+
+/**
+ * Compress module dry-run diffs into a gzipped base64 blob, mirroring
+ * compressData so module output does not bloat the inline HTML. The blob
+ * contains a JSON array of ModuleDiff objects.
+ */
+export function compressModuleDiffs(modules: ModuleDiff[]): string {
+  return gzipBase64(modules);
 }
 
 // ============================================================================
@@ -665,7 +754,8 @@ export function assembleHtml(dataJs: string, templatesDir?: string): string {
 
 export function generateHtml(diffDir: string, templatesDir?: string): string {
   const stacks = readDiffJsonFiles(diffDir);
-  if (stacks.length === 0) {
+  const modules = readModuleDiffs(diffDir);
+  if (stacks.length === 0 && modules.length === 0) {
     throw new Error(`No .diff.json files found in ${diffDir}`);
   }
 
@@ -673,9 +763,16 @@ export function generateHtml(diffDir: string, templatesDir?: string): string {
   const blob = compressData(stacks);
   // Embed the report via safeJsonEmbed so attacker-controlled strings (logical IDs,
   // tag values, IAM SIDs, etc.) cannot terminate the surrounding <script> block.
-  // The blob is base64 (alphabet: A-Za-z0-9+/=) so it contains no HTML specials
-  // and is safe to concatenate directly inside a double-quoted JS string literal.
-  const dataJs = [`const impactReport = ${safeJsonEmbed(report)};`, `const dataBlob = "${blob}";`].join('\n');
+  // Both blobs are base64 (alphabet: A-Za-z0-9+/=) so they contain no HTML specials
+  // and are safe to concatenate directly inside a double-quoted JS string literal.
+  // Module dry-run output is gzipped into moduleBlob (rather than inlined as JSON)
+  // so large module output does not bloat the HTML — symmetric with dataBlob.
+  const moduleBlob = compressModuleDiffs(modules);
+  const dataJs = [
+    `const impactReport = ${safeJsonEmbed(report)};`,
+    `const dataBlob = "${blob}";`,
+    `const moduleBlob = "${moduleBlob}";`,
+  ].join('\n');
 
   return assembleHtml(dataJs, templatesDir);
 }

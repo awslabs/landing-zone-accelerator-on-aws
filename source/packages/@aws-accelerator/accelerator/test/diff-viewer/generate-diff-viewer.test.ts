@@ -20,8 +20,11 @@ import {
   extractSection,
   parseStackIdentifiers,
   readDiffJsonFiles,
+  readModuleDiffs,
+  classifyModuleLine,
   generateImpactReport,
   compressData,
+  compressModuleDiffs,
   generateHtml,
   assembleHtml,
   StackDiffData,
@@ -41,6 +44,11 @@ afterEach(() => {
 /** Write a .diff.json file with the given structured diff. */
 function writeDiffJson(name: string, diff: StructuredStackDiff) {
   fs.writeFileSync(path.join(tmpDir, `${name}.diff.json`), JSON.stringify(diff));
+}
+
+/** Write a .module.diff file with raw module runner dry-run text. */
+function writeModuleDiff(name: string, content: string) {
+  fs.writeFileSync(path.join(tmpDir, `${name}.module.diff`), content);
 }
 
 function gunzip(b64: string): string {
@@ -263,6 +271,109 @@ describe('readDiffJsonFiles', () => {
 });
 
 // ============================================================================
+// readModuleDiffs
+// ============================================================================
+
+describe('readModuleDiffs', () => {
+  it('reads and parses .module.diff files from directory', () => {
+    writeModuleDiff(
+      '10-tgw-associations-and-propagations',
+      'associations(+2 -2 =21 !0)\n  [+] tgw-attach-abc\n  [-] tgw-attach-def',
+    );
+    writeModuleDiff('06-macie', '[+] macie org admin enabled');
+
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods).toHaveLength(2);
+
+    const macie = mods.find(m => m.name === 'macie')!;
+    expect(macie.hasChanges).toBe(true);
+    expect(macie.content).toContain('macie org admin');
+    expect(mods.map(m => m.name)).toContain('tgw-associations-and-propagations');
+  });
+
+  it('flags a module with [+]/[-] as having changes', () => {
+    writeModuleDiff('mod-changed', 'route-tables\n  [+] rtb-123');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods[0].hasChanges).toBe(true);
+  });
+
+  it('flags a SKIPPED (config-unchanged) module as no changes', () => {
+    writeModuleDiff('mod-skipped', 'Module SKIPPED — configuration unchanged');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods[0].hasChanges).toBe(false);
+  });
+
+  it('flags an empty module diff as no changes', () => {
+    writeModuleDiff('mod-empty', '');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods).toHaveLength(1);
+    expect(mods[0].hasChanges).toBe(false);
+  });
+
+  it('flags a whitespace-only module diff as no changes', () => {
+    writeModuleDiff('mod-ws', '  \n\t\n  ');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods[0].hasChanges).toBe(false);
+  });
+
+  it('strips ANSI escape sequences from module content', () => {
+    // \x1b[32m ... \x1b[0m color codes must not survive into the payload.
+    writeModuleDiff('mod-ansi', '\x1b[32m[+] added\x1b[0m\n\x1b[31m[-] removed\x1b[0m');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods[0].content).not.toContain('\x1b');
+    expect(mods[0].content).toContain('[+] added');
+    expect(mods[0].content).toContain('[-] removed');
+    expect(mods[0].hasChanges).toBe(true);
+  });
+
+  it('ignores .diff.json and plain .diff files', () => {
+    writeDiffJson('AWSAccelerator-KeyStack-123-us-east-1', makeDiff());
+    fs.writeFileSync(path.join(tmpDir, 'stack.diff'), 'old text diff');
+    writeModuleDiff('only-module', '[+] change');
+
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods).toHaveLength(1);
+    expect(mods[0].name).toBe('only-module');
+  });
+
+  it('returns empty array for directory with no module diffs', () => {
+    expect(readModuleDiffs(tmpDir)).toHaveLength(0);
+  });
+
+  it('returns empty array when directory does not exist', () => {
+    expect(readModuleDiffs(path.join(tmpDir, 'does-not-exist'))).toHaveLength(0);
+  });
+
+  it('returns modules sorted by filename', () => {
+    writeModuleDiff('20-second', '[+] b');
+    writeModuleDiff('10-first', '[+] a');
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods[0].name).toBe('first');
+    expect(mods[1].name).toBe('second');
+  });
+
+  it('strips the stage-run-order prefix from the module name', () => {
+    writeModuleDiff('06-macie', '[+] enabled');
+    writeModuleDiff('10-tgw-associations-and-propagations', '[+] attach');
+    const names = readModuleDiffs(tmpDir).map(m => m.name);
+    expect(names).toEqual(['macie', 'tgw-associations-and-propagations']);
+  });
+
+  it('skips an unreadable module diff and continues', () => {
+    // A directory named like a module diff: readdirSync lists it, but
+    // readFileSync throws EISDIR. The catch branch must log-and-skip so one
+    // bad entry does not abort the whole viewer.
+    fs.mkdirSync(path.join(tmpDir, 'bad.module.diff'));
+    writeModuleDiff('06-macie', '[+] enabled');
+
+    const mods = readModuleDiffs(tmpDir);
+    expect(mods).toHaveLength(1);
+    expect(mods[0].name).toBe('macie');
+    expect(mods[0].hasChanges).toBe(true);
+  });
+});
+
+// ============================================================================
 // compressData
 // ============================================================================
 
@@ -296,6 +407,170 @@ describe('compressData', () => {
     const blob = compressData(stacks);
     const decompressed = JSON.parse(gunzip(blob));
     expect(decompressed).toHaveLength(1);
+  });
+});
+
+// ============================================================================
+// classifyModuleLine (+ viewer.js mirror)
+// ============================================================================
+
+describe('classifyModuleLine', () => {
+  it('classifies added lines', () => {
+    expect(classifyModuleLine('[+] tgw-attach-abc')).toBe('module-add');
+    expect(classifyModuleLine('  [+] indented add')).toBe('module-add');
+    expect(classifyModuleLine('+ raw add')).toBe('module-add');
+  });
+
+  it('classifies removed lines', () => {
+    expect(classifyModuleLine('[-] tgw-attach-def')).toBe('module-del');
+    expect(classifyModuleLine('\t[-] indented del')).toBe('module-del');
+    expect(classifyModuleLine('- raw del')).toBe('module-del');
+  });
+
+  it('classifies everything else as context', () => {
+    expect(classifyModuleLine('associations(+2 -2 =21 !0)')).toBe('module-ctx');
+    expect(classifyModuleLine('[~] modified')).toBe('module-ctx');
+    expect(classifyModuleLine('')).toBe('module-ctx');
+    expect(classifyModuleLine('   ')).toBe('module-ctx');
+    expect(classifyModuleLine('Module SKIPPED')).toBe('module-ctx');
+  });
+
+  // Executes the hand-mirrored moduleLineClass() from viewer.js (it has no DOM
+  // dependencies) and asserts it agrees with the canonical classifyModuleLine
+  // across representative inputs — catches drift between the two copies.
+  it('stays in sync with the moduleLineClass mirror in viewer.js', () => {
+    const viewerJs = fs.readFileSync(path.join(__dirname, '../../lib/diff-viewer/templates/viewer.js'), 'utf-8');
+    const match = viewerJs.match(/function moduleLineClass\(line\) \{[\s\S]*?\n\}/);
+    expect(match).not.toBeNull();
+
+    const mirror = new Function('return (' + match![0] + ')')() as (line: string) => string;
+
+    const samples = [
+      '[+] add',
+      '  [+] add',
+      '+ add',
+      '[-] del',
+      '\t[-] del',
+      '- del',
+      '[~] modify',
+      'associations(+2 -2 =21 !0)',
+      '',
+      '   ',
+      'plain context line',
+    ];
+    for (const s of samples) {
+      expect(mirror(s)).toBe(classifyModuleLine(s));
+    }
+  });
+});
+
+// ============================================================================
+// viewer.js client rendering (extracted — no DOM harness available)
+// ----------------------------------------------------------------------------
+// viewer.js is inlined verbatim into the HTML and cannot be imported. These
+// tests extract individual pure functions from its source and execute them via
+// `new Function`, the same technique used by the classifyModuleLine mirror test.
+// ============================================================================
+
+/** Extract a top-level `function <name>(...) { ... }` from source via brace matching. */
+function extractFunction(src: string, name: string): string {
+  const start = src.indexOf('function ' + name + '(');
+  if (start === -1) throw new Error('function not found: ' + name);
+  const braceStart = src.indexOf('{', start);
+  let depth = 0;
+  let i = braceStart;
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}' && --depth === 0) {
+      i++;
+      break;
+    }
+  }
+  return src.slice(start, i);
+}
+
+describe('viewer.js renderModuleBody (render-time XSS escaping)', () => {
+  const viewerJs = fs.readFileSync(path.join(__dirname, '../../lib/diff-viewer/templates/viewer.js'), 'utf-8');
+
+  // renderModuleBody depends on esc() and moduleLineClass(); bundle all three.
+  const bundle = [
+    extractFunction(viewerJs, 'esc'),
+    extractFunction(viewerJs, 'moduleLineClass'),
+    extractFunction(viewerJs, 'renderModuleBody'),
+    'return renderModuleBody;',
+  ].join('\n');
+
+  const renderModuleBody = new Function(bundle)() as (stackData: { content: string }) => string;
+
+  it('HTML-escapes a </script> payload so it cannot execute when written via innerHTML', () => {
+    const out = renderModuleBody({ content: '[+] </script><script>alert(1)</script>' });
+    // No raw script tags survive into the rendered markup.
+    expect(out).not.toContain('<script>');
+    expect(out).not.toContain('</script>');
+    // The payload is present only in HTML-escaped form.
+    expect(out).toContain('&lt;/script&gt;&lt;script&gt;alert(1)&lt;/script&gt;');
+  });
+
+  it('escapes angle brackets, ampersands and quotes in module content', () => {
+    const out = renderModuleBody({ content: '<img src=x onerror="alert(1)"> & done' });
+    expect(out).not.toContain('<img');
+    expect(out).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; done');
+  });
+
+  it('renders a placeholder for empty content', () => {
+    expect(renderModuleBody({ content: '' })).toContain('No module dry-run output');
+  });
+});
+
+describe('viewer.js impact-report guard for module pseudo-stacks', () => {
+  const viewerJs = fs.readFileSync(path.join(__dirname, '../../lib/diff-viewer/templates/viewer.js'), 'utf-8');
+
+  it('buildModuleStacks produces diff-less entries tagged module:true', () => {
+    const bundle = extractFunction(viewerJs, 'buildModuleStacks') + '\nreturn buildModuleStacks;';
+
+    const buildModuleStacks = new Function(bundle)() as (mods: unknown[]) => Array<Record<string, unknown>>;
+
+    const entries = buildModuleStacks([{ name: '06-macie', hasChanges: true, content: '[+] enabled' }]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].module).toBe(true);
+    expect(entries[0].diff).toBeUndefined();
+    expect((entries[0].meta as Record<string, unknown>).hasChanges).toBe(true);
+  });
+
+  // A changed module (hasChanges:true) has no `diff`, so renderImpactReport MUST
+  // skip module entries before dereferencing s.diff.resources — otherwise the
+  // whole viewer blanks. Assert the guard is present ahead of that dereference.
+  it('renderImpactReport skips module entries before touching s.diff.resources', () => {
+    const fn = extractFunction(viewerJs, 'renderImpactReport');
+    const guardIdx = fn.indexOf('|| s.module) continue;');
+    // Match the actual dereference call, not the explanatory comment above the guard.
+    const derefIdx = fn.indexOf('s.diff.resources.filter');
+    expect(guardIdx).toBeGreaterThan(-1);
+    expect(derefIdx).toBeGreaterThan(-1);
+    expect(guardIdx).toBeLessThan(derefIdx);
+  });
+});
+
+// ============================================================================
+// compressModuleDiffs
+// ============================================================================
+
+describe('compressModuleDiffs', () => {
+  it('compresses module diffs into a decompressible gzipped base64 blob', () => {
+    const mods = [
+      { name: '06-macie', hasChanges: true, content: '[+] macie enabled' },
+      { name: '01-skipped', hasChanges: false, content: 'SKIPPED' },
+    ];
+    const blob = compressModuleDiffs(mods);
+    const decompressed = JSON.parse(gunzip(blob));
+    expect(decompressed).toHaveLength(2);
+    expect(decompressed[0].name).toBe('06-macie');
+    expect(decompressed[0].content).toContain('macie enabled');
+    expect(decompressed[1].hasChanges).toBe(false);
+  });
+
+  it('compresses an empty array', () => {
+    expect(JSON.parse(gunzip(compressModuleDiffs([])))).toEqual([]);
   });
 });
 
@@ -934,6 +1209,14 @@ describe('assembleHtml', () => {
     expect(html).toContain('sd-resource');
     expect(html).toContain('impactBadge');
   });
+
+  it('contains module dry-run rendering code and styles', () => {
+    const templatesDir = path.join(__dirname, '../../lib/diff-viewer/templates');
+    const html = assembleHtml('const testData = 0;', templatesDir);
+    expect(html).toContain('buildModuleStacks');
+    expect(html).toContain('renderModuleBody');
+    expect(html).toContain('module-diff');
+  });
 });
 
 // ============================================================================
@@ -958,6 +1241,58 @@ describe('generateHtml', () => {
 
   it('throws when no diff.json files exist', () => {
     expect(() => generateHtml(tmpDir)).toThrow('No .diff.json files found');
+  });
+
+  it('embeds module dry-run output in a gzipped moduleBlob', () => {
+    writeDiffJson('AWSAccelerator-NetworkVpcStack-123-us-east-1', EMPTY_DIFF);
+    writeModuleDiff('10-tgw-associations-and-propagations', 'associations(+2 -2 =21 !0)\n  [+] tgw-attach-abc');
+
+    const html = generateHtml(tmpDir);
+    const match = html.match(/const moduleBlob = "([^"]+)"/);
+    expect(match).not.toBeNull();
+
+    const mods = JSON.parse(gunzip(match![1]));
+    expect(mods).toHaveLength(1);
+    expect(mods[0].name).toBe('tgw-associations-and-propagations');
+    expect(mods[0].hasChanges).toBe(true);
+    expect(mods[0].content).toContain('tgw-attach-abc');
+  });
+
+  it('generates HTML from module diffs alone (no .diff.json stacks)', () => {
+    // Module-only pipeline run: reviewer must still see pending module changes.
+    writeModuleDiff('06-macie', '[+] macie org admin enabled');
+
+    const html = generateHtml(tmpDir);
+    expect(html).toContain('<!DOCTYPE html>');
+    const match = html.match(/const moduleBlob = "([^"]+)"/);
+    expect(match).not.toBeNull();
+    const mods = JSON.parse(gunzip(match![1]));
+    expect(mods).toHaveLength(1);
+    expect(mods[0].name).toBe('macie');
+  });
+
+  it('embeds an empty (gzipped) module array when no module diffs are present', () => {
+    writeDiffJson('AWSAccelerator-NetworkVpcStack-123-us-east-1', makeDiff());
+    const html = generateHtml(tmpDir);
+    const match = html.match(/const moduleBlob = "([^"]+)"/);
+    expect(match).not.toBeNull();
+    expect(JSON.parse(gunzip(match![1]))).toEqual([]);
+  });
+
+  it('keeps module content out of HTML-injection context via the base64 blob', () => {
+    // The gzipped blob is base64 (A-Za-z0-9+/=), so attacker-controlled module
+    // text can never introduce a literal </script> into the inline script.
+    writeDiffJson('AWSAccelerator-NetworkVpcStack-123-us-east-1', EMPTY_DIFF);
+    writeModuleDiff('evil-module', '[+] </script><script>alert(1)</script>');
+
+    const html = generateHtml(tmpDir);
+    // The moduleBlob token itself is base64 — no raw markup leaks into the HTML.
+    const match = html.match(/const moduleBlob = "([^"]+)"/);
+    expect(match).not.toBeNull();
+    expect(match![1]).not.toContain('</script>');
+    // And the original content round-trips intact after decompression.
+    const mods = JSON.parse(gunzip(match![1]));
+    expect(mods[0].content).toContain('</script><script>alert(1)</script>');
   });
 
   it('produces decompressible blob in the HTML', () => {
