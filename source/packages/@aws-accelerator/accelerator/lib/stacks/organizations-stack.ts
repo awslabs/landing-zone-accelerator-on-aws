@@ -836,7 +836,11 @@ export class OrganizationsStack extends AcceleratorStack {
       }));
     }
 
-    if (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov') {
+    if (
+      this.props.partition === 'aws' ||
+      this.props.partition === 'aws-us-gov' ||
+      this.props.partition === 'aws-eusc'
+    ) {
       new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
         adminAccountId: delegatedAdminAccountId,
         lzaManagedPermissionSets: lzaManagedPermissionSets,

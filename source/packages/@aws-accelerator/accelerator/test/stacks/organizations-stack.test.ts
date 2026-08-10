@@ -17,12 +17,15 @@ import {
   CloudWatchLogsConfig,
   ControlTowerConfig,
   GlobalConfig,
+  IamConfig,
+  IdentityCenterConfig,
+  IdentityCenterPermissionSetConfig,
   LoggingConfig,
   OrganizationConfig,
 } from '@aws-accelerator/config';
 import { beforeEach, describe, expect, vi, test } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
-import { Capture, Template } from 'aws-cdk-lib/assertions';
+import { Capture, Match, Template } from 'aws-cdk-lib/assertions';
 import { IKey } from 'aws-cdk-lib/aws-kms';
 import path from 'node:path';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
@@ -106,6 +109,71 @@ describe('OrganizationsStack cdk assert tests', () => {
     template.resourceCountIs('Custom::AttachPolicy', 0);
   });
 });
+
+describe('OrganizationsStack Identity Center delegated admin partition gating', () => {
+  // The Identity Center delegated admin custom resource is uniquely identified by the
+  // `lzaManagedPermissionSets` property it passes to the enable-organization-admin-account handler.
+  const identityCenterAdminResource = {
+    lzaManagedPermissionSets: Match.anyValue(),
+  };
+
+  // Partitions where IAM Identity Center org delegated admin enablement is supported.
+  // aws-eusc (European Sovereign Cloud) launched IAM Identity Center in March 2026.
+  test.each(['aws', 'aws-us-gov', 'aws-eusc'])(
+    'registers the Identity Center delegated admin in the %s partition',
+    partition => {
+      const stack = createStackWithIdentityCenter(partition);
+      const template = Template.fromStack(stack);
+
+      template.hasResourceProperties('AWS::CloudFormation::CustomResource', identityCenterAdminResource);
+    },
+  );
+
+  // Partitions where the enablement must remain gated out.
+  test.each(['aws-cn'])('does not register the Identity Center delegated admin in the %s partition', partition => {
+    const stack = createStackWithIdentityCenter(partition);
+    const template = Template.fromStack(stack);
+
+    const identityCenterAdmins = template.findResources('AWS::CloudFormation::CustomResource', {
+      Properties: identityCenterAdminResource,
+    });
+    expect(Object.keys(identityCenterAdmins)).toHaveLength(0);
+  });
+});
+
+function createStackWithIdentityCenter(partition: string) {
+  const identityCenter: IdentityCenterConfig = {
+    name: 'IdentityCenter',
+    delegatedAdminAccount: 'SharedServices',
+    identityCenterPermissionSets: [
+      {
+        name: 'ps-Admin',
+        description: 'Admin access',
+        policies: {
+          awsManaged: ['AdministratorAccess'],
+          customerManaged: undefined,
+          acceleratorManaged: undefined,
+          inlinePolicy: undefined,
+          permissionsBoundary: undefined,
+        },
+        sessionDuration: undefined,
+      } as IdentityCenterPermissionSetConfig,
+    ],
+    identityCenterAssignments: undefined,
+  };
+
+  const baseProps = createAcceleratorStackProps();
+  const overrideProps = {
+    partition,
+    iamConfig: {
+      ...baseProps.iamConfig,
+      identityCenter,
+    } as IamConfig,
+  } as AcceleratorStackProps;
+  const props = createAcceleratorStackProps(overrideProps);
+
+  return new OrganizationsStack(app, `unit-test-Organizations-stack-idc-${partition}`, props);
+}
 
 function createStackWithControlTower() {
   const controlTowerConfig: ControlTowerConfig = {
