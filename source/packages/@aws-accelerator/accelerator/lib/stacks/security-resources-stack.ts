@@ -357,6 +357,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
       }
 
       for (const metricItem of metricSetItem.metrics ?? []) {
+        if (this.isOrphanedCloudTrailLogGroupReference(metricItem.logGroupName)) {
+          this.logger.warn(
+            `Skipping metric filter ${metricItem.filterName}: log group ${metricItem.logGroupName} references the organization CloudTrail log group, but the organization trail is not enabled (logging.cloudtrail.enable / organizationTrail)`,
+          );
+          continue;
+        }
+
         const metricFilter = new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
           logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
             this,
@@ -375,6 +382,30 @@ export class SecurityResourcesStack extends AcceleratorStack {
         }
       }
     }
+  }
+
+  /**
+   * Returns true if a metric filter references the organization CloudTrail log
+   * group but that log group will not exist at deploy time, so the filter must
+   * be skipped to avoid a `The specified log group does not exist` failure (#327).
+   *
+   * The org trail log group exists when `cloudtrail.enable && organizationTrail`
+   * (see {@link OrganizationsStack.configureOrganizationCloudTrail}); it is created
+   * regardless of `sendToCloudWatchLogs`. The map check covers the case where an
+   * account trail owns an identically named log group created earlier in this stack.
+   *
+   * @param logGroupName - The log group name from the metric filter configuration
+   */
+  private isOrphanedCloudTrailLogGroupReference(logGroupName: string): boolean {
+    const cloudtrailConfig = this.stackProperties.globalConfig.logging.cloudtrail;
+    const orgTrailLogGroupName = `${this.props.prefixes.trailLogName}-cloudtrail-logs`;
+
+    // Skip only if no account trail already created this log group in the stack.
+    if (logGroupName === orgTrailLogGroupName && !this.accountTrailCloudWatchLogGroups.has(logGroupName)) {
+      return !(cloudtrailConfig.enable && cloudtrailConfig.organizationTrail);
+    }
+
+    return false;
   }
 
   /**

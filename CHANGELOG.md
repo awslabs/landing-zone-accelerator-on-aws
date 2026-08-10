@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
 - fix(s3): allow expired object delete marker only lifecycle rules
 - chore: upgrade to node24
+- fix(cloudwatch): skip metric filters referencing the organization CloudTrail log group when the organization trail is not enabled, preventing `The specified log group does not exist` failures (issue #327)
 
 ## [1.16.0] - 2026-07-24
 

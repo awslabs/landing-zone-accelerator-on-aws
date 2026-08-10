@@ -20,6 +20,16 @@ import { createAcceleratorStackProps, createSecurityStackProps } from './stack-p
 import { Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
 import path from 'path';
+import {
+  AccountsConfig,
+  CustomizationsConfig,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+  ReplacementsConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 
 describe('SecurityResourcesStack - Config Recorder', () => {
   afterEach(() => vi.clearAllMocks());
@@ -61,6 +71,117 @@ describe('SecurityResourcesStack - CloudWatch Metrics', () => {
     const props = createCloudWatchProps('metrics', { region: 'us-west-2', excludeRegions: ['us-west-2'] });
     const { template } = createSecurityResourcesStackWithTemplate('test-metrics-2', props);
     expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(0);
+  });
+
+  it('should skip metric filter when log group references org trail that is not enabled', () => {
+    const props = createOrgTrailMetricFilterProps({
+      cloudtrailEnabled: false,
+      organizationTrail: false,
+      sendToCloudWatchLogs: false,
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-metrics-orgtrail-disabled', props);
+    expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(0);
+  });
+
+  it('should create metric filter when log group references org trail with sendToCloudWatchLogs false', () => {
+    // The org trail CloudWatch log group is created whenever the org trail is
+    // enabled, independent of sendToCloudWatchLogs (see
+    // OrganizationsStack.configureOrganizationCloudTrail), so the filter must be kept.
+    const props = createOrgTrailMetricFilterProps({
+      cloudtrailEnabled: true,
+      organizationTrail: true,
+      sendToCloudWatchLogs: false,
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-metrics-orgtrail-nologs', props);
+    expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(1);
+  });
+
+  it('should create metric filter when log group references org trail with sendToCloudWatchLogs true', () => {
+    const props = createOrgTrailMetricFilterProps({
+      cloudtrailEnabled: true,
+      organizationTrail: true,
+      sendToCloudWatchLogs: true,
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-metrics-orgtrail-enabled', props);
+    expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(1);
+  });
+
+  it('should skip metric filter when cloudtrail is disabled but org trail flag is set', () => {
+    // Exercises the cloudtrailConfig.enable term of the skip condition: the org
+    // trail log group is only created when enable AND organizationTrail are both
+    // true, so enable=false must still skip even with organizationTrail=true.
+    const props = createOrgTrailMetricFilterProps({
+      cloudtrailEnabled: false,
+      organizationTrail: true,
+      sendToCloudWatchLogs: true,
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-metrics-orgtrail-enable-false', props);
+    expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(0);
+  });
+
+  describe('against real all-enabled config', () => {
+    it('keeps every metric filter when none reference the organization trail log group', () => {
+      // all-enabled has cloudtrail.organizationTrail = false and its metric
+      // filters reference the account trail log group, not the org trail log
+      // group (aws-accelerator-cloudtrail-logs). The org-trail-only guard must
+      // therefore leave all of them intact - this is the no-regression guard.
+      const props = loadAllEnabledProps();
+      const template = synthSecurityResourcesTemplateForAllEnabled(props);
+
+      expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBeGreaterThan(0);
+    });
+
+    it('skips every metric filter that references the organization trail log group when the org trail is disabled', () => {
+      // Reproduce issue #327 through the real config: all-enabled already has
+      // cloudtrail.organizationTrail = false, so a metric filter that references
+      // the org trail log group aws-accelerator-cloudtrail-logs points at a log
+      // group that will never exist. Redirect every filter at that name and
+      // confirm the guard skips them all.
+      const props = loadAllEnabledProps();
+      const orgTrailLogGroupName = `${props.prefixes.trailLogName}-cloudtrail-logs`;
+      const metricSets = props.securityConfig.cloudWatch.metricSets;
+      expect(metricSets.length).toBeGreaterThan(0);
+
+      let redirected = 0;
+      for (const metricSet of metricSets) {
+        for (const metric of metricSet.metrics ?? []) {
+          (metric as { logGroupName: string }).logGroupName = orgTrailLogGroupName;
+          redirected++;
+        }
+      }
+      expect(redirected).toBeGreaterThan(0);
+
+      const template = synthSecurityResourcesTemplateForAllEnabled(props);
+
+      expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBe(0);
+    });
+
+    it('keeps metric filters when an account trail named "logs" owns the org-trail log group name', () => {
+      // Name collision: an account trail named `logs` produces the log group
+      // aws-accelerator-cloudtrail-logs, identical to the org trail log group.
+      // With the org trail disabled the guard must NOT skip such filters, because
+      // the account trail creates that log group in this same stack.
+      const props = loadAllEnabledProps();
+      expect(props.globalConfig.logging.cloudtrail.organizationTrail).toBe(false);
+
+      const trails = props.globalConfig.logging.cloudtrail.accountTrails;
+      expect(trails.length).toBeGreaterThan(0);
+      for (const trail of trails) {
+        (trail as { name: string }).name = 'logs';
+        trail.settings.sendToCloudWatchLogs = true;
+      }
+
+      const orgTrailLogGroupName = `${props.prefixes.trailLogName}-cloudtrail-logs`;
+      for (const metricSet of props.securityConfig.cloudWatch.metricSets) {
+        for (const metric of metricSet.metrics ?? []) {
+          (metric as { logGroupName: string }).logGroupName = orgTrailLogGroupName;
+        }
+      }
+
+      const template = synthSecurityResourcesTemplateForAllEnabled(props);
+
+      expect(Object.keys(template.findResources('AWS::Logs::MetricFilter')).length).toBeGreaterThan(0);
+    });
   });
 });
 
@@ -773,4 +894,130 @@ function createConfigRulesProps(options: {
     },
     env: { region: 'us-east-1', account: testAccountId },
   });
+}
+
+function createOrgTrailMetricFilterProps(options: {
+  cloudtrailEnabled: boolean;
+  organizationTrail: boolean;
+  sendToCloudWatchLogs: boolean;
+}): AcceleratorStackProps {
+  const baseProps = createAcceleratorStackProps();
+  const testAccountId = '00000001';
+  const testAccountName = 'TestAccount';
+  const trailLogName = 'aws-accelerator';
+  const orgTrailLogGroupName = `${trailLogName}-cloudtrail-logs`;
+
+  return createSecurityStackProps({
+    configDirPath: './',
+    prefixes: {
+      ...baseProps.prefixes,
+      trailLogName,
+    },
+    accountsConfig: {
+      ...baseProps.accountsConfig,
+      getAccountId: vi.fn((name: string) => (name === testAccountName ? testAccountId : '123456789' + name)),
+      getAccount: vi.fn(() => ({ name: testAccountName, organizationalUnit: 'Root' })),
+      getManagementAccountId: vi.fn(() => '234567890'),
+      getLogArchiveAccountId: vi.fn(() => '345678901'),
+      getAuditAccountId: vi.fn(() => '456789012'),
+      getAccountNameById: vi.fn(() => testAccountName),
+      containsAccount: vi.fn(() => true),
+      mandatoryAccounts: [{ name: testAccountName, organizationalUnit: 'Root' }],
+      workloadAccounts: [],
+    } as any,
+    organizationConfig: {
+      ...baseProps.organizationConfig,
+      isIgnored: vi.fn(() => false),
+    } as any,
+    globalConfig: {
+      ...baseProps.globalConfig,
+      logging: {
+        ...baseProps.globalConfig.logging,
+        cloudtrail: {
+          enable: options.cloudtrailEnabled,
+          organizationTrail: options.organizationTrail,
+          organizationTrailSettings: options.organizationTrail
+            ? {
+                multiRegionTrail: true,
+                globalServiceEvents: true,
+                managementEvents: true,
+                s3DataEvents: true,
+                lambdaDataEvents: true,
+                sendToCloudWatchLogs: options.sendToCloudWatchLogs,
+                apiErrorRateInsight: false,
+                apiCallRateInsight: false,
+              }
+            : undefined,
+          accountTrails: [],
+        },
+      } as any,
+    },
+    securityConfig: {
+      ...baseProps.securityConfig,
+      awsConfig: { ...baseProps.securityConfig.awsConfig, ruleSets: [] },
+      cloudWatch: {
+        metricSets: [
+          {
+            regions: ['us-east-1'],
+            deploymentTargets: { accounts: [testAccountName], organizationalUnits: [] },
+            metrics: [
+              {
+                filterName: 'OrgTrailMetricFilter',
+                logGroupName: orgTrailLogGroupName,
+                filterPattern: '{$.userIdentity.type="Root"}',
+                metricNamespace: 'CloudTrailMetrics',
+                metricName: 'RootAccount',
+                metricValue: '1',
+              },
+            ],
+          },
+        ],
+        alarmSets: [],
+        logGroups: [],
+      },
+    },
+    env: { region: 'us-east-1', account: testAccountId },
+  });
+}
+
+/**
+ * Load the on-disk all-enabled test configs into in-memory AcceleratorStackProps.
+ * Used by the "against real all-enabled config" tests to exercise the real LZA
+ * config parser + stack synth path, mutating only the cloudtrail settings needed
+ * for the assertion (no config folder clone).
+ */
+function loadAllEnabledProps(): AcceleratorStackProps {
+  const configDir = path.join(__dirname, '..', 'configs', 'all-enabled');
+
+  const accountsConfig = AccountsConfig.load(configDir);
+  const replacementsConfig = ReplacementsConfig.load(configDir, accountsConfig);
+
+  const baseProps = createAcceleratorStackProps();
+
+  return {
+    ...baseProps,
+    configDirPath: configDir,
+    accountsConfig,
+    customizationsConfig: new CustomizationsConfig(),
+    globalConfig: GlobalConfig.load(configDir, replacementsConfig),
+    iamConfig: IamConfig.load(configDir, replacementsConfig),
+    networkConfig: NetworkConfig.load(configDir, replacementsConfig),
+    organizationConfig: OrganizationConfig.load(configDir, replacementsConfig),
+    securityConfig: SecurityConfig.load(configDir, replacementsConfig),
+    replacementsConfig,
+    // The metric filter log group names in all-enabled are formed with the real
+    // LZA prefix (aws-accelerator-cloudtrail-...). The default fixture prefix is
+    // empty, which would break the fix's pattern match.
+    prefixes: { ...baseProps.prefixes, trailLogName: 'aws-accelerator' },
+    env: { account: accountsConfig.getManagementAccountId(), region: 'us-east-1' },
+  };
+}
+
+/**
+ * Synthesize a SecurityResourcesStack against all-enabled props and return its template.
+ */
+function synthSecurityResourcesTemplateForAllEnabled(props: AcceleratorStackProps): Template {
+  const app = new cdk.App();
+  const stack = new SecurityResourcesStack(app, 'AllEnabledSecurityResourcesStack', props);
+  return Template.fromStack(stack);
 }
