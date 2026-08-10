@@ -744,14 +744,28 @@ export interface IGroupSetConfig {
  * assumedBy:
  *   - type: account
  *     principal: 'arn:aws:iam::111111111111:root'
- * ``
+ * ```
  * @example
  * ```
  * assumedBy:
  *   - type: principalArn
  *     principal: 'arn:aws:iam::111122223333:role/path/role-name'
- * ``
+ * ```
  * @remarks In order to use a Principal ARN in the assume role policy, the principal must exist.
+ *
+ * Principal with trust policy conditions. Each entry under `conditions` is nested under the
+ * `assumedBy` principal, so `type`, `key`, and `values` are indented to align with `principal`.
+ * @example
+ * ```
+ * assumedBy:
+ *   - type: account
+ *     principal: '111111111111'
+ *     conditions:
+ *       - type: StringEquals
+ *         key: sts:ExternalId
+ *         values:
+ *           - my-external-id
+ * ```
  *
  */
 export interface IAssumedByConfig {
@@ -787,6 +801,19 @@ export interface IAssumedByConfig {
    * @remarks
    * Each entry becomes part of the IAM trust policy statement's `Condition` block
    * for this principal (e.g., enforce sts:ExternalId, aws:PrincipalArn patterns, IP ranges).
+   *
+   * @example
+   * ```
+   * conditions:
+   *   - type: StringEquals
+   *     key: sts:ExternalId
+   *     values:
+   *       - my-external-id
+   *   - type: ArnLike
+   *     key: aws:PrincipalArn
+   *     values:
+   *       - 'arn:aws:iam::111122223333:role/path/*'
+   * ```
    */
   readonly conditions?: IAssumeRoleConditionConfig[];
 }
@@ -841,6 +868,24 @@ export interface IAssumeRoleConditionConfig {
  *       - AmazonSSMDirectoryServiceAccess
  *       - CloudWatchAgentServerPolicy
  * ```
+ *
+ * Role with trust policy conditions. The `conditions` list is nested under the `assumedBy`
+ * principal and indented to align with `type` and `principal`.
+ * @example
+ * ```
+ * - name: Cross-Account-Role
+ *   assumedBy:
+ *     - type: account
+ *       principal: '111111111111'
+ *       conditions:
+ *         - type: StringEquals
+ *           key: sts:ExternalId
+ *           values:
+ *             - my-external-id
+ *   policies:
+ *     awsManaged:
+ *       - ReadOnlyAccess
+ * ```
  */
 export interface IRoleConfig {
   /**
@@ -889,8 +934,8 @@ export interface IRoleConfig {
    *   assumedBy:
    *     - type: principalArn
    *       principal: "arn:aws:iam::555555555555:user/TestUser"
-   *    externalIds:
-   *      - "777777777777"
+   *   externalIds:
+   *     - "777777777777"
    * ```
    */
   readonly externalIds?: t.NonEmptyString[];
