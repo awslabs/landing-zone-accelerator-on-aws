@@ -1,9 +1,11 @@
-import { beforeAll, vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 import * as throttleModule from '@aws-accelerator/utils/lib/throttle';
 
 process.setMaxListeners(50);
 
-beforeAll(() => {
+// Installed in beforeEach (not beforeAll) so the spies survive files that call
+// vi.restoreAllMocks() in afterEach; see vitest.shared-setup.ts for details.
+beforeEach(() => {
   vi.spyOn(global, 'setTimeout').mockImplementation((fn: () => void) => {
     fn();
     return 0 as unknown as NodeJS.Timeout;

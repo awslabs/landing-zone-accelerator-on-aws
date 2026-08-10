@@ -18,7 +18,7 @@ import * as cdk from 'aws-cdk-lib';
 import { AccountsStack, AccountsStackProps } from '../../lib/stacks/accounts-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
 import { Template } from 'aws-cdk-lib/assertions';
-import { Create } from '../accelerator-test-helpers';
+import { Create, memoize } from '../accelerator-test-helpers';
 import { AcceleratorStage } from '../../lib/accelerator-stage';
 
 const LOG_RETENTION_DAYS = 123;
@@ -605,14 +605,19 @@ describe('AccountsStack - Configuration Value Mapping', () => {
 });
 
 describe('AccountsStack - Quarantine SCP Functionality', () => {
+  // Memoized: one ACCOUNTS stage synth shared by the tests below (read-only assertions).
+  const getQuarantineTemplate = memoize(() => {
+    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
+    expect(stack).toBeDefined();
+    return Template.fromStack(stack!);
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it('should create quarantine Lambda function when quarantine is enabled', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getQuarantineTemplate();
 
     const lambdas = template.findResources('AWS::Lambda::Function');
     const quarantineLambdas = Object.values(lambdas).filter((lambda: any) =>
@@ -622,9 +627,7 @@ describe('AccountsStack - Quarantine SCP Functionality', () => {
   });
 
   it('should create EventBridge rule for CreateAccount events when quarantine is enabled', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getQuarantineTemplate();
 
     template.hasResourceProperties('AWS::Events::Rule', {
       Description: 'Rule to notify when a new account is created.',
@@ -640,9 +643,7 @@ describe('AccountsStack - Quarantine SCP Functionality', () => {
   });
 
   it('should configure Lambda with correct SCP_POLICY_NAME environment variable', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.ACCOUNTS);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getQuarantineTemplate();
 
     const lambdas = template.findResources('AWS::Lambda::Function');
     const quarantineLambdas = Object.values(lambdas).filter((lambda: any) =>

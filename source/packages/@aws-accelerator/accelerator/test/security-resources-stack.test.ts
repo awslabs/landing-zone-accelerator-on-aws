@@ -14,7 +14,7 @@
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { describe, expect, test } from 'vitest';
 import { snapShotTest } from './snapshot-test';
-import { Create } from './accelerator-test-helpers';
+import { Create, memoize } from './accelerator-test-helpers';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 
 const testNamePrefix = 'Construct(SecurityResourcesStack): ';
@@ -44,8 +44,11 @@ describe('SecurityResourcesStack.getRemediationParameters', () => {
     configFunctionName?: string,
   ) => Record<string, { StaticValue?: { Values: string[] }; ResourceValue?: { Value: string } }> | undefined;
 
-  const getStack = () =>
-    Create.stack('Management-us-east-1', AcceleratorStage.SECURITY_RESOURCES) as SecurityResourcesStack;
+  // Memoized: one SECURITY_RESOURCES stage synth shared by all tests in this describe.
+  // Safe because these tests only call a read-only private method on the stack.
+  const getStack = memoize(
+    () => Create.stack('Management-us-east-1', AcceleratorStage.SECURITY_RESOURCES) as SecurityResourcesStack,
+  );
 
   const callPrivate = (
     stack: SecurityResourcesStack,

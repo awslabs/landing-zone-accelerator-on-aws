@@ -142,11 +142,18 @@ describe('PrepareStack - account and region gating (minimal props)', () => {
   });
 });
 
+// One full PREPARE stage synth shared by the real-config suites below. Create.stack
+// builds a fresh CDK app and synthesizes every PREPARE stack (~1s), so do it once
+// and share the resulting template. Safe because these tests only read the template.
+const getPrepareTemplate = memoize(() => {
+  const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
+  expect(stack).toBeDefined();
+  return Template.fromStack(stack!);
+});
+
 describe('PrepareStack - management home region (real configs)', () => {
   test('creates Accelerator config DynamoDB table when organization is enabled', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const tables = template.findResources('AWS::DynamoDB::Table');
     const configTable = Object.values(tables).find((t: any) => JSON.stringify(t).includes('awsResourceKeys'));
@@ -154,9 +161,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates management KMS key SSM parameter', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const ssmParams = template.findResources('AWS::SSM::Parameter');
     const mgmtKeyParam = Object.values(ssmParams).find(
@@ -166,9 +171,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates config table ARN SSM parameter', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const ssmParams = template.findResources('AWS::SSM::Parameter');
     const tableArnParam = Object.values(ssmParams).find(
@@ -179,9 +182,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates config table name SSM parameter', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const ssmParams = template.findResources('AWS::SSM::Parameter');
     const tableNameParam = Object.values(ssmParams).find(
@@ -192,9 +193,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates AcceleratorMoveAccountRole IAM role', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const roles = template.findResources('AWS::IAM::Role');
     const moveAccountRoleExists = Object.values(roles).some(
@@ -204,9 +203,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('uses customer-managed KMS encryption for the config table', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const tables = template.findResources('AWS::DynamoDB::Table');
     const configTable = Object.values(tables).find((t: any) => JSON.stringify(t).includes('awsResourceKeys')) as any;
@@ -216,9 +213,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('config table has PAY_PER_REQUEST billing mode', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const tables = template.findResources('AWS::DynamoDB::Table');
     const configTable = Object.values(tables).find((t: any) => JSON.stringify(t).includes('awsResourceKeys')) as any;
@@ -226,9 +221,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('config table has point-in-time recovery enabled', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const tables = template.findResources('AWS::DynamoDB::Table');
     const configTable = Object.values(tables).find((t: any) => JSON.stringify(t).includes('awsResourceKeys')) as any;
@@ -236,9 +229,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates AcceleratorResourceTable DynamoDB table', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const tables = template.findResources('AWS::DynamoDB::Table');
     const resourceTables = Object.values(tables).filter((t: any) => {
@@ -249,9 +240,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('creates resource table name SSM parameter', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const ssmParams = template.findResources('AWS::SSM::Parameter');
     const resourceTableParam = Object.values(ssmParams).find(
@@ -262,9 +251,7 @@ describe('PrepareStack - management home region (real configs)', () => {
   });
 
   test('management key has rotation enabled', () => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    const template = Template.fromStack(stack!);
+    const template = getPrepareTemplate();
 
     const keys = template.findResources('AWS::KMS::Key');
     const managementKey = Object.values(keys).find(
@@ -277,14 +264,8 @@ describe('PrepareStack - management home region (real configs)', () => {
 });
 
 describe('PrepareStack - management home region resources (real configs)', () => {
-  // Memoize the synthesized template. Create.stack builds a fresh CDK app and
-  // synthesizes every PREPARE stack; doing that once and sharing the resulting
-  // template keeps this suite fast without reintroducing any disk dependency.
-  const getTemplate = memoize(() => {
-    const stack = Create.stack('Management-us-east-1', AcceleratorStage.PREPARE);
-    expect(stack).toBeDefined();
-    return Template.fromStack(stack!);
-  });
+  // Reuse the file-level memoized template so the PREPARE stage is synthesized once.
+  const getTemplate = getPrepareTemplate;
 
   const findByName = (resources: Record<string, any>, suffix: string) =>
     Object.values(resources).find(

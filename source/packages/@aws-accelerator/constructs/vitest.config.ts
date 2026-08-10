@@ -8,6 +8,9 @@ export default defineConfig({
     testTimeout: 180000,
     hookTimeout: 300000,
     setupFiles: ['./vitest.setup.ts'],
+    // Threads share the CDK module graph across files; the default forks pool
+    // re-imports it per worker, measured ~31% slower on this large suite.
+    pool: 'threads',
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {

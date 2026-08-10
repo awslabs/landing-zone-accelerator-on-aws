@@ -23,7 +23,7 @@ export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.St
 
     configureSnapshotSeriliazers();
 
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+    expect(SynthUtils.toCloudFormation(stack, { force: false })).toMatchSnapshot();
   }, 1200000);
 }
 

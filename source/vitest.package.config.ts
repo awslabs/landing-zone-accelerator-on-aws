@@ -5,8 +5,7 @@ import { defineConfig } from 'vitest/config';
  * Used by run-all-tests.sh for package-by-package execution
  *
  * Key optimizations:
- * - Single fork pool to reduce memory overhead
- * - Controlled worker count
+ * - Sequential file execution (fileParallelism: false) to reduce memory overhead
  * - Isolated test environment per package
  */
 export default defineConfig({
@@ -23,11 +22,6 @@ export default defineConfig({
       clean: true,
     },
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
     isolate: true,
     fileParallelism: false,
   },

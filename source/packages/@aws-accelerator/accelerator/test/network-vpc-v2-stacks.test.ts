@@ -16,7 +16,7 @@ import { describe, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { snapShotTest } from './snapshot-test';
-import { Create } from './accelerator-test-helpers';
+import { Create, memoize } from './accelerator-test-helpers';
 
 const v2TestNamePatterns: { testName: string; stackKey: string }[] = [
   {
@@ -105,7 +105,10 @@ describe('NetworkVpcV2Stacks', () => {
   let testDir: string;
 
   beforeEach(() => {
-    testDir = path.join(__dirname, '..');
+    // Redirect cfn-templates reads to the committed fixtures in test/cfn-templates
+    // (the source of truth per accelerator-synth-stacks.ts), NOT the package root,
+    // where an untracked, locally generated cfn-templates dir may exist and diverge.
+    testDir = __dirname;
     const originalReadFileSync = fs.readFileSync;
     vi.spyOn(fs, 'readFileSync').mockImplementation((filePath, ...args) => {
       if (typeof filePath === 'string' && filePath.startsWith('cfn-templates')) {
@@ -120,11 +123,16 @@ describe('NetworkVpcV2Stacks', () => {
     vi.restoreAllMocks();
   });
 
-  const v2StackProvider = (stackKey: string) => () => {
+  // Memoized: one full NETWORK_VPC stage + v2 synth shared by all snapshot tests below.
+  // The first invocation happens inside the first test, where the fs.readFileSync mock
+  // from beforeEach is active; subsequent tests only read from the cached stacks.
+  const getV2Stacks = memoize(() => {
     const stacks = Create.stacks(AcceleratorStage.NETWORK_VPC);
     stacks.synthV2NetworkVpcStacks();
-    return stacks.stacks.get(stackKey);
-  };
+    return stacks;
+  });
+
+  const v2StackProvider = (stackKey: string) => () => getV2Stacks().stacks.get(stackKey);
 
   for (const { testName, stackKey } of v2TestNamePatterns) {
     snapShotTest(testName, v2StackProvider(stackKey));

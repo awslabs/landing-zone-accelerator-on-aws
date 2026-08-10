@@ -12,9 +12,12 @@ export default defineConfig({
     silent: true,
     testTimeout: 180000,
     include: ['**/*.test.ts'],
-    setupFiles: ['vitest.setup.ts'],
+    setupFiles: ['../../../vitest.shared-setup.ts', 'vitest.setup.ts'],
+    // Threads share the CDK module graph across files; forks re-import it per
+    // worker, which measured ~31% slower on this import-heavy suite. If the
+    // vitest 4 native SIGABRT resurfaces (see vitest.setup.ts), fall back to
+    // the default forks pool, which contains native crashes to one worker.
     pool: 'threads',
-    singleThread: true,
     hookTimeout: 300000,
     teardownTimeout: 90000,
     reporters: ['default', 'junit'],

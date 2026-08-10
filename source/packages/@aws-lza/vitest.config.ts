@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     include: ['**/*.test.unit.ts'],
     passWithNoTests: true,
+    // Threads share the module graph across files; the default forks pool
+    // re-imports it per worker, measured ~24% slower here.
+    pool: 'threads',
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {

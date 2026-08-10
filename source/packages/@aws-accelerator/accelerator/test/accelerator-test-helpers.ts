@@ -76,6 +76,12 @@ const parseProps = (props: CreateStacksProps): CreateStacksPropsObject => {
 
 /**
  * Helper class for creating AcceleratorSynthStacks and creating providers for tests.
+ *
+ * NOTE: Create.stacks() intentionally does NOT cache. Synth output can depend on
+ * process.env (for example SKIP_MACIE_MODULE in the SkipMacie snapshot tests), so a
+ * parameter-keyed cache would silently serve stale templates. If your tests reuse
+ * the same stack repeatedly without changing env, wrap the call in memoize() at the
+ * top of your test file instead.
  */
 export class Create {
   /**
