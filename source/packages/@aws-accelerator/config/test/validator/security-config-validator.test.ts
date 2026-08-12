@@ -11,8 +11,29 @@
  *  and limitations under the License.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
+
+// The validator reports advisory findings through a module level logger. Capture them so the
+// tests can assert on what was reported without depending on winston transports.
+const { loggedErrors, loggedWarnings } = vi.hoisted(() => ({
+  loggedErrors: [] as string[],
+  loggedWarnings: [] as string[],
+}));
+
+vi.mock('@aws-accelerator/utils', async importOriginal => {
+  const actual = await importOriginal<typeof import('@aws-accelerator/utils')>();
+  return {
+    ...actual,
+    createLogger: () => ({
+      info: () => undefined,
+      debug: () => undefined,
+      warn: (message: string) => loggedWarnings.push(String(message)),
+      error: (message: string) => loggedErrors.push(String(message)),
+    }),
+  };
+});
+
 import { SecurityConfigValidator } from '../../validator/security-config-validator';
 import {
   IAwsConfigRuleSet,
@@ -20,7 +41,7 @@ import {
   ICustomRuleConfigType,
   ISecurityConfig,
 } from '../../lib/models/security-config';
-import { DeploymentTargets, ILifecycleRule } from '../../lib/common';
+import { DeploymentTargets, ILifecycleRule, setConfigValidationMode } from '../../lib/common';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateConfigRuleAssets = (SecurityConfigValidator.prototype as any)['validateConfigRuleAssets'].bind({});
@@ -94,6 +115,23 @@ function createRuleSet(rules: IConfigRule[]): IAwsConfigRuleSet {
     deploymentTargets: new DeploymentTargets(),
     rules,
   };
+}
+
+function createRemediationRule(
+  parameters: { name: string; value: string; type: 'String' | 'StringList' }[],
+  overrides: { name?: string; targetId?: string } = {},
+): IConfigRule {
+  return {
+    name: overrides.name ?? 'test-remediation-rule',
+    type: 'Custom',
+    remediation: {
+      targetId: overrides.targetId ?? 'Custom-Remediation-Document',
+      rolePolicyFile: 'custom-config-rules/remediation-role.json',
+      automatic: true,
+      parameters,
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
 }
 
 describe('SecurityConfigValidator', () => {
@@ -477,6 +515,516 @@ describe('SecurityConfigValidator', () => {
       expect(
         errors.some(e => e.includes('region: "us-west-2" not present in deployment targets for securityHub')),
       ).toBe(true);
+    });
+  });
+
+  describe('validateConfigRuleRemediationParameterTypes', () => {
+    const configDir = '/mock/config';
+    const ssmDocuments = [{ name: 'Custom-Remediation-Document', template: 'ssm-documents/remediation.yaml' }];
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const proto = SecurityConfigValidator.prototype as any;
+    const validateParameterTypesRaw = proto['validateConfigRuleRemediationParameterTypes'].bind(proto);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    // Collects blocking errors so the default (non-strict) cases can assert none were raised.
+    let blockingErrors: string[];
+
+    const validateParameterTypes = (
+      dir: string,
+      ruleSet: IAwsConfigRuleSet,
+      documents: { name: string; template: string }[],
+    ) => validateParameterTypesRaw(dir, ruleSet, documents, blockingErrors);
+
+    const mockTemplate = (content: string) => {
+      vi.spyOn(fs, 'readFileSync').mockReturnValue(content);
+    };
+
+    beforeEach(() => {
+      vi.restoreAllMocks();
+      loggedErrors.length = 0;
+      loggedWarnings.length = 0;
+      blockingErrors = [];
+      setConfigValidationMode('off');
+    });
+
+    // The validation mode is process global, so restore it to keep later tests independent.
+    afterEach(() => {
+      setConfigValidationMode('off');
+    });
+
+    it('reports a type mismatch when String is configured but the document declares StringList', () => {
+      mockTemplate(`
+parameters:
+  Policies:
+    type: StringList
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Policies', value: 'PolicyA,PolicyB', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(
+        loggedErrors.some(
+          e =>
+            e.includes('Policies') &&
+            e.includes('configured as type String') &&
+            e.includes('declares it as StringList'),
+        ),
+      ).toBe(true);
+    });
+
+    it('reports a type mismatch when StringList is configured but the document declares String', () => {
+      mockTemplate(`
+parameters:
+  Configuration:
+    type: String
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Configuration', value: 'a,b', type: 'StringList' }])]),
+        ssmDocuments,
+      );
+      expect(
+        loggedErrors.some(e => e.includes('configured as type StringList') && e.includes('declares it as String')),
+      ).toBe(true);
+    });
+
+    it('does not report when configured types match the document declaration', () => {
+      mockTemplate(`
+parameters:
+  ResourceId:
+    type: String
+  Policies:
+    type: StringList
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([
+            { name: 'ResourceId', value: 'RESOURCE_ID', type: 'String' },
+            { name: 'Policies', value: 'PolicyA,PolicyB', type: 'StringList' },
+          ]),
+        ]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('does not report a type mismatch when the value has no comma and both types submit the same value', () => {
+      mockTemplate(`
+parameters:
+  LogDestination:
+    type: String
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([{ name: 'LogDestination', value: 'my-log-bucket', type: 'StringList' }]),
+        ]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('does not report a type mismatch for an unresolved replacement value', () => {
+      mockTemplate(`
+parameters:
+  KMSMasterKey:
+    type: String
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([{ name: 'KMSMasterKey', value: '${ACCEL_LOOKUP::KMS}', type: 'StringList' }]),
+        ]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it.each(['StringMap', 'MapList', 'Integer', 'Boolean'])(
+      'does not report a type mismatch when the document declares the non-comparable type %s',
+      documentType => {
+        mockTemplate(`
+parameters:
+  Payload:
+    type: ${documentType}
+`);
+        validateParameterTypes(
+          configDir,
+          createRuleSet([createRemediationRule([{ name: 'Payload', value: 'a,b', type: 'String' }])]),
+          ssmDocuments,
+        );
+        expect(loggedErrors).toHaveLength(0);
+        expect(blockingErrors).toHaveLength(0);
+      },
+    );
+
+    it('does not block a non-comparable document type in strict mode', () => {
+      setConfigValidationMode('strict');
+      mockTemplate(`
+parameters:
+  Tags:
+    type: StringMap
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Tags', value: '{"a":"b","c":"d"}', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(blockingErrors).toHaveLength(0);
+    });
+
+    it('still reports a missing required parameter declared with a non-comparable type', () => {
+      mockTemplate(`
+parameters:
+  Tags:
+    type: StringMap
+`);
+      validateParameterTypes(configDir, createRuleSet([createRemediationRule([])]), ssmDocuments);
+      expect(loggedErrors.some(e => e.includes('requires parameter Tags'))).toBe(true);
+    });
+
+    it('does not report a type mismatch when the document type is not a string', () => {
+      mockTemplate(`
+parameters:
+  Broken:
+    type:
+      nested: value
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Broken', value: 'a,b', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('reports a type mismatch on an optional parameter that is configured', () => {
+      mockTemplate(`
+parameters:
+  Optional:
+    type: StringList
+    default: []
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Optional', value: 'PolicyA,PolicyB', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(1);
+      expect(loggedErrors[0]).toContain('configured as type String');
+      expect(loggedErrors[0]).toContain('declares it as StringList');
+    });
+
+    it('blocks a type mismatch on an optional parameter in strict mode', () => {
+      setConfigValidationMode('strict');
+      mockTemplate(`
+parameters:
+  Optional:
+    type: String
+    default: ""
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Optional', value: 'a,b', type: 'StringList' }])]),
+        ssmDocuments,
+      );
+      expect(blockingErrors).toHaveLength(1);
+      expect(blockingErrors[0]).toContain('configured as type StringList');
+    });
+
+    it('does not report a configured parameter that the target document does not declare', () => {
+      mockTemplate(`
+parameters:
+  ResourceId:
+    type: String
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([
+            { name: 'ResourceId', value: 'RESOURCE_ID', type: 'String' },
+            { name: 'Extra', value: 'value', type: 'String' },
+          ]),
+        ]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('reports a required document parameter that is missing from the configuration', () => {
+      mockTemplate(`
+parameters:
+  ResourceId:
+    type: String
+  RequiredTags:
+    type: String
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'ResourceId', value: 'RESOURCE_ID', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors.some(e => e.includes('requires parameter RequiredTags'))).toBe(true);
+    });
+
+    it('does not report AutomationAssumeRole or parameters with defaults as missing', () => {
+      mockTemplate(`
+parameters:
+  ResourceId:
+    type: String
+  Optional:
+    type: StringList
+    default: []
+  AutomationAssumeRole:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'ResourceId', value: 'RESOURCE_ID', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('skips documents owned by AWS because their definition is not available locally', () => {
+      // A template that would report a mismatch is resolvable for this target, so the test fails if
+      // the AWS owned document is not skipped before the template is read.
+      mockTemplate(`
+parameters:
+  Anything:
+    type: StringList
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([{ name: 'Anything', value: 'value', type: 'String' }], {
+            targetId: 'AWSConfigRemediation-EnableS3BucketEncryption',
+          }),
+        ]),
+        [
+          ...ssmDocuments,
+          {
+            name: 'AWSConfigRemediation-EnableS3BucketEncryption',
+            template: 'ssm-documents/aws-owned.yaml',
+          },
+        ],
+      );
+      expect(fs.readFileSync).not.toHaveBeenCalled();
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('does not report when the template cannot be parsed', () => {
+      vi.spyOn(fs, 'readFileSync').mockImplementation(() => {
+        throw new Error('ENOENT');
+      });
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Policies', value: 'a,b', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+    });
+
+    it('logs without blocking validation in off mode', () => {
+      mockTemplate(`
+parameters:
+  Policies:
+    type: StringList
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Policies', value: 'PolicyA,PolicyB', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(1);
+      expect(blockingErrors).toHaveLength(0);
+    });
+
+    it('logs without blocking validation in warn mode', () => {
+      setConfigValidationMode('warn');
+      mockTemplate(`
+parameters:
+  Policies:
+    type: StringList
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Policies', value: 'PolicyA,PolicyB', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(1);
+      expect(blockingErrors).toHaveLength(0);
+    });
+
+    it('fails validation in strict mode instead of only logging', () => {
+      setConfigValidationMode('strict');
+      mockTemplate(`
+parameters:
+  Policies:
+    type: StringList
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Policies', value: 'PolicyA,PolicyB', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(loggedErrors).toHaveLength(0);
+      expect(blockingErrors).toHaveLength(1);
+      expect(blockingErrors[0]).toContain('configured as type String');
+      expect(blockingErrors[0]).toContain('declares it as StringList');
+    });
+
+    it('logs without blocking a missing required parameter even in strict mode', () => {
+      setConfigValidationMode('strict');
+      mockTemplate(`
+parameters:
+  RequiredTags:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([createRemediationRule([{ name: 'Extra', value: 'value', type: 'String' }])]),
+        ssmDocuments,
+      );
+      expect(blockingErrors).toHaveLength(0);
+      expect(loggedErrors).toHaveLength(1);
+      expect(loggedErrors[0]).toContain('requires parameter RequiredTags');
+    });
+
+    it('does not fail validation in strict mode when the value equivalence gate applies', () => {
+      setConfigValidationMode('strict');
+      mockTemplate(`
+parameters:
+  LogDestination:
+    type: String
+`);
+      validateParameterTypes(
+        configDir,
+        createRuleSet([
+          createRemediationRule([{ name: 'LogDestination', value: 'my-log-bucket', type: 'StringList' }]),
+        ]),
+        ssmDocuments,
+      );
+      expect(blockingErrors).toHaveLength(0);
+      expect(loggedErrors).toHaveLength(0);
+    });
+  });
+
+  describe('validateConfigRuleRemediationParameterValues', () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const proto = SecurityConfigValidator.prototype as any;
+    const validateParameterValues = proto['validateConfigRuleRemediationParameterValues'].bind(proto);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    it('reports a String value longer than the 256 character StaticValue limit', () => {
+      const errors: string[] = [];
+      validateParameterValues(
+        createRuleSet([createRemediationRule([{ name: 'LongValue', value: 'a'.repeat(257), type: 'String' }])]),
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('length 257');
+      expect(errors[0]).toContain('exceeds the AWS Config limit of 256 characters');
+    });
+
+    it('accepts a String value exactly at the 256 character limit', () => {
+      const errors: string[] = [];
+      validateParameterValues(
+        createRuleSet([createRemediationRule([{ name: 'MaxValue', value: 'a'.repeat(256), type: 'String' }])]),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('does not split a String value on commas when checking length', () => {
+      const errors: string[] = [];
+      // 300 characters total, but each comma separated segment is short.
+      const value = Array.from({ length: 60 }, () => 'abcd').join(',');
+      validateParameterValues(
+        createRuleSet([createRemediationRule([{ name: 'CommaValue', value, type: 'String' }])]),
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('of type String');
+    });
+
+    it('reports a StringList resolving to more than 25 items', () => {
+      const errors: string[] = [];
+      const value = Array.from({ length: 26 }, (_, index) => `item${index}`).join(',');
+      validateParameterValues(
+        createRuleSet([createRemediationRule([{ name: 'TooManyItems', value, type: 'StringList' }])]),
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('resolves to 26 values');
+      expect(errors[0]).toContain('exceeds the AWS Config limit of 25');
+    });
+
+    it('accepts a StringList resolving to exactly 25 items', () => {
+      const errors: string[] = [];
+      const value = Array.from({ length: 25 }, (_, index) => `item${index}`).join(',');
+      validateParameterValues(
+        createRuleSet([createRemediationRule([{ name: 'MaxItems', value, type: 'StringList' }])]),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('reports a StringList item longer than the 256 character limit', () => {
+      const errors: string[] = [];
+      validateParameterValues(
+        createRuleSet([
+          createRemediationRule([{ name: 'LongItem', value: `short,${'b'.repeat(257)}`, type: 'StringList' }]),
+        ]),
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('of type StringList');
+      expect(errors[0]).toContain('length 257');
+    });
+
+    it('skips RESOURCE_ID and ACCEL_LOOKUP replacement values', () => {
+      const errors: string[] = [];
+      validateParameterValues(
+        createRuleSet([
+          createRemediationRule([
+            { name: 'ResourceId', value: 'RESOURCE_ID', type: 'String' },
+            { name: 'Kms', value: '${ACCEL_LOOKUP::KMS}', type: 'String' },
+          ]),
+        ]),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('includes the rule name in reported errors', () => {
+      const errors: string[] = [];
+      validateParameterValues(
+        createRuleSet([
+          createRemediationRule([{ name: 'LongValue', value: 'a'.repeat(300), type: 'String' }], {
+            name: 'my-specific-rule',
+          }),
+        ]),
+        errors,
+      );
+      expect(errors[0]).toContain('my-specific-rule');
     });
   });
 });

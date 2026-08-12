@@ -1249,7 +1249,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         } else {
           returnParams[parameterName!] = {
             StaticValue: {
-              Values: parameterValue!.split(','),
+              Values: this.getParamValue(parameterValue!.split(','), parameterType),
             },
           };
         }

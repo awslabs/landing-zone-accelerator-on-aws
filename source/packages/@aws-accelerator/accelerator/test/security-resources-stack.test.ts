@@ -95,6 +95,32 @@ describe('SecurityResourcesStack.getRemediationParameters', () => {
     expect(result!['BucketName']).toEqual({ ResourceValue: { Value: 'RESOURCE_ID' } });
   });
 
+  test('preserves commas in String parameter values', () => {
+    const result = callPrivate(getStack(), [
+      {
+        name: 'Configuration',
+        value: 'powerMgmt=disabled-1800,patchMgmt=testing',
+        type: 'String',
+      },
+    ]);
+    expect(result!['Configuration']).toEqual({
+      StaticValue: { Values: ['powerMgmt=disabled-1800,patchMgmt=testing'] },
+    });
+  });
+
+  test('splits StringList parameter values on commas', () => {
+    const result = callPrivate(getStack(), [
+      {
+        name: 'Policies',
+        value: 'PolicyA,PolicyB',
+        type: 'StringList',
+      },
+    ]);
+    expect(result!['Policies']).toEqual({
+      StaticValue: { Values: ['PolicyA', 'PolicyB'] },
+    });
+  });
+
   test('preserves existing parameters and adds AutomationAssumeRole when both are provided', () => {
     const result = callPrivate(
       getStack(),

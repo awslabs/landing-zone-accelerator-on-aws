@@ -13,9 +13,10 @@
 
 import { createLogger } from '@aws-accelerator/utils';
 import fs from 'fs';
+import * as yaml from 'js-yaml';
 import path from 'path';
 import { AccountsConfig } from '../lib/accounts-config';
-import { DeploymentTargets } from '../lib/common';
+import { DeploymentTargets, getConfigValidationMode } from '../lib/common';
 import { GlobalConfig } from '../lib/global-config';
 import {
   IAlarmSetConfig,
@@ -41,6 +42,27 @@ import { CommonValidatorFunctions } from './common/common-validator-functions';
 
 const RESERVED_STATIC_PARAMETER_FOR_RESOURCE_POLICY = 'ATTACHED_RESOURCE_ARN';
 
+/**
+ * Parameter injected by the solution, so it is never configured in `remediation.parameters`.
+ */
+const SOLUTION_INJECTED_REMEDIATION_PARAMETER = 'AutomationAssumeRole';
+
+/**
+ * Maximum number of items accepted by a remediation parameter `StaticValue`.
+ *
+ * @see https://docs.aws.amazon.com/config/latest/APIReference/API_StaticValue.html
+ */
+const REMEDIATION_STATIC_VALUE_MAX_ITEMS = 25;
+
+/**
+ * Maximum length of a single remediation parameter `StaticValue` item.
+ *
+ * @see https://docs.aws.amazon.com/config/latest/APIReference/API_StaticValue.html
+ */
+const REMEDIATION_STATIC_VALUE_MAX_ITEM_LENGTH = 256;
+
+const logger = createLogger(['security-config-validator']);
+
 export class SecurityConfigValidator {
   constructor(
     securityConfig: SecurityConfig,
@@ -52,8 +74,6 @@ export class SecurityConfigValidator {
   ) {
     const errors: string[] = [];
     const ouIdNames: string[] = ['Root'];
-
-    const logger = createLogger(['security-config-validator']);
 
     logger.info(`${SecurityConfig.FILENAME} file validation started`);
 
@@ -137,6 +157,8 @@ export class SecurityConfigValidator {
       this.validateConfigRuleRemediationAccountNames(ruleSet, accountNames, errors);
       this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
       this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
+      this.validateConfigRuleRemediationParameterTypes(configDir, ruleSet, ssmDocuments, errors);
+      this.validateConfigRuleRemediationParameterValues(ruleSet, errors);
     }
     this.validateConfigRuleNames(securityConfig.awsConfig, accountsConfig, globalConfig, errors);
 
@@ -1312,6 +1334,181 @@ export class SecurityConfigValidator {
               }
             }
           }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to read the `parameters` declaration of a remediation target SSM document template
+   * @param configDir
+   * @param template
+   * @returns Map of parameter name to its declaration, or undefined when the template cannot be parsed
+   */
+  private getSsmDocumentParameterDeclarations(
+    configDir: string,
+    template: string,
+  ): Map<string, { type?: 'String' | 'StringList'; hasDefault: boolean }> | undefined {
+    const templatePath = path.join(configDir, template);
+    let parsed: unknown;
+    try {
+      parsed = yaml.load(fs.readFileSync(templatePath, 'utf8'));
+    } catch (error) {
+      logger.warn(`Unable to read or parse SSM document template ${template}: ${error}`);
+      return undefined;
+    }
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      logger.warn(`SSM document template ${template} does not contain a document definition`);
+      return undefined;
+    }
+
+    const documentParameters = (parsed as { parameters?: unknown }).parameters;
+    if (documentParameters === undefined) {
+      // A document without parameters is valid, there is simply nothing to compare against.
+      return new Map();
+    }
+
+    if (typeof documentParameters !== 'object' || documentParameters === null) {
+      logger.warn(`SSM document template ${template} has a malformed parameters section`);
+      return undefined;
+    }
+
+    const declarations = new Map<string, { type?: 'String' | 'StringList'; hasDefault: boolean }>();
+    for (const [parameterName, declaration] of Object.entries(documentParameters)) {
+      if (typeof declaration !== 'object' || declaration === null) {
+        logger.warn(`SSM document template ${template} has a malformed declaration for parameter ${parameterName}`);
+        continue;
+      }
+      const parameterDeclaration = declaration as { type?: unknown; default?: unknown };
+      // Only the types a remediation parameter can declare are comparable. Documents may use
+      // Integer, Boolean, StringMap or MapList, which no security-config value can match.
+      const declaredType = parameterDeclaration.type;
+      declarations.set(parameterName, {
+        type: declaredType === 'String' || declaredType === 'StringList' ? declaredType : undefined,
+        hasDefault: 'default' in parameterDeclaration,
+      });
+    }
+    return declarations;
+  }
+
+  /**
+   * Function to determine whether a parameter type mismatch changes the submitted value. `String` and
+   * `StringList` only diverge when the value contains a comma.
+   * @param parameter
+   * @returns true when the type disagreement produces a different `StaticValue`
+   */
+  private isRemediationParameterTypeMismatchMeaningful(parameter: { value: string }): boolean {
+    return parameter.value.includes(',');
+  }
+
+  /**
+   * Function to validate remediation parameter types and required parameters against the target SSM
+   * document. A type mismatch is pushed to `errors` when validation mode is `strict`, otherwise
+   * findings are logged.
+   * @param configDir
+   * @param ruleSet
+   * @param ssmDocuments
+   * @param errors
+   */
+  private validateConfigRuleRemediationParameterTypes(
+    configDir: string,
+    ruleSet: IAwsConfigRuleSet,
+    ssmDocuments: { name: string; template: string }[],
+    errors: string[],
+  ) {
+    // Findings block validation only when the customer opted into strict validation.
+    const reportFinding = (message: string) => {
+      if (getConfigValidationMode() === 'strict') {
+        errors.push(message);
+      } else {
+        logger.error(message);
+      }
+    };
+
+    for (const rule of ruleSet.rules) {
+      const remediation = rule.remediation;
+      if (!remediation || IsPublicSsmDoc(remediation.targetId)) {
+        continue;
+      }
+
+      const ssmDocument = ssmDocuments.find(item => item.name === remediation.targetId);
+      if (!ssmDocument) {
+        // Missing target documents are already reported by validateConfigRuleRemediationTargetAssets.
+        continue;
+      }
+
+      const declarations = this.getSsmDocumentParameterDeclarations(configDir, ssmDocument.template);
+      if (!declarations) {
+        continue;
+      }
+
+      const configuredParameters = remediation.parameters ?? [];
+      for (const parameter of configuredParameters) {
+        const declaration = declarations.get(parameter.name);
+        if (!declaration) {
+          continue;
+        }
+        if (
+          declaration.type !== undefined &&
+          declaration.type !== parameter.type &&
+          this.isRemediationParameterTypeMismatchMeaningful(parameter)
+        ) {
+          reportFinding(
+            `Rule: ${rule.name}, remediation parameter ${parameter.name} is configured as type ${parameter.type} but target SSM document ${ssmDocument.name} declares it as ${declaration.type}`,
+          );
+        }
+      }
+
+      // A parameter without a default is inferred to be required, so this is always logged rather
+      // than blocking validation even in strict mode.
+      const configuredParameterNames = configuredParameters.map(parameter => parameter.name);
+      for (const [parameterName, declaration] of declarations) {
+        if (parameterName === SOLUTION_INJECTED_REMEDIATION_PARAMETER || declaration.hasDefault) {
+          continue;
+        }
+        if (!configuredParameterNames.includes(parameterName)) {
+          logger.error(
+            `Rule: ${rule.name}, target SSM document ${ssmDocument.name} requires parameter ${parameterName} but it is not configured in remediation parameters`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate remediation parameter values against AWS Config StaticValue limits. Values
+   * resolved during deployment are skipped.
+   * @param ruleSet
+   * @param errors
+   *
+   * @see https://docs.aws.amazon.com/config/latest/APIReference/API_StaticValue.html
+   */
+  private validateConfigRuleRemediationParameterValues(ruleSet: IAwsConfigRuleSet, errors: string[]) {
+    for (const rule of ruleSet.rules) {
+      for (const parameter of rule.remediation?.parameters ?? []) {
+        if (parameter.value === 'RESOURCE_ID' || parameter.value.includes('${ACCEL_LOOKUP::')) {
+          continue;
+        }
+
+        if (parameter.type === 'StringList') {
+          const itemCount = parameter.value.split(',').length;
+          if (itemCount > REMEDIATION_STATIC_VALUE_MAX_ITEMS) {
+            errors.push(
+              `Rule: ${rule.name}, remediation parameter ${parameter.name} of type StringList resolves to ${itemCount} values which exceeds the AWS Config limit of ${REMEDIATION_STATIC_VALUE_MAX_ITEMS}`,
+            );
+          }
+          for (const item of parameter.value.split(',')) {
+            if (item.length > REMEDIATION_STATIC_VALUE_MAX_ITEM_LENGTH) {
+              errors.push(
+                `Rule: ${rule.name}, remediation parameter ${parameter.name} of type StringList has a value of length ${item.length} which exceeds the AWS Config limit of ${REMEDIATION_STATIC_VALUE_MAX_ITEM_LENGTH} characters`,
+              );
+            }
+          }
+        } else if (parameter.value.length > REMEDIATION_STATIC_VALUE_MAX_ITEM_LENGTH) {
+          errors.push(
+            `Rule: ${rule.name}, remediation parameter ${parameter.name} of type String has a value of length ${parameter.value.length} which exceeds the AWS Config limit of ${REMEDIATION_STATIC_VALUE_MAX_ITEM_LENGTH} characters`,
+          );
         }
       }
     }
