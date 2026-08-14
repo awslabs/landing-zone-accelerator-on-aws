@@ -22,6 +22,11 @@ import {
   AttachRolePolicyCommand,
   waitUntilRoleExists,
   NoSuchEntityException,
+  DeleteRoleCommand,
+  DetachRolePolicyCommand,
+  ListAttachedRolePoliciesCommand,
+  ListRolePoliciesCommand,
+  DeleteRolePolicyCommand,
 } from '@aws-sdk/client-iam';
 import { MODULE_EXCEPTIONS } from '../../../../../common/enums';
 
@@ -36,6 +41,11 @@ vi.mock('@aws-sdk/client-iam', () => {
     TagRoleCommand: vi.fn(),
     NoSuchEntityException: vi.fn(),
     waitUntilRoleExists: vi.fn(),
+    DeleteRoleCommand: vi.fn(),
+    DetachRolePolicyCommand: vi.fn(),
+    ListAttachedRolePoliciesCommand: vi.fn(),
+    ListRolePoliciesCommand: vi.fn(),
+    DeleteRolePolicyCommand: vi.fn(),
   };
 });
 
@@ -80,7 +90,56 @@ describe('IAM Role Tests', () => {
     });
   });
 
-  test('should check if roles exist and throw error if they do', async () => {
+  test('should delete and re-create an existing role instead of throwing', async () => {
+    // Setup - only AWSControlTowerAdmin is reported as existing, with no policies attached
+    mockSend.mockImplementation(command => {
+      if (command instanceof GetRoleCommand) {
+        return Promise.resolve({
+          Role: MOCK_CONSTANTS.existingControlTowerRole,
+        });
+      }
+      if (command instanceof ListAttachedRolePoliciesCommand) {
+        return Promise.resolve({ AttachedPolicies: [], IsTruncated: false });
+      }
+      if (command instanceof ListRolePoliciesCommand) {
+        return Promise.resolve({ PolicyNames: [], IsTruncated: false });
+      }
+      if (command instanceof DeleteRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof CreateRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof PutRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof AttachRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
+
+    // Execute
+    const response = await IamRole.createControlTowerRoles(
+      MOCK_CONSTANTS.partition,
+      MOCK_CONSTANTS.region,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - the existing role is deleted and all required roles are created
+    expect(response).toBeUndefined();
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(1);
+    expect(DeleteRoleCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ RoleName: MOCK_CONSTANTS.existingControlTowerRole.RoleName }),
+    );
+    expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
+  });
+
+  test('should detach managed and remove inline policies before deleting an existing role', async () => {
     // Setup
     mockSend.mockImplementation(command => {
       if (command instanceof GetRoleCommand) {
@@ -88,24 +147,112 @@ describe('IAM Role Tests', () => {
           Role: MOCK_CONSTANTS.existingControlTowerRole,
         });
       }
+      if (command instanceof ListAttachedRolePoliciesCommand) {
+        return Promise.resolve({
+          AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockManagedPolicy' }],
+          IsTruncated: false,
+        });
+      }
+      if (command instanceof DetachRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof ListRolePoliciesCommand) {
+        return Promise.resolve({ PolicyNames: ['MockInlinePolicy'], IsTruncated: false });
+      }
+      if (command instanceof DeleteRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof DeleteRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof CreateRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof PutRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof AttachRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
 
-    // Execute and Verify
-    await expect(async () => {
-      await IamRole.createControlTowerRoles(
-        MOCK_CONSTANTS.partition,
-        MOCK_CONSTANTS.region,
-        MOCK_CONSTANTS.solutionId,
-        MOCK_CONSTANTS.credentials,
-      );
-    }).rejects.toThrow(
-      `There are existing AWS Control Tower Landing Zone roles "${MOCK_CONSTANTS.existingControlTowerRole.RoleName}", the solution cannot deploy AWS Control Tower Landing Zone`,
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
+
+    // Execute
+    await IamRole.createControlTowerRoles(
+      MOCK_CONSTANTS.partition,
+      MOCK_CONSTANTS.region,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
     );
-    expect(GetRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
-    expect(CreateRoleCommand).toHaveBeenCalledTimes(0);
-    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(0);
-    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(0);
+
+    // Verify - policies are removed before the role is deleted
+    expect(DetachRolePolicyCommand).toHaveBeenCalledTimes(1);
+    expect(DeleteRolePolicyCommand).toHaveBeenCalledTimes(1);
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(1);
+  });
+
+  test('should paginate when listing attached policies of an existing role', async () => {
+    // Setup - first page of attached policies is truncated
+    let attachedCallCount = 0;
+    mockSend.mockImplementation(command => {
+      if (command instanceof GetRoleCommand) {
+        return Promise.resolve({
+          Role: MOCK_CONSTANTS.existingControlTowerRole,
+        });
+      }
+      if (command instanceof ListAttachedRolePoliciesCommand) {
+        attachedCallCount++;
+        if (attachedCallCount === 1) {
+          return Promise.resolve({
+            AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockPolicyPageOne' }],
+            IsTruncated: true,
+            Marker: 'mockMarker',
+          });
+        }
+        return Promise.resolve({
+          AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockPolicyPageTwo' }],
+          IsTruncated: false,
+        });
+      }
+      if (command instanceof DetachRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof ListRolePoliciesCommand) {
+        return Promise.resolve({ PolicyNames: [], IsTruncated: false });
+      }
+      if (command instanceof DeleteRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof CreateRoleCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof PutRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+      if (command instanceof AttachRolePolicyCommand) {
+        return Promise.resolve(undefined);
+      }
+
+      return Promise.reject(MOCK_CONSTANTS.unknownError);
+    });
+
+    (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
+
+    // Execute
+    await IamRole.createControlTowerRoles(
+      MOCK_CONSTANTS.partition,
+      MOCK_CONSTANTS.region,
+      MOCK_CONSTANTS.solutionId,
+      MOCK_CONSTANTS.credentials,
+    );
+
+    // Verify - both pages were fetched and every policy detached
+    expect(attachedCallCount).toBe(2);
+    expect(DetachRolePolicyCommand).toHaveBeenCalledTimes(2);
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(1);
   });
 
   test('should handle service api exception for while checking existing roles', async () => {

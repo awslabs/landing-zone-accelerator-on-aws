@@ -23,6 +23,8 @@ import {
   ListRolePoliciesCommand,
   DeleteRolePolicyCommand,
   ListAttachedRolePoliciesCommand,
+  DetachRolePolicyCommand,
+  DeleteRoleCommand,
 } from '@aws-sdk/client-iam';
 
 import { setRetryStrategy } from '../../../../common/functions';
@@ -90,23 +92,48 @@ export abstract class IamRole {
   }
 
   /**
-   * Function to check if AWS Control Tower Landing Zone roles exists
+   * Function to delete an existing AWS Control Tower Landing Zone IAM role.
+   *
+   * @remarks
+   * IAM requires a role to have no attached managed policies and no inline policies before the role can
+   * be deleted, so both are removed first.
    * @param client {@link IAMClient}
+   * @param roleName string
    */
-  private static async controlTowerRolesExists(client: IAMClient): Promise<{ status: boolean; message: string[] }> {
-    const roleNames: string[] = [];
+  private static async deleteControlTowerRole(client: IAMClient, roleName: string): Promise<void> {
+    IamRole.logger.info(`Existing AWS Control Tower Landing Zone role ${roleName} found, deleting before re-creation.`);
 
-    for (const roleName of IamRole.requiredControlTowerRoleNames) {
-      if (await IamRole.roleExists(client, roleName)) {
-        roleNames.push(roleName);
+    // Detach managed policies
+    let attachedPolicyMarker: string | undefined = undefined;
+    do {
+      const attachedPolicies = await throttlingBackOff(() =>
+        client.send(new ListAttachedRolePoliciesCommand({ RoleName: roleName, Marker: attachedPolicyMarker })),
+      );
+      for (const policy of attachedPolicies.AttachedPolicies ?? []) {
+        await throttlingBackOff(() =>
+          client.send(new DetachRolePolicyCommand({ RoleName: roleName, PolicyArn: policy.PolicyArn })),
+        );
       }
-    }
+      attachedPolicyMarker = attachedPolicies.IsTruncated ? attachedPolicies.Marker : undefined;
+    } while (attachedPolicyMarker);
 
-    if (roleNames.length > 0) {
-      return { status: true, message: roleNames };
-    }
+    // Delete inline policies
+    let inlinePolicyMarker: string | undefined = undefined;
+    do {
+      const inlinePolicies = await throttlingBackOff(() =>
+        client.send(new ListRolePoliciesCommand({ RoleName: roleName, Marker: inlinePolicyMarker })),
+      );
+      for (const policyName of inlinePolicies.PolicyNames ?? []) {
+        await throttlingBackOff(() =>
+          client.send(new DeleteRolePolicyCommand({ RoleName: roleName, PolicyName: policyName })),
+        );
+      }
+      inlinePolicyMarker = inlinePolicies.IsTruncated ? inlinePolicies.Marker : undefined;
+    } while (inlinePolicyMarker);
 
-    return { status: false, message: [] };
+    await throttlingBackOff(() => client.send(new DeleteRoleCommand({ RoleName: roleName })));
+
+    IamRole.logger.info(`Deleted existing AWS Control Tower Landing Zone role ${roleName}.`);
   }
 
   /**
@@ -311,17 +338,10 @@ export abstract class IamRole {
       credentials: credentials,
     });
 
-    const existingRoles = await IamRole.controlTowerRolesExists(client);
-
-    if (existingRoles.status && existingRoles.message.length > 0) {
-      throw new Error(
-        `There are existing AWS Control Tower Landing Zone roles "${existingRoles.message.join(
-          ',',
-        )}", the solution cannot deploy AWS Control Tower Landing Zone`,
-      );
-    }
-
     for (const roleName of IamRole.requiredControlTowerRoleNames) {
+      if (await IamRole.roleExists(client, roleName)) {
+        await IamRole.deleteControlTowerRole(client, roleName);
+      }
       await IamRole.createControlTowerRole(client, partition, roleName);
     }
   }
