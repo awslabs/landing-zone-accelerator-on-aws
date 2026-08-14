@@ -392,8 +392,8 @@ describe('cleanupStack retained resource scoping', () => {
     const stackAClient = { send: vi.fn() };
     const stackBClient = { send: vi.fn() };
     tool.logGroups = [
-      { client: stackAClient, stackName: 'stack-a', logGroup: 'stack-a-log-group' },
-      { client: stackBClient, stackName: 'stack-b', logGroup: 'stack-b-log-group' },
+      { client: stackAClient, ownerKey: 'stack-a', logGroup: 'stack-a-log-group' },
+      { client: stackBClient, ownerKey: 'stack-b', logGroup: 'stack-b-log-group' },
     ];
 
     vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
@@ -411,7 +411,7 @@ describe('cleanupStack retained resource scoping', () => {
     expect(deleteCloudWatchLogs).toHaveBeenCalledWith(stackAClient, 'stack-a', 'stack-a-log-group');
 
     // And - stack-b's log group remains queued for its own cleanup
-    expect(tool.logGroups).toEqual([{ client: stackBClient, stackName: 'stack-b', logGroup: 'stack-b-log-group' }]);
+    expect(tool.logGroups).toEqual([{ client: stackBClient, ownerKey: 'stack-b', logGroup: 'stack-b-log-group' }]);
   });
 
   it('should preserve other stacks retained resources across all resource types', async () => {
@@ -420,20 +420,20 @@ describe('cleanupStack retained resource scoping', () => {
     const tool = new AcceleratorTool(makeProps()) as any;
 
     tool.logGroups = [
-      { client: {}, stackName: 'stack-a', logGroup: 'a-lg' },
-      { client: {}, stackName: 'stack-b', logGroup: 'b-lg' },
+      { client: {}, ownerKey: 'stack-a', logGroup: 'a-lg' },
+      { client: {}, ownerKey: 'stack-b', logGroup: 'b-lg' },
     ];
     tool.buckets = [
-      { client: {}, stackName: 'stack-a', bucket: 'a-bucket' },
-      { client: {}, stackName: 'stack-b', bucket: 'b-bucket' },
+      { client: {}, ownerKey: 'stack-a', bucket: 'a-bucket' },
+      { client: {}, ownerKey: 'stack-b', bucket: 'b-bucket' },
     ];
     tool.kmsKeys = [
-      { client: {}, stackName: 'stack-a', key: 'a-key' },
-      { client: {}, stackName: 'stack-b', key: 'b-key' },
+      { client: {}, ownerKey: 'stack-a', key: 'a-key' },
+      { client: {}, ownerKey: 'stack-b', key: 'b-key' },
     ];
     tool.backupVaults = [
-      { client: {}, stackName: 'stack-a', backup: 'a-vault' },
-      { client: {}, stackName: 'stack-b', backup: 'b-vault' },
+      { client: {}, ownerKey: 'stack-a', backup: 'a-vault' },
+      { client: {}, ownerKey: 'stack-b', backup: 'b-vault' },
     ];
 
     vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
@@ -458,10 +458,10 @@ describe('cleanupStack retained resource scoping', () => {
     expect(deleteBackupVault).toHaveBeenCalledWith(expect.anything(), 'stack-a', 'a-vault');
 
     // And - all stack-b resources remain queued (clearing filter)
-    expect(tool.logGroups).toEqual([{ client: {}, stackName: 'stack-b', logGroup: 'b-lg' }]);
-    expect(tool.buckets).toEqual([{ client: {}, stackName: 'stack-b', bucket: 'b-bucket' }]);
-    expect(tool.kmsKeys).toEqual([{ client: {}, stackName: 'stack-b', key: 'b-key' }]);
-    expect(tool.backupVaults).toEqual([{ client: {}, stackName: 'stack-b', backup: 'b-vault' }]);
+    expect(tool.logGroups).toEqual([{ client: {}, ownerKey: 'stack-b', logGroup: 'b-lg' }]);
+    expect(tool.buckets).toEqual([{ client: {}, ownerKey: 'stack-b', bucket: 'b-bucket' }]);
+    expect(tool.kmsKeys).toEqual([{ client: {}, ownerKey: 'stack-b', key: 'b-key' }]);
+    expect(tool.backupVaults).toEqual([{ client: {}, ownerKey: 'stack-b', backup: 'b-vault' }]);
   });
 
   it('should only detach/clear IAM roles and policies belonging to the completed stack', async () => {
@@ -478,12 +478,12 @@ describe('cleanupStack retained resource scoping', () => {
     const stackBPolicyClient = { send: vi.fn().mockResolvedValue({ PolicyRoles: [] }) };
 
     tool.iamRoles = [
-      { client: stackARoleClient, stackName: 'stack-a', roleName: 'stack-a-role' },
-      { client: stackBRoleClient, stackName: 'stack-b', roleName: 'stack-b-role' },
+      { client: stackARoleClient, ownerKey: 'stack-a', roleName: 'stack-a-role' },
+      { client: stackBRoleClient, ownerKey: 'stack-b', roleName: 'stack-b-role' },
     ];
     tool.iamPolicies = [
-      { client: stackAPolicyClient, stackName: 'stack-a', policyName: 'stack-a-policy' },
-      { client: stackBPolicyClient, stackName: 'stack-b', policyName: 'stack-b-policy' },
+      { client: stackAPolicyClient, ownerKey: 'stack-a', policyName: 'stack-a-policy' },
+      { client: stackBPolicyClient, ownerKey: 'stack-b', policyName: 'stack-b-policy' },
     ];
 
     // Avoid a live SSM lookup for managed policy names
@@ -499,9 +499,219 @@ describe('cleanupStack retained resource scoping', () => {
     expect(stackBPolicyClient.send).not.toHaveBeenCalled();
 
     // And - stack-b's entries remain queued for their own stack's cleanup
-    expect(tool.iamRoles).toEqual([{ client: stackBRoleClient, stackName: 'stack-b', roleName: 'stack-b-role' }]);
+    expect(tool.iamRoles).toEqual([{ client: stackBRoleClient, ownerKey: 'stack-b', roleName: 'stack-b-role' }]);
     expect(tool.iamPolicies).toEqual([
-      { client: stackBPolicyClient, stackName: 'stack-b', policyName: 'stack-b-policy' },
+      { client: stackBPolicyClient, ownerKey: 'stack-b', policyName: 'stack-b-policy' },
     ]);
+  });
+});
+
+describe('CDKToolkit bootstrap per-owner scoping', () => {
+  /**
+   * The CDKToolkit bootstrap stack uses the same CloudFormation stack name in every
+   * account/region ("${prefix}-CDKToolkit"), so it cannot be used as the scoping key
+   * for retained resources. Each account/region must instead be tracked under an
+   * owner-qualified key so parallel deletion does not drain one owner's KMS key,
+   * S3 bucket, and log groups from another owner's cleanup pass.
+   */
+  it('prepareStackResourcesForDelete tags CDKToolkit resources with an owner-qualified key', async () => {
+    // Given - a CDKToolkit stack in two owners with distinct retained resources
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    const ownerAResources = [
+      { ResourceType: 'AWS::KMS::Key', PhysicalResourceId: 'key-owner-a' },
+      { ResourceType: 'AWS::S3::Bucket', PhysicalResourceId: 'bucket-owner-a' },
+      { ResourceType: 'AWS::Logs::LogGroup', PhysicalResourceId: 'log-owner-a' },
+    ];
+    const ownerBResources = [
+      { ResourceType: 'AWS::KMS::Key', PhysicalResourceId: 'key-owner-b' },
+      { ResourceType: 'AWS::S3::Bucket', PhysicalResourceId: 'bucket-owner-b' },
+      { ResourceType: 'AWS::Logs::LogGroup', PhysicalResourceId: 'log-owner-b' },
+    ];
+
+    // The CFN stack name is identical in both accounts; only the client and owner
+    // key differ. Both List calls hit the same shared bucket list to mimic an
+    // S3 API that returns all buckets from the caller's account.
+    const cfnClientA = {
+      send: vi
+        .fn()
+        .mockResolvedValueOnce({ StackResourceSummaries: ownerAResources, NextToken: undefined })
+        .mockResolvedValue({ Buckets: [{ Name: 'bucket-owner-a' }] }),
+    };
+    const cfnClientB = {
+      send: vi
+        .fn()
+        .mockResolvedValueOnce({ StackResourceSummaries: ownerBResources, NextToken: undefined })
+        .mockResolvedValue({ Buckets: [{ Name: 'bucket-owner-b' }] }),
+    };
+    const s3ClientA = {
+      send: vi.fn().mockResolvedValue({ Buckets: [{ Name: 'bucket-owner-a' }] }),
+    };
+    const s3ClientB = {
+      send: vi.fn().mockResolvedValue({ Buckets: [{ Name: 'bucket-owner-b' }] }),
+    };
+
+    const cfnName = 'AWSAccelerator-CDKToolkit';
+    const ownerA = `${cfnName}-111111111111-us-east-1`;
+    const ownerB = `${cfnName}-222222222222-us-east-1`;
+
+    // When - queue retained resources for both owners under the shared CFN name
+    await tool.prepareStackResourcesForDelete(cfnName, ownerA, cfnClientA, {}, s3ClientA, {}, {}, {});
+    await tool.prepareStackResourcesForDelete(cfnName, ownerB, cfnClientB, {}, s3ClientB, {}, {}, {});
+
+    // Then - each account's resources are tagged with its own owner-qualified key,
+    // so filtering by ownerKey isolates them for per-owner cleanup.
+    expect(tool.kmsKeys.filter((k: { ownerKey: string }) => k.ownerKey === ownerA)).toHaveLength(1);
+    expect(tool.kmsKeys.filter((k: { ownerKey: string }) => k.ownerKey === ownerB)).toHaveLength(1);
+    expect(tool.buckets.filter((b: { ownerKey: string }) => b.ownerKey === ownerA)).toHaveLength(1);
+    expect(tool.buckets.filter((b: { ownerKey: string }) => b.ownerKey === ownerB)).toHaveLength(1);
+    expect(tool.logGroups.filter((l: { ownerKey: string }) => l.ownerKey === ownerA)).toHaveLength(1);
+    expect(tool.logGroups.filter((l: { ownerKey: string }) => l.ownerKey === ownerB)).toHaveLength(1);
+  });
+
+  it('cleanupStack drains only the completing owner even when multiple share the CDKToolkit CFN name', async () => {
+    // Given - two owners have queued their CDKToolkit retained resources under
+    // owner-qualified keys, but both share the same CloudFormation stack name.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    const cfnName = 'AWSAccelerator-CDKToolkit';
+    const ownerA = `${cfnName}-111111111111-us-east-1`;
+    const ownerB = `${cfnName}-222222222222-us-east-1`;
+
+    const clientA = { send: vi.fn() };
+    const clientB = { send: vi.fn() };
+
+    tool.logGroups = [
+      { client: clientA, ownerKey: ownerA, logGroup: 'log-a' },
+      { client: clientB, ownerKey: ownerB, logGroup: 'log-b' },
+    ];
+    tool.buckets = [
+      { client: clientA, ownerKey: ownerA, bucket: 'bucket-a' },
+      { client: clientB, ownerKey: ownerB, bucket: 'bucket-b' },
+    ];
+    tool.kmsKeys = [
+      { client: clientA, ownerKey: ownerA, key: 'key-a' },
+      { client: clientB, ownerKey: ownerB, key: 'key-b' },
+    ];
+
+    vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'completeStackDeletion').mockResolvedValue(undefined);
+    const deleteCloudWatchLogs = vi.spyOn(tool, 'deleteCloudWatchLogs').mockResolvedValue(true);
+    const deleteBucket = vi.spyOn(tool, 'deleteBucket').mockResolvedValue(undefined);
+    const scheduleKeyDeletion = vi.spyOn(tool, 'scheduleKeyDeletion').mockResolvedValue(undefined);
+
+    // When - complete cleanup for owner A only; the shared CFN name is passed
+    // separately for the actual DeleteStack API call.
+    await tool.cleanupStack({ send: vi.fn() }, cfnName, ownerA);
+
+    // Then - only owner A's retained resources are drained
+    expect(deleteCloudWatchLogs).toHaveBeenCalledTimes(1);
+    expect(deleteCloudWatchLogs).toHaveBeenCalledWith(clientA, ownerA, 'log-a');
+    expect(deleteBucket).toHaveBeenCalledTimes(1);
+    expect(deleteBucket).toHaveBeenCalledWith(clientA, ownerA, 'bucket-a');
+    expect(scheduleKeyDeletion).toHaveBeenCalledTimes(1);
+    expect(scheduleKeyDeletion).toHaveBeenCalledWith(clientA, ownerA, 'key-a');
+
+    // And - owner B's resources are still queued for its own cleanup pass
+    expect(tool.logGroups).toEqual([{ client: clientB, ownerKey: ownerB, logGroup: 'log-b' }]);
+    expect(tool.buckets).toEqual([{ client: clientB, ownerKey: ownerB, bucket: 'bucket-b' }]);
+    expect(tool.kmsKeys).toEqual([{ client: clientB, ownerKey: ownerB, key: 'key-b' }]);
+  });
+
+  it('completeStacksDeletion computes owner-qualified keys for CDKToolkit and identity keys for regular stacks', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+    const prefix = 'AWSAccelerator';
+    const cfnName = `${prefix}-CDKToolkit`;
+    const clients = {
+      cloudFormation: {},
+      cloudWatchLogs: {},
+      s3: {},
+      backup: {},
+      iam: {},
+      kms: {},
+    };
+    tool.deleteStackLists = [
+      { clients, stackName: cfnName, accountID: '111111111111', region: 'us-east-1' },
+      { clients, stackName: cfnName, accountID: '222222222222', region: 'us-east-1' },
+      { clients, stackName: `${prefix}-LoggingStack`, accountID: '111111111111', region: 'us-east-1' },
+    ];
+
+    vi.spyOn(tool, 'validateStackExistence').mockResolvedValue({ StackName: 'exists' });
+    vi.spyOn(tool, 'disableStackTermination').mockResolvedValue(true);
+    const prepare = vi.spyOn(tool, 'prepareStackResourcesForDelete').mockResolvedValue(undefined);
+    const cleanup = vi.spyOn(tool, 'cleanupStack').mockResolvedValue(undefined);
+
+    // When
+    await tool.completeStacksDeletion(prefix);
+
+    // Then - both CDKToolkit entries share the CFN stack name but each carries
+    // a distinct account/region-qualified owner key. Passing them as literals
+    // via the arg matchers catches any future collapse to fullyQualifiedStackName.
+    const ownerA = `${cfnName}-111111111111-us-east-1`;
+    const ownerB = `${cfnName}-222222222222-us-east-1`;
+    expect(prepare).toHaveBeenNthCalledWith(
+      1,
+      cfnName,
+      ownerA,
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(prepare).toHaveBeenNthCalledWith(
+      2,
+      cfnName,
+      ownerB,
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(cleanup).toHaveBeenNthCalledWith(1, expect.anything(), cfnName, ownerA);
+    expect(cleanup).toHaveBeenNthCalledWith(2, expect.anything(), cfnName, ownerB);
+    expect(ownerA).not.toEqual(ownerB);
+
+    const regularCfn = `${prefix}-LoggingStack-111111111111-us-east-1`;
+    expect(prepare).toHaveBeenNthCalledWith(
+      3,
+      regularCfn,
+      regularCfn,
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(cleanup).toHaveBeenNthCalledWith(3, expect.anything(), regularCfn, regularCfn);
+  });
+
+  it('cleanupStack calls DeleteStack with the shared CFN stack name, not the owner key', async () => {
+    // Given
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tool = new AcceleratorTool(makeProps()) as any;
+
+    const cfnName = 'AWSAccelerator-CDKToolkit';
+    const ownerKey = `${cfnName}-111111111111-us-east-1`;
+    const cfnClient = { send: vi.fn() };
+
+    vi.spyOn(tool, 'deletePreStackDeleteResources').mockResolvedValue(undefined);
+    vi.spyOn(tool, 'deletePostStackDeleteResources').mockResolvedValue(undefined);
+    const completeStackDeletion = vi.spyOn(tool, 'completeStackDeletion').mockResolvedValue(undefined);
+
+    // When
+    await tool.cleanupStack(cfnClient, cfnName, ownerKey);
+
+    // Then - DeleteStack targets the actual CloudFormation stack name, which is
+    // the same in every account. The account-qualified owner key must never be
+    // used as the CFN stack name (that stack does not exist).
+    expect(completeStackDeletion).toHaveBeenCalledWith(cfnClient, cfnName);
   });
 });

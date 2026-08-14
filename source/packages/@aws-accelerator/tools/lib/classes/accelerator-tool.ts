@@ -328,37 +328,40 @@ export class AcceleratorTool {
   private pipelineActionNames: string[] = [];
 
   /**
-   * List of Kms key will be used to delete post stack deletion
+   * List of Kms key will be used to delete post stack deletion.
+   * ownerKey scopes the entry to a single account/region so parallel deletions do
+   * not drain resources across owners. It may differ from the actual CFN stack
+   * name (e.g., CDKToolkit which uses the same name in every account).
    */
-  private kmsKeys: { client: KMSClient; stackName: string; key: string }[] = [];
+  private kmsKeys: { client: KMSClient; ownerKey: string; key: string }[] = [];
 
   /**
    * List of backup vaults will be used to delete post stack deletion
    */
-  private backupVaults: { client: BackupClient; stackName: string; backup: string }[] = [];
+  private backupVaults: { client: BackupClient; ownerKey: string; backup: string }[] = [];
 
   /**
    * List of log groups will be used to delete post stack deletion
    */
   private logGroups: {
     client: CloudWatchLogsClient;
-    stackName: string;
+    ownerKey: string;
     logGroup: string;
   }[] = [];
   /**
    * List of buckets will be used to delete post stack deletion
    */
-  private buckets: { client: S3Client; stackName: string; bucket: string }[] = [];
+  private buckets: { client: S3Client; ownerKey: string; bucket: string }[] = [];
 
   /**
    * List of IAM roles to have policies detached prior to stack deletion
    */
-  private iamRoles: { client: IAMClient; stackName: string; roleName: string }[] = [];
+  private iamRoles: { client: IAMClient; ownerKey: string; roleName: string }[] = [];
 
   /**
    * List of IAM policies to be detached prior to stack deletion
    */
-  private iamPolicies: { client: IAMClient; stackName: string; policyName: string }[] = [];
+  private iamPolicies: { client: IAMClient; ownerKey: string; policyName: string }[] = [];
 
   /**
    * pipelineManagementAccount
@@ -1154,12 +1157,12 @@ export class AcceleratorTool {
     return true;
   }
 
-  private async removeSsmManagedPolicies(stackName: string): Promise<void> {
+  private async removeSsmManagedPolicies(ownerKey: string): Promise<void> {
     // get SsmManagedPolicies onces
     const ssmManagedPolicies = await this.getSsmManagedPolicies();
 
-    for (const item of this.iamRoles.filter(role => role.stackName === stackName)) {
-      this.debugLog(`Deleting IAM Role ${item.roleName} from ${item.stackName} stack`, 'info');
+    for (const item of this.iamRoles.filter(role => role.ownerKey === ownerKey)) {
+      this.debugLog(`Deleting IAM Role ${item.roleName} from ${item.ownerKey} stack`, 'info');
       try {
         // Get managed policies
         const listAttachedRolePoliciesResponse = await throttlingBackOff(() =>
@@ -1170,7 +1173,7 @@ export class AcceleratorTool {
         for (const policy of listAttachedRolePoliciesResponse.AttachedPolicies!) {
           if (ssmManagedPolicies.indexOf(policy.PolicyName!) !== -1) {
             this.debugLog(
-              `Managed policy ${policy.PolicyName} detached from IAM Role ${item.roleName} from ${item.stackName}`,
+              `Managed policy ${policy.PolicyName} detached from IAM Role ${item.roleName} from ${item.ownerKey}`,
               'info',
             );
             await throttlingBackOff(() =>
@@ -1183,16 +1186,16 @@ export class AcceleratorTool {
         e: any
       ) {
         if (e.name === 'NoSuchEntity') {
-          this.debugLog(`IAM Role ${item.roleName} from ${item.stackName} stack not found !!`, 'info');
+          this.debugLog(`IAM Role ${item.roleName} from ${item.ownerKey} stack not found !!`, 'info');
         }
       }
     }
-    this.iamRoles = this.iamRoles.filter(role => role.stackName !== stackName);
+    this.iamRoles = this.iamRoles.filter(role => role.ownerKey !== ownerKey);
   }
 
-  private async detachPoliciesFromRole(stackName: string): Promise<void> {
-    for (const item of this.iamPolicies.filter(policy => policy.stackName === stackName)) {
-      this.debugLog(`Detaching IAM policy ${item.policyName} from ${item.stackName} stack`, 'info');
+  private async detachPoliciesFromRole(ownerKey: string): Promise<void> {
+    for (const item of this.iamPolicies.filter(policy => policy.ownerKey === ownerKey)) {
+      this.debugLog(`Detaching IAM policy ${item.policyName} from ${item.ownerKey} stack`, 'info');
 
       try {
         // Get roles with this policy attached
@@ -1202,7 +1205,7 @@ export class AcceleratorTool {
         //Detach policy from roles
         for (const role of listEntitiesForPolicyResponse.PolicyRoles!) {
           this.debugLog(
-            `Detaching policy ${item.policyName} from role ${role.RoleName} from ${item.stackName} stack`,
+            `Detaching policy ${item.policyName} from role ${role.RoleName} from ${item.ownerKey} stack`,
             'info',
           );
           await throttlingBackOff(() =>
@@ -1214,11 +1217,11 @@ export class AcceleratorTool {
         e: any
       ) {
         if (e.name === 'NoSuchEntity') {
-          this.debugLog(`IAM Policy ${item.policyName} from ${item.stackName} stack not found !!`, 'info');
+          this.debugLog(`IAM Policy ${item.policyName} from ${item.ownerKey} stack not found !!`, 'info');
         }
       }
     }
-    this.iamPolicies = this.iamPolicies.filter(policy => policy.stackName !== stackName);
+    this.iamPolicies = this.iamPolicies.filter(policy => policy.ownerKey !== ownerKey);
   }
 
   /**
@@ -1855,18 +1858,19 @@ export class AcceleratorTool {
 
   /**
    * Function to delete stack's resources like S3/Cloudwatch logs, KMS key
-   * @param accountId
-   * @param stackName
+   * @param cfnStackName Actual CloudFormation stack name used for the ListStackResources API call
+   * @param ownerKey Account/region-qualified scoping key stored on each retained resource entry
    * @param cloudFormationClient
    * @param cloudWatchLogsClient
    * @param s3Client
    * @param backupClient
-   * @param iamClient
    * @param kMSClient
+   * @param iamClient
    * @private
    */
   private async prepareStackResourcesForDelete(
-    stackName: string,
+    cfnStackName: string,
+    ownerKey: string,
     cloudFormationClient: CloudFormationClient,
     cloudWatchLogsClient: CloudWatchLogsClient,
     s3Client: S3Client,
@@ -1877,28 +1881,28 @@ export class AcceleratorTool {
     let nextToken: string | undefined = undefined;
     do {
       const page = await throttlingBackOff(() =>
-        cloudFormationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+        cloudFormationClient.send(new ListStackResourcesCommand({ StackName: cfnStackName, NextToken: nextToken })),
       );
       for (const stackResourceSummary of page.StackResourceSummaries ?? []) {
         switch (stackResourceSummary.ResourceType) {
           case 'AWS::KMS::Key':
             this.kmsKeys.push({
               client: kMSClient,
-              stackName: stackName,
+              ownerKey: ownerKey,
               key: stackResourceSummary.PhysicalResourceId!,
             });
             break;
           case 'AWS::Backup::BackupVault':
             this.backupVaults.push({
               client: backupClient,
-              stackName: stackName,
+              ownerKey: ownerKey,
               backup: stackResourceSummary.PhysicalResourceId!,
             });
             break;
           case 'AWS::Logs::LogGroup':
             this.logGroups.push({
               client: cloudWatchLogsClient,
-              stackName: stackName,
+              ownerKey: ownerKey,
               logGroup: stackResourceSummary.PhysicalResourceId!,
             });
             break;
@@ -1908,7 +1912,7 @@ export class AcceleratorTool {
               if (bucket.Name === stackResourceSummary.PhysicalResourceId) {
                 this.buckets.push({
                   client: s3Client,
-                  stackName: stackName,
+                  ownerKey: ownerKey,
                   bucket: stackResourceSummary.PhysicalResourceId!,
                 });
               }
@@ -1919,7 +1923,7 @@ export class AcceleratorTool {
             // config rule which will cause stack deletion to fail
             this.iamRoles.push({
               client: iamClient,
-              stackName: stackName,
+              ownerKey: ownerKey,
               roleName: stackResourceSummary.PhysicalResourceId!,
             });
             break;
@@ -1928,7 +1932,7 @@ export class AcceleratorTool {
             // We have to detach the policy from any roles or the stack will fail to delete the policy.
             this.iamPolicies.push({
               client: iamClient,
-              stackName: stackName,
+              ownerKey: ownerKey,
               policyName: stackResourceSummary.PhysicalResourceId!,
             });
             break;
@@ -2386,8 +2390,13 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
       return;
     }
 
-    // Prepare list of resources to be deleted before and after stack deletion
+    // Prepare list of resources to be deleted before and after stack deletion.
+    // deleteStack is called for stack names that are already unique per owner
+    // (pipeline stacks include -{account}-{region}) or for single-account
+    // contexts (CDKToolkit in fullDestroy of the executing account only), so
+    // reusing the CFN stack name as the owner key is safe here.
     await this.prepareStackResourcesForDelete(
+      stackName,
       stackName,
       cloudFormationClient,
       new CloudWatchLogsClient({}),
@@ -2581,53 +2590,53 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
   /**
    * Function to schedule deletion of ksm keys post stack deletion
    */
-  private async deleteKmsKeys(stackName: string) {
+  private async deleteKmsKeys(ownerKey: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.kmsKeys.filter(key => key.stackName === stackName)) {
-        this.debugLog(`Scheduling deletion of KMS key ${item.stackName} ${item.key}`, 'info');
-        await this.scheduleKeyDeletion(item.client, item.stackName, item.key);
+      for (const item of this.kmsKeys.filter(key => key.ownerKey === ownerKey)) {
+        this.debugLog(`Scheduling deletion of KMS key ${item.ownerKey} ${item.key}`, 'info');
+        await this.scheduleKeyDeletion(item.client, item.ownerKey, item.key);
       }
     }
-    this.kmsKeys = this.kmsKeys.filter(key => key.stackName !== stackName);
+    this.kmsKeys = this.kmsKeys.filter(key => key.ownerKey !== ownerKey);
   }
 
   /**
    * Function to delete backup vaults
    */
-  private async deleteBackupVaults(stackName: string) {
+  private async deleteBackupVaults(ownerKey: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.backupVaults.filter(vault => vault.stackName === stackName)) {
-        this.debugLog(`Deleting backup vault', ${item.stackName} ${item.backup}`, 'display');
-        await this.deleteBackupVault(item.client, item.stackName, item.backup);
+      for (const item of this.backupVaults.filter(vault => vault.ownerKey === ownerKey)) {
+        this.debugLog(`Deleting backup vault', ${item.ownerKey} ${item.backup}`, 'display');
+        await this.deleteBackupVault(item.client, item.ownerKey, item.backup);
       }
     }
-    this.backupVaults = this.backupVaults.filter(vault => vault.stackName !== stackName);
+    this.backupVaults = this.backupVaults.filter(vault => vault.ownerKey !== ownerKey);
   }
 
   /**
    * Function to delete log groups
    */
-  private async deleteLogGroups(stackName: string) {
+  private async deleteLogGroups(ownerKey: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.logGroups.filter(logGroup => logGroup.stackName === stackName)) {
-        this.debugLog(`Deleting log group', ${item.stackName} ${item.logGroup}`, 'display');
-        await this.deleteCloudWatchLogs(item.client, item.stackName, item.logGroup);
+      for (const item of this.logGroups.filter(logGroup => logGroup.ownerKey === ownerKey)) {
+        this.debugLog(`Deleting log group', ${item.ownerKey} ${item.logGroup}`, 'display');
+        await this.deleteCloudWatchLogs(item.client, item.ownerKey, item.logGroup);
       }
     }
-    this.logGroups = this.logGroups.filter(logGroup => logGroup.stackName !== stackName);
+    this.logGroups = this.logGroups.filter(logGroup => logGroup.ownerKey !== ownerKey);
   }
 
   /**
    * Function to delete buckets post stack deletion, if buckets deleted before stack replication custom resource will fail
    */
-  private async deleteBuckets(stackName: string) {
+  private async deleteBuckets(ownerKey: string) {
     if (!this.acceleratorToolProps.keepData) {
-      for (const item of this.buckets.filter(bucket => bucket.stackName === stackName)) {
-        this.debugLog(`Deleting bucket', ${item.stackName} ${item.bucket}`, 'display');
-        await this.deleteBucket(item.client, item.stackName, item.bucket);
+      for (const item of this.buckets.filter(bucket => bucket.ownerKey === ownerKey)) {
+        this.debugLog(`Deleting bucket', ${item.ownerKey} ${item.bucket}`, 'display');
+        await this.deleteBucket(item.client, item.ownerKey, item.bucket);
       }
     }
-    this.buckets = this.buckets.filter(bucket => bucket.stackName !== stackName);
+    this.buckets = this.buckets.filter(bucket => bucket.ownerKey !== ownerKey);
   }
 
   /**
@@ -2692,8 +2701,11 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
             );
             await this.disableStackTermination(item.clients.cloudFormation, accountStack, item.accountID, item.region);
 
-            // Prepare list of resources to be deleted before and after stack deletion
+            // Prepare list of resources to be deleted before and after stack deletion.
+            // V2 stack names already include -{account}-{region}, so accountStack
+            // is both the CFN stack name and a unique owner-scoped key.
             await this.prepareStackResourcesForDelete(
+              accountStack,
               accountStack,
               item.clients.cloudFormation,
               item.clients.cloudWatchLogs,
@@ -2703,7 +2715,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
               item.clients.iam,
             );
 
-            await this.cleanupStack(item.clients.cloudFormation, accountStack);
+            await this.cleanupStack(item.clients.cloudFormation, accountStack, accountStack);
           }
         }
       }
@@ -2731,10 +2743,16 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
     let stackName = '';
     for (const item of this.deleteStackLists) {
       stackName = item.stackName;
+      // CDKToolkit uses the same CFN stack name in every account/region, so we
+      // qualify the scoping key with account+region to keep retained-resource
+      // cleanup (log groups, S3 buckets, KMS keys, backup vaults, IAM roles/
+      // policies) scoped to a single owner, matching the behavior of regular
+      // stacks whose fullyQualifiedStackName already includes the suffix.
       const fullyQualifiedStackName =
         item.stackName === `${acceleratorPrefix}-CDKToolkit`
           ? `${acceleratorPrefix}-CDKToolkit`
           : `${item.stackName}-${item.accountID}-${item.region}`;
+      const ownerKey = `${item.stackName}-${item.accountID}-${item.region}`;
 
       if (item.hasV2Stacks) {
         this.logger.info(
@@ -2761,6 +2779,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
         // Prepare list of resources to be deleted before and after stack deletion
         await this.prepareStackResourcesForDelete(
           fullyQualifiedStackName,
+          ownerKey,
           item.clients.cloudFormation,
           item.clients.cloudWatchLogs,
           item.clients.s3,
@@ -2769,7 +2788,7 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
           item.clients.iam,
         );
 
-        promises.push(this.cleanupStack(item.clients.cloudFormation, fullyQualifiedStackName));
+        promises.push(this.cleanupStack(item.clients.cloudFormation, fullyQualifiedStackName, ownerKey));
       }
     }
 
@@ -2790,39 +2809,44 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
   /**
    * Function to clean stack and it's resources
    * @param cloudFormationClient
-   * @param stackName
+   * @param cfnStackName Actual CloudFormation stack name used for AWS API calls
+   * @param ownerKey Account/region-qualified scoping key for retained resources.
+   *                 Defaults to cfnStackName for stack names that are already
+   *                 unique per owner (e.g., regular LZA stacks include the
+   *                 account/region suffix).
    */
-  private async cleanupStack(cloudFormationClient: CloudFormationClient, stackName: string) {
-    await this.deletePreStackDeleteResources(stackName);
-    await this.completeStackDeletion(cloudFormationClient, stackName);
-    await this.deletePostStackDeleteResources(stackName);
+  private async cleanupStack(cloudFormationClient: CloudFormationClient, cfnStackName: string, ownerKey?: string) {
+    const scopeKey = ownerKey ?? cfnStackName;
+    await this.deletePreStackDeleteResources(scopeKey);
+    await this.completeStackDeletion(cloudFormationClient, cfnStackName);
+    await this.deletePostStackDeleteResources(scopeKey);
   }
 
   /**
    * Function to delete resources before stack deletion
    */
-  private async deletePreStackDeleteResources(stackName: string): Promise<void> {
+  private async deletePreStackDeleteResources(ownerKey: string): Promise<void> {
     // 1. For roles in this stack, remove SsmManagedPolicies that would prevent role deletion
-    await this.removeSsmManagedPolicies(stackName);
+    await this.removeSsmManagedPolicies(ownerKey);
     // 2. For policies in this stack, detach from any roles that would prevent policy deletion
-    await this.detachPoliciesFromRole(stackName);
+    await this.detachPoliciesFromRole(ownerKey);
   }
 
   /**
    * Function to delete resources after stack deletion
    */
-  private async deletePostStackDeleteResources(stackName: string): Promise<void> {
+  private async deletePostStackDeleteResources(ownerKey: string): Promise<void> {
     // Delete cloudwatch log groups
-    await this.deleteLogGroups(stackName);
+    await this.deleteLogGroups(ownerKey);
 
     // Delete backup vaults
-    await this.deleteBackupVaults(stackName);
+    await this.deleteBackupVaults(ownerKey);
 
     // Delete buckets
-    await this.deleteBuckets(stackName);
+    await this.deleteBuckets(ownerKey);
 
     // Delete KMS keys
-    await this.deleteKmsKeys(stackName);
+    await this.deleteKmsKeys(ownerKey);
   }
 
   private async completeStackDeletion(cloudFormationClient: CloudFormationClient, stackName: string): Promise<void> {
