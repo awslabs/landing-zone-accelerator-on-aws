@@ -22,9 +22,10 @@ import {
   AttachRolePolicyCommand,
   waitUntilRoleExists,
   NoSuchEntityException,
-  UpdateAssumeRolePolicyCommand,
   DeleteRoleCommand,
   DetachRolePolicyCommand,
+  ListAttachedRolePoliciesCommand,
+  ListRolePoliciesCommand,
   DeleteRolePolicyCommand,
 } from '@aws-sdk/client-iam';
 import { MODULE_EXCEPTIONS } from '../../../../../common/enums';
@@ -40,14 +41,11 @@ vi.mock('@aws-sdk/client-iam', () => {
     TagRoleCommand: vi.fn(),
     NoSuchEntityException: vi.fn(),
     waitUntilRoleExists: vi.fn(),
-    UpdateAssumeRolePolicyCommand: vi.fn(),
-    // Not used by the module under test. Imported here so the tests can assert that no destructive IAM call is
-    // ever made against a pre-existing Control Tower role.
     DeleteRoleCommand: vi.fn(),
     DetachRolePolicyCommand: vi.fn(),
-    DeleteRolePolicyCommand: vi.fn(),
     ListAttachedRolePoliciesCommand: vi.fn(),
     ListRolePoliciesCommand: vi.fn(),
+    DeleteRolePolicyCommand: vi.fn(),
   };
 });
 
@@ -67,30 +65,16 @@ const MOCK_CONSTANTS = {
     'AWSControlTowerStackSetRole',
     'AWSControlTowerConfigAggregatorRoleForOrganizations',
   ],
-  /**
-   * Trust principal each required role is expected to be reconciled to, in the same order as
-   * requiredControlTowerRoleNames.
-   */
-  expectedAssumeRolePrincipals: [
-    'controltower.amazonaws.com',
-    'cloudtrail.amazonaws.com',
-    'cloudformation.amazonaws.com',
-    'config.amazonaws.com',
-  ],
-  controlTowerRolePath: '/service-role/',
+  existingControlTowerRole: {
+    RoleName: 'AWSControlTowerAdmin',
+    Arn: 'MockRoleArn',
+  },
   mockRole: {
     RoleName: 'mockRoleName',
     Arn: 'MockRoleArn',
   },
   unknownError: new Error('Unknown command'),
 };
-
-/**
- * Builds the GetRole response for a pre-existing Control Tower role.
- */
-function existingRole(roleName: string, path: string = MOCK_CONSTANTS.controlTowerRolePath) {
-  return { RoleName: roleName, Arn: `arn:aws:iam::111111111111:role${path}${roleName}`, Path: path };
-}
 
 /**
  * The NoSuchEntityException IAM raises when a role is absent.
@@ -100,25 +84,23 @@ function roleNotFound() {
 }
 
 /**
- * Commands that would destroy or strip a pre-existing role. None of these may ever be issued.
- */
-const DESTRUCTIVE_COMMANDS = [DeleteRoleCommand, DetachRolePolicyCommand, DeleteRolePolicyCommand];
-
-function expectNothingDestructive() {
-  for (const command of DESTRUCTIVE_COMMANDS) {
-    expect(command).toHaveBeenCalledTimes(0);
-  }
-}
-
-/**
  * Returns the 1-based global invocation order of the first call to the given mocked command constructor.
- * vitest records this across all mocks, which lets a test constrain the sequence of calls rather than only
+ * vitest records this across all mocks, which lets a test constrain the sequence of calls instead of only
  * asserting that they happened.
  */
 function firstCallOrder(command: unknown): number {
   const order = (command as vi.Mock).mock.invocationCallOrder;
   expect(order.length).toBeGreaterThan(0);
   return order[0];
+}
+
+/**
+ * Returns the invocation order of the last call to the given mocked command constructor.
+ */
+function lastCallOrder(command: unknown): number {
+  const order = (command as vi.Mock).mock.invocationCallOrder;
+  expect(order.length).toBeGreaterThan(0);
+  return order[order.length - 1];
 }
 
 describe('IAM Role Tests', () => {
@@ -136,24 +118,49 @@ describe('IAM Role Tests', () => {
   });
 
   /**
-   * Resolves every command the happy path issues. `getRoleResponses` is consumed in order, one entry per
-   * GetRole call, which mirrors the sequential loop over requiredControlTowerRoleNames. Once the supplied
-   * entries are exhausted the remaining roles are reported as absent, so a test only has to describe the
-   * roles it actually cares about.
+   * Resolves every command the delete-and-recreate path issues.
    *
-   * Note that NoSuchEntityException is itself mocked, so a thrown entry cannot be detected with
-   * `instanceof Error`. Rejections are marked explicitly instead.
+   * `getRoleResponses` is consumed in order, one entry per GetRole call, mirroring the sequential loop over
+   * requiredControlTowerRoleNames. Once the entries are exhausted the remaining roles are reported as absent,
+   * so a test only has to describe the roles it cares about. NoSuchEntityException is itself mocked and is not
+   * an `instanceof Error`, so rejections are marked explicitly.
    */
-  function mockIamWith(getRoleResponses: Array<{ Role: unknown } | { reject: unknown }>) {
+  function mockIamWith(options: {
+    getRoleResponses: Array<{ Role: unknown } | { reject: unknown }>;
+    attachedPolicyPages?: Array<{
+      AttachedPolicies: Array<{ PolicyArn: string }>;
+      IsTruncated?: boolean;
+      Marker?: string;
+    }>;
+    inlinePolicyPages?: Array<{ PolicyNames: string[]; IsTruncated?: boolean; Marker?: string }>;
+    onDeleteRole?: () => Promise<unknown>;
+  }) {
+    const attachedPages = options.attachedPolicyPages ?? [{ AttachedPolicies: [], IsTruncated: false }];
+    const inlinePages = options.inlinePolicyPages ?? [{ PolicyNames: [], IsTruncated: false }];
     let getRoleCallCount = 0;
+    let attachedCallCount = 0;
+    let inlineCallCount = 0;
+
     mockSend.mockImplementation(command => {
       if (command instanceof GetRoleCommand) {
-        const response = getRoleResponses[getRoleCallCount++] ?? { reject: roleNotFound() };
+        const response = options.getRoleResponses[getRoleCallCount++] ?? { reject: roleNotFound() };
         return 'reject' in response ? Promise.reject(response.reject) : Promise.resolve(response);
       }
+      if (command instanceof ListAttachedRolePoliciesCommand) {
+        const page = attachedPages[Math.min(attachedCallCount++, attachedPages.length - 1)];
+        return Promise.resolve(page);
+      }
+      if (command instanceof ListRolePoliciesCommand) {
+        const page = inlinePages[Math.min(inlineCallCount++, inlinePages.length - 1)];
+        return Promise.resolve(page);
+      }
+      if (command instanceof DeleteRoleCommand) {
+        return options.onDeleteRole ? options.onDeleteRole() : Promise.resolve(undefined);
+      }
       if (
+        command instanceof DetachRolePolicyCommand ||
+        command instanceof DeleteRolePolicyCommand ||
         command instanceof CreateRoleCommand ||
-        command instanceof UpdateAssumeRolePolicyCommand ||
         command instanceof PutRolePolicyCommand ||
         command instanceof AttachRolePolicyCommand
       ) {
@@ -162,13 +169,20 @@ describe('IAM Role Tests', () => {
 
       return Promise.reject(MOCK_CONSTANTS.unknownError);
     });
+
     (waitUntilRoleExists as vi.Mock).mockReturnValue({ state: 'SUCCESS' });
   }
 
-  test('should reuse pre-existing roles instead of throwing or deleting them', async () => {
-    // Setup - every required role already exists at the expected path, as it would after a run that
-    // created the roles and then failed at a later prerequisite step.
-    mockIamWith(MOCK_CONSTANTS.requiredControlTowerRoleNames.map(name => ({ Role: existingRole(name) })));
+  /**
+   * GetRole response for a role that already exists.
+   */
+  function existing(roleName: string) {
+    return { Role: { RoleName: roleName, Arn: `MockRoleArn/${roleName}` } };
+  }
+
+  test('should delete and re-create an existing role instead of throwing', async () => {
+    // Setup - only AWSControlTowerAdmin already exists, and it carries no policies
+    mockIamWith({ getRoleResponses: [existing(MOCK_CONSTANTS.existingControlTowerRole.RoleName)] });
 
     // Execute
     const response = await IamRole.createControlTowerRoles(
@@ -178,16 +192,18 @@ describe('IAM Role Tests', () => {
       MOCK_CONSTANTS.credentials,
     );
 
-    // Verify - the step succeeds, nothing is created and nothing is destroyed
+    // Verify - the existing role is deleted and all four required roles are created
     expect(response).toBeUndefined();
-    expect(CreateRoleCommand).toHaveBeenCalledTimes(0);
-    expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
-    expectNothingDestructive();
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(1);
+    expect(DeleteRoleCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ RoleName: MOCK_CONSTANTS.existingControlTowerRole.RoleName }),
+    );
+    expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
   });
 
-  test('should re-apply the required policies onto pre-existing roles', async () => {
+  test('should re-create the deleted role after deleting it', async () => {
     // Setup
-    mockIamWith(MOCK_CONSTANTS.requiredControlTowerRoleNames.map(name => ({ Role: existingRole(name) })));
+    mockIamWith({ getRoleResponses: [existing(MOCK_CONSTANTS.existingControlTowerRole.RoleName)] });
 
     // Execute
     await IamRole.createControlTowerRoles(
@@ -197,24 +213,38 @@ describe('IAM Role Tests', () => {
       MOCK_CONSTANTS.credentials,
     );
 
-    // Verify - reconciling an existing role applies exactly the same policy set as creating it from scratch:
-    // 2 inline policies (Admin, StackSet) and 3 managed policies (Admin, CloudTrail, ConfigAggregator).
-    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(2);
-    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(3);
+    // Verify - ordering, so a re-create can never be issued before the delete that frees the name
+    expect(firstCallOrder(DeleteRoleCommand)).toBeLessThan(firstCallOrder(CreateRoleCommand));
+    expect(CreateRoleCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        RoleName: MOCK_CONSTANTS.existingControlTowerRole.RoleName,
+        Path: '/service-role/',
+      }),
+    );
+    // The re-created role gets its required policies back
     expect(PutRolePolicyCommand).toHaveBeenCalledWith(
-      expect.objectContaining({ RoleName: 'AWSControlTowerAdmin', PolicyName: 'AWSControlTowerAdminPolicy' }),
+      expect.objectContaining({
+        RoleName: 'AWSControlTowerAdmin',
+        PolicyName: 'AWSControlTowerAdminPolicy',
+      }),
     );
     expect(AttachRolePolicyCommand).toHaveBeenCalledWith(
       expect.objectContaining({
-        RoleName: 'AWSControlTowerCloudTrailRole',
-        PolicyArn: `arn:${MOCK_CONSTANTS.partition}:iam::aws:policy/service-role/AWSControlTowerCloudTrailRolePolicy`,
+        RoleName: 'AWSControlTowerAdmin',
+        PolicyArn: `arn:${MOCK_CONSTANTS.partition}:iam::aws:policy/service-role/AWSControlTowerServiceRolePolicy`,
       }),
     );
   });
 
-  test('should reconcile each pre-existing role to its required trust principal', async () => {
-    // Setup
-    mockIamWith(MOCK_CONSTANTS.requiredControlTowerRoleNames.map(name => ({ Role: existingRole(name) })));
+  test('should detach managed and remove inline policies before deleting an existing role', async () => {
+    // Setup - the existing role carries one managed and one inline policy
+    mockIamWith({
+      getRoleResponses: [existing(MOCK_CONSTANTS.existingControlTowerRole.RoleName)],
+      attachedPolicyPages: [
+        { AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockManagedPolicy' }], IsTruncated: false },
+      ],
+      inlinePolicyPages: [{ PolicyNames: ['MockInlinePolicy'], IsTruncated: false }],
+    });
 
     // Execute
     await IamRole.createControlTowerRoles(
@@ -224,54 +254,76 @@ describe('IAM Role Tests', () => {
       MOCK_CONSTANTS.credentials,
     );
 
-    // Verify - the trust policy written to each existing role names that role's own service principal
-    MOCK_CONSTANTS.requiredControlTowerRoleNames.forEach((roleName, index) => {
-      expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledWith(
-        expect.objectContaining({
-          RoleName: roleName,
-          PolicyDocument: expect.stringContaining(MOCK_CONSTANTS.expectedAssumeRolePrincipals[index]),
-        }),
-      );
-    });
+    // Verify - ordering, not just occurrence. IAM rejects DeleteRole while any policy is still attached, so
+    // asserting only the call counts would let a reordering through.
+    expect(DetachRolePolicyCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        RoleName: MOCK_CONSTANTS.existingControlTowerRole.RoleName,
+        PolicyArn: 'arn:aws:iam::aws:policy/MockManagedPolicy',
+      }),
+    );
+    expect(DeleteRolePolicyCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        RoleName: MOCK_CONSTANTS.existingControlTowerRole.RoleName,
+        PolicyName: 'MockInlinePolicy',
+      }),
+    );
+    expect(lastCallOrder(DetachRolePolicyCommand)).toBeLessThan(firstCallOrder(DeleteRoleCommand));
+    expect(lastCallOrder(DeleteRolePolicyCommand)).toBeLessThan(firstCallOrder(DeleteRoleCommand));
   });
 
-  test('should write an identical trust policy whether the role is created or reconciled', async () => {
-    // Setup - AWSControlTowerAdmin is created from scratch
-    mockIamWith([{ Role: MOCK_CONSTANTS.mockRole }]);
-    await IamRole.createControlTowerRoles(
-      MOCK_CONSTANTS.partition,
-      MOCK_CONSTANTS.region,
-      MOCK_CONSTANTS.solutionId,
-      MOCK_CONSTANTS.credentials,
-    );
-    const createdDocument = (CreateRoleCommand as vi.Mock).mock.calls[0][0].AssumeRolePolicyDocument;
-
-    // Setup - AWSControlTowerAdmin already exists and is reconciled
-    vi.clearAllMocks();
-    (IAMClient as vi.Mock).mockImplementation(function () {
-      return { send: mockSend };
+  test('should list every page of policies before removing any of them', async () => {
+    // Setup - attached and inline policies both span two pages
+    mockIamWith({
+      getRoleResponses: [existing(MOCK_CONSTANTS.existingControlTowerRole.RoleName)],
+      attachedPolicyPages: [
+        {
+          AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockPolicyPageOne' }],
+          IsTruncated: true,
+          Marker: 'mockAttachedMarker',
+        },
+        { AttachedPolicies: [{ PolicyArn: 'arn:aws:iam::aws:policy/MockPolicyPageTwo' }], IsTruncated: false },
+      ],
+      inlinePolicyPages: [
+        { PolicyNames: ['MockInlinePageOne'], IsTruncated: true, Marker: 'mockInlineMarker' },
+        { PolicyNames: ['MockInlinePageTwo'], IsTruncated: false },
+      ],
     });
-    mockIamWith([{ Role: existingRole('AWSControlTowerAdmin') }]);
+
+    // Execute
     await IamRole.createControlTowerRoles(
       MOCK_CONSTANTS.partition,
       MOCK_CONSTANTS.region,
       MOCK_CONSTANTS.solutionId,
       MOCK_CONSTANTS.credentials,
     );
-    const reconciledDocument = (UpdateAssumeRolePolicyCommand as vi.Mock).mock.calls[0][0].PolicyDocument;
 
-    // Verify - both paths derive the document from the same helper, so they must not drift apart
-    expect(createdDocument).toBe(reconciledDocument);
+    // Verify - the second page request carries the marker from the first
+    expect(ListAttachedRolePoliciesCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ Marker: 'mockAttachedMarker' }),
+    );
+    expect(ListRolePoliciesCommand).toHaveBeenCalledWith(expect.objectContaining({ Marker: 'mockInlineMarker' }));
+
+    // Every policy from both pages is removed
+    expect(DetachRolePolicyCommand).toHaveBeenCalledTimes(2);
+    expect(DeleteRolePolicyCommand).toHaveBeenCalledTimes(2);
+
+    // Pagination completes before anything is removed. Detaching mid-pagination can shift the remaining
+    // entries past the marker and silently skip a policy, which then fails the delete.
+    expect(lastCallOrder(ListAttachedRolePoliciesCommand)).toBeLessThan(firstCallOrder(DetachRolePolicyCommand));
+    expect(lastCallOrder(ListRolePoliciesCommand)).toBeLessThan(firstCallOrder(DeleteRolePolicyCommand));
   });
 
   test('should recover a partially completed run where only some roles exist', async () => {
-    // Setup - roles 0 and 2 were created by an earlier run that then failed; 1 and 3 were never created.
-    mockIamWith([
-      { Role: existingRole(MOCK_CONSTANTS.requiredControlTowerRoleNames[0]) },
-      { reject: roleNotFound() },
-      { Role: existingRole(MOCK_CONSTANTS.requiredControlTowerRoleNames[2]) },
-      { reject: roleNotFound() },
-    ]);
+    // Setup - an earlier run created roles 0 and 2 and then failed; 1 and 3 were never created
+    mockIamWith({
+      getRoleResponses: [
+        existing(MOCK_CONSTANTS.requiredControlTowerRoleNames[0]),
+        { reject: roleNotFound() },
+        existing(MOCK_CONSTANTS.requiredControlTowerRoleNames[2]),
+        { reject: roleNotFound() },
+      ],
+    });
 
     // Execute
     await IamRole.createControlTowerRoles(
@@ -281,25 +333,26 @@ describe('IAM Role Tests', () => {
       MOCK_CONSTANTS.credentials,
     );
 
-    // Verify - the two missing roles are created, the two present roles are reconciled, none are destroyed
+    // Verify - only the two pre-existing roles are deleted, and all four end up created
     expect(GetRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
-    expect(CreateRoleCommand).toHaveBeenCalledTimes(2);
-    expect(CreateRoleCommand).toHaveBeenCalledWith(
-      expect.objectContaining({ RoleName: MOCK_CONSTANTS.requiredControlTowerRoleNames[1] }),
-    );
-    expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledTimes(2);
-    expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledWith(
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(2);
+    expect(DeleteRoleCommand).toHaveBeenCalledWith(
       expect.objectContaining({ RoleName: MOCK_CONSTANTS.requiredControlTowerRoleNames[0] }),
     );
-    // Every role still ends up with its full policy set
+    expect(DeleteRoleCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ RoleName: MOCK_CONSTANTS.requiredControlTowerRoleNames[2] }),
+    );
+    expect(DeleteRoleCommand).not.toHaveBeenCalledWith(
+      expect.objectContaining({ RoleName: MOCK_CONSTANTS.requiredControlTowerRoleNames[1] }),
+    );
+    expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
     expect(PutRolePolicyCommand).toHaveBeenCalledTimes(2);
     expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(3);
-    expectNothingDestructive();
   });
 
-  test('should reconcile the trust policy before applying the role policies', async () => {
-    // Setup - a single pre-existing role, so the recorded call order is unambiguous
-    mockIamWith([{ Role: existingRole('AWSControlTowerAdmin') }]);
+  test('should not attempt any deletion when none of the roles exist', async () => {
+    // Setup - every role is absent
+    mockIamWith({ getRoleResponses: [] });
 
     // Execute
     await IamRole.createControlTowerRoles(
@@ -309,18 +362,26 @@ describe('IAM Role Tests', () => {
       MOCK_CONSTANTS.credentials,
     );
 
-    // Verify - ordering, not just occurrence. The role must be reconciled and present before policies are
-    // written to it, otherwise the policy calls would race the trust policy update.
-    expect(firstCallOrder(GetRoleCommand)).toBeLessThan(firstCallOrder(UpdateAssumeRolePolicyCommand));
-    expect(firstCallOrder(UpdateAssumeRolePolicyCommand)).toBeLessThan(firstCallOrder(PutRolePolicyCommand));
-    expect(firstCallOrder(PutRolePolicyCommand)).toBeLessThan(firstCallOrder(AttachRolePolicyCommand));
+    // Verify - a clean account never issues a destructive call, and never even lists policies
+    expect(DeleteRoleCommand).toHaveBeenCalledTimes(0);
+    expect(DetachRolePolicyCommand).toHaveBeenCalledTimes(0);
+    expect(DeleteRolePolicyCommand).toHaveBeenCalledTimes(0);
+    expect(ListAttachedRolePoliciesCommand).toHaveBeenCalledTimes(0);
+    expect(ListRolePoliciesCommand).toHaveBeenCalledTimes(0);
+    expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
   });
 
-  test('should fail with an actionable error when an existing role is under an unexpected path', async () => {
-    // Setup - a role of the right name exists, but not under /service-role/
-    mockIamWith([{ Role: existingRole('AWSControlTowerAdmin', '/') }]);
+  test('should surface a failure to delete an existing role and not re-create it', async () => {
+    // Setup - DeleteRole fails, as it would if the role were still in use
+    const deleteError = new Error(
+      'DeleteConflictException: Cannot delete entity, must remove roles from instance profile first.',
+    );
+    mockIamWith({
+      getRoleResponses: [existing(MOCK_CONSTANTS.existingControlTowerRole.RoleName)],
+      onDeleteRole: () => Promise.reject(deleteError),
+    });
 
-    // Execute and Verify
+    // Execute and Verify - the error propagates rather than being swallowed, and the loop stops
     await expect(async () => {
       await IamRole.createControlTowerRoles(
         MOCK_CONSTANTS.partition,
@@ -328,16 +389,8 @@ describe('IAM Role Tests', () => {
         MOCK_CONSTANTS.solutionId,
         MOCK_CONSTANTS.credentials,
       );
-    }).rejects.toThrow(
-      `${MODULE_EXCEPTIONS.INVALID_INPUT}: Existing AWS Control Tower Landing Zone role AWSControlTowerAdmin is under path "/"`,
-    );
-
-    // The role is left exactly as it was found: not moved, not deleted, not re-trusted
-    expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledTimes(0);
+    }).rejects.toThrow(deleteError.message);
     expect(CreateRoleCommand).toHaveBeenCalledTimes(0);
-    expect(PutRolePolicyCommand).toHaveBeenCalledTimes(0);
-    expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(0);
-    expectNothingDestructive();
   });
 
   test('should handle service api exception for while checking existing roles', async () => {
@@ -401,14 +454,12 @@ describe('IAM Role Tests', () => {
     expect(CreateRoleCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         RoleName: MOCK_CONSTANTS.requiredControlTowerRoleNames[0],
-        Path: MOCK_CONSTANTS.controlTowerRolePath,
         AssumeRolePolicyDocument: expect.stringContaining('sts:AssumeRole'),
       }),
     );
     expect(CreateRoleCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length);
     expect(PutRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 2);
     expect(AttachRolePolicyCommand).toHaveBeenCalledTimes(MOCK_CONSTANTS.requiredControlTowerRoleNames.length - 1);
-    expect(UpdateAssumeRolePolicyCommand).toHaveBeenCalledTimes(0);
   });
 
   test('should handle role creation failure', async () => {
@@ -454,7 +505,7 @@ describe('IAM Role Tests', () => {
     // Setup
     mockSend.mockImplementation(command => {
       if (command instanceof GetRoleCommand) {
-        return Promise.reject(new NoSuchEntityException({ message: 'Role does not exist', $metadata: {} }));
+        return Promise.reject(roleNotFound());
       }
       if (command instanceof CreateRoleCommand) {
         return Promise.resolve(undefined);
