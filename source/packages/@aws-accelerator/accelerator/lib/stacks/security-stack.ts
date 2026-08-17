@@ -77,8 +77,12 @@ export class SecurityStack extends AcceleratorStack {
 
     //
     // GuardDuty configuration
+    // Only create custom resources if GuardDuty module is skipped
+    // When module runs successfully, it manages GuardDuty via API calls
     //
-    this.configureGuardDuty();
+    if (this.createGuardDutyCustomResource) {
+      this.configureGuardDuty();
+    }
 
     //
     // SecurityHub configuration

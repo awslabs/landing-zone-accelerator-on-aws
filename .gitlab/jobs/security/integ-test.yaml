@@ -124,6 +124,55 @@ integ:macie:aws:us-east-1:
     - when: never
 
 # ============================================================
+# GuardDuty module integration test
+# ============================================================
+integ:guardduty:aws:us-east-1:
+  stage: pipeline
+  resource_group: integ-guardduty-us-east-1
+  needs:
+    - job: accelerator:build
+      artifacts: true
+    - job: integ:prereq:aws:us-east-1
+      artifacts: true
+  variables:
+    ENV_NAME: sampleConfig
+    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    PARTITION: aws
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${LZA_GITLAB_ROLE_NAME}"
+    # Enable CloudWatch verbose logging — log group created by prereq infrastructure
+    VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
+    PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    ACCELERATOR_STAGE: "integ-guardduty"
+    # LOGGING_BUCKET_NAME and LOGGING_BUCKET_KEY_ARN are injected from
+    # the prereq job's dotenv artifact (actual KMS key ARN, not alias).
+  tags:
+    - arch:amd64
+  script:
+    - "cd source/packages/@aws-accelerator/accelerator"
+    - "yarn test:integration test/integration/modules/guardduty/index.test.integration.ts"
+  artifacts:
+    when: always
+    reports:
+      junit: "source/packages/@aws-accelerator/accelerator/test-reports/integration-results.xml"
+    expire_in: 7 days
+  timeout: 15m
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "No"
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
+      changes:
+        - source/packages/@aws-lza/lib/guardduty/**/*
+        - source/packages/@aws-accelerator/accelerator/lib/actions/security/amazon-guardduty*
+        - source/packages/@aws-accelerator/accelerator/test/integration/modules/guardduty/**/*
+      when: always
+    - when: never
+
+# ============================================================
 # Transit Gateway module integration test
 # ============================================================
 integ:tgw:aws:us-east-1:

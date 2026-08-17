@@ -58,6 +58,7 @@
     "yaml": "1.10.3"
   },
   "devDependencies": {
+    "@aws-sdk/client-guardduty": "3.1041.0",
     "@aws-sdk/client-macie2": "3.1041.0",
     "@types/fs-extra": "11.0.1",
     "@types/mri": "1.1.1",

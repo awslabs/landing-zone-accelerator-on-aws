@@ -1,0 +1,63 @@
+{
+    "name": "update-settings",
+    "description": "Update GuardDuty settings \u2014 change frequency, disable some protections, toggle autoEnable",
+    "order": 4,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": false,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "eksProtection": {
+            "enable": false,
+            "manageAgent": false,
+            "excludeRegions": []
+        },
+        "ec2Protection": {
+            "enable": false,
+            "keepSnapshots": false,
+            "excludeRegions": []
+        },
+        "rdsProtection": {
+            "enable": false,
+            "excludeRegions": []
+        },
+        "lambdaProtection": {
+            "enable": false,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": true,
+            "exportFrequency": "ONE_HOUR"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "NONE",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksProtection": false,
+            "ec2Protection": false,
+            "rdsProtection": false,
+            "lambdaProtection": false
+        }
+    },
+    "skipCleanup": true
+}

@@ -326,6 +326,8 @@ interface IUpdateRetentionStatusConfig {
   readonly status: RetentionStatus;
   readonly error?: string;
   readonly dryRun: boolean;
+  /** Updated resource types to store (e.g., when new service types are added to the registry) */
+  readonly resourceTypes?: string[];
 }
 
 /**
@@ -411,13 +413,16 @@ export async function updateRetentionStatus(
       config.status === RetentionStatus.COMPLETED || config.status === RetentionStatus.NOT_FOUND
         ? true
         : existingState.resourcesRetained,
+    // Update resourceTypes if new types provided (e.g., new service added to registry)
+    ...(config.resourceTypes && { resourceTypes: config.resourceTypes }),
   };
 
   // Save updated state
   await saveRetentionState(updatedState, params, logPrefix, config.dryRun);
 
+  const typeSuffix = config.resourceTypes ? ` with resourceTypes: [${config.resourceTypes.join(', ')}]` : '';
   logger.info(
-    `Updated retention status for ${config.serviceName} stack ${config.stackName} to ${config.status}`,
+    `Updated retention status for ${config.serviceName} stack ${config.stackName} to ${config.status}${typeSuffix}`,
     logPrefix,
   );
 }

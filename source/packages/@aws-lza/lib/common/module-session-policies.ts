@@ -152,6 +152,37 @@ const MACIE = createModulePolicy('macie', [
   'iam:CreateServiceLinkedRole',
 ]);
 
+const GUARDDUTY = createModulePolicy('guardduty', [
+  // Validated: source/packages/@aws-lza/lib/guardduty/ (all files)
+  // Wildcards used to stay within STS packed policy size limit (2048 bytes packed)
+  'guardduty:*Detector*',
+  'guardduty:*OrganizationAdmin*',
+  'guardduty:*OrganizationConfiguration',
+  'guardduty:*Members',
+  'guardduty:*Member*',
+  'guardduty:*PublishingDestination*',
+  'guardduty:*MalwareScanSettings',
+  'guardduty:UpdateMemberDetectors',
+  'guardduty:ListDetectors',
+  // CreatePublishingDestination requires the calling principal to have S3 permissions
+  // on the destination bucket when exporting to a prefix. Per AWS documentation:
+  // https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_exportfindings.html
+  // "Step 1 – Permissions required to export findings"
+  's3:GetBucketLocation',
+  's3:PutObject',
+  's3:GetObject',
+  's3:ListBucket',
+  // guardduty:CreateDetector implicitly creates the AWSServiceRoleForAmazonGuardDuty SLR
+  // on first enablement in a member account.
+  // iam:GetRole is required for Malware Protection (EBS_MALWARE_PROTECTION) enablement.
+  // GuardDuty's UpdateDetector API validates the AWSServiceRoleForAmazonGuardDutyMalwareProtection
+  // SLR exists via iam:GetRole before enabling the feature. Without this permission, the API
+  // returns BadRequestException: "you do not have the required iam:GetRole permission."
+  // See: https://docs.aws.amazon.com/guardduty/latest/ug/troubleshooting-guardduty-malware-protection-issues.html
+  'iam:CreateServiceLinkedRole',
+  'iam:GetRole',
+]);
+
 const GET_CLOUDFORMATION_TEMPLATES = createModulePolicy('get-cloudformation-templates', [
   // Validated: source/packages/@aws-lza/lib/aws-cloudformation/get-cloudformation-templates/
   'cloudformation:GetTemplate',
@@ -207,6 +238,7 @@ export const MODULE_SESSION_POLICIES: Record<string, IModuleSessionPolicy> = {
   'invite-accounts-to-organizations': INVITE_ACCOUNTS_TO_ORGANIZATIONS,
   'create-stack-policy': CREATE_STACK_POLICY,
   macie: MACIE,
+  guardduty: GUARDDUTY,
   'get-cloudformation-templates': GET_CLOUDFORMATION_TEMPLATES,
   'tgw-associations-and-propagations': TGW_ASSOCIATIONS_AND_PROPAGATIONS,
   accounts: ACCOUNTS,

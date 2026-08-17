@@ -79,6 +79,8 @@ export interface IModuleRegionFilters {
 export interface IModuleBoundary {
   /** Specific regions to include in operations */
   readonly regions?: string[];
+  /** Specific account IDs to include in operations (empty/undefined = all accounts) */
+  readonly accounts?: string[];
 }
 
 /**
@@ -215,6 +217,8 @@ export interface IRequiredBatchOperationSettings {
 export enum AcceleratorModuleName {
   /** Amazon Macie security module */
   AMAZON_MACIE = 'amazon-macie',
+  /** Amazon GuardDuty security module */
+  AMAZON_GUARDDUTY = 'amazon-guardduty',
   /** Unified accounts module — manages alias and tags */
   ACCOUNTS = 'accounts',
 }

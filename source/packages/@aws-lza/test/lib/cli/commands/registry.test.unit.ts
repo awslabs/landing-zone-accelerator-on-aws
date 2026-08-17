@@ -35,8 +35,9 @@ describe('Commands registry', () => {
 
   test('should have correct resources count', () => {
     const resourceKeys = Object.keys(Commands.setup.resources);
-    expect(resourceKeys).toHaveLength(2);
+    expect(resourceKeys).toHaveLength(3);
     expect(resourceKeys).toContain('macie');
+    expect(resourceKeys).toContain('guardduty');
     expect(resourceKeys).toContain('control-tower');
   });
 });

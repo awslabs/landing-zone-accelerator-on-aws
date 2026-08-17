@@ -19,6 +19,7 @@ __metadata:
     "@aws-sdk/client-controltower": "npm:3.1041.0"
     "@aws-sdk/client-dynamodb": "npm:3.1041.0"
     "@aws-sdk/client-ec2": "npm:3.1041.0"
+    "@aws-sdk/client-guardduty": "npm:3.1041.0"
     "@aws-sdk/client-macie2": "npm:3.1041.0"
     "@aws-sdk/client-service-quotas": "npm:3.1041.0"
     "@aws-sdk/client-ssm": "npm:3.1041.0"

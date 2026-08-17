@@ -16,12 +16,13 @@ import { MODULE_SESSION_POLICIES, getModuleSessionPolicy } from '../../lib/commo
 
 describe('ModuleSessionPolicies', () => {
   describe('Registry completeness', () => {
-    it('should have policies for all 7 cross-account modules', () => {
+    it('should have policies for all 8 cross-account modules', () => {
       const expectedModules = [
         'stack-resources-retention',
         'invite-accounts-to-organizations',
         'create-stack-policy',
         'macie',
+        'guardduty',
         'get-cloudformation-templates',
         'tgw-associations-and-propagations',
         'accounts',
@@ -138,6 +139,38 @@ describe('ModuleSessionPolicies', () => {
       const actions: string[] = parsed.Statement.find(
         (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
       ).Action;
+      expect(actions).toContain('iam:CreateServiceLinkedRole');
+    });
+
+    it('GuardDuty module should include guardduty actions with wildcards', () => {
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions.some(a => a.startsWith('guardduty:'))).toBe(true);
+      expect(actions.some(a => a.includes('*'))).toBe(true);
+    });
+
+    it('GuardDuty module should grant S3 permissions for CreatePublishingDestination', () => {
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions).toContain('s3:GetBucketLocation');
+      expect(actions).toContain('s3:PutObject');
+      expect(actions).toContain('s3:GetObject');
+      expect(actions).toContain('s3:ListBucket');
+    });
+
+    it('GuardDuty module should grant iam:GetRole and iam:CreateServiceLinkedRole for malware protection SLR', () => {
+      // UpdateDetector with EBS_MALWARE_PROTECTION requires iam:GetRole to validate
+      // AWSServiceRoleForAmazonGuardDutyMalwareProtection exists.
+      // See: https://docs.aws.amazon.com/guardduty/latest/ug/troubleshooting-guardduty-malware-protection-issues.html
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions).toContain('iam:GetRole');
       expect(actions).toContain('iam:CreateServiceLinkedRole');
     });
   });

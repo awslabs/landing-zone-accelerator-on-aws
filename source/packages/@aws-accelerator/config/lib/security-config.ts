@@ -256,6 +256,8 @@ export class MalwareProtectionConfig implements i.IMalwareProtectionConfig {
 export class GuardDutyConfig implements i.IGuardDutyConfig {
   readonly enable: boolean = false;
   readonly excludeRegions: string[] = [];
+  readonly disabledRegions: string[] = [];
+  readonly overrideExisting: boolean = false;
   readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   readonly autoEnableOrgMembers: boolean | undefined = undefined;
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();

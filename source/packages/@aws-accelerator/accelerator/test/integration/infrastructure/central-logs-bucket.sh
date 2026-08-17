@@ -22,7 +22,7 @@ set -euo pipefail
 # ============================================================
 SERVICES=(
   "macie.amazonaws.com"
-  # "guardduty.amazonaws.com"
+  "guardduty.amazonaws.com"
   # "securityhub.amazonaws.com"
 )
 
@@ -42,6 +42,10 @@ echo ""
 echo "[Central Logs] Setting up central logs bucket in Log Archive account..."
 echo "[Central Logs]   Bucket: ${BUCKET_NAME}"
 echo "[Central Logs]   Services: ${SERVICES[*]}"
+
+# Get Organization ID before assuming into Log Archive (needs management account creds)
+ORG_ID=$(aws organizations describe-organization --query 'Organization.Id' --output text 2>/dev/null || echo "")
+echo "[Central Logs]   Organization ID: ${ORG_ID:-UNAVAILABLE}"
 
 # Assume role into Log Archive account
 ROLE_ARN="arn:${partition}:iam::${logArchiveAccountId}:role/${crossAccountRoleName}"
@@ -88,7 +92,7 @@ build_bucket_service_statement() {
       "Sid": "AllowServiceWrite",
       "Effect": "Allow",
       "Principal": { "Service": [${services_json}] },
-      "Action": ["s3:PutObject", "s3:GetBucketLocation"],
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
       "Resource": ["${BUCKET_ARN}", "${BUCKET_ARN}/*"]
     }
 EOF
@@ -105,9 +109,33 @@ if [ -n "${EXISTING_KEY_ARN}" ] && [ "${EXISTING_KEY_ARN}" != "None" ]; then
   echo "[Central Logs]   KMS key already exists: ${KEY_ARN}"
 else
   echo "[Central Logs]   Creating KMS key..."
-  KMS_SERVICE_STMT=$(build_kms_service_statement)
-  POLICY_FILE=$(mktemp)
-  cat > "${POLICY_FILE}" <<EOF
+
+  KEY_ARN=$(aws kms create-key \
+    --description "Integration test KMS key for central logs bucket encryption" \
+    --region "${region}" \
+    --tags TagKey=Accelerator,TagValue="${acceleratorPrefix}" TagKey=Purpose,TagValue=IntegrationTest \
+    --query 'KeyMetadata.Arn' --output text)
+
+  aws kms enable-key-rotation \
+    --key-id "${KEY_ARN}" \
+    --region "${region}"
+
+  aws kms create-alias \
+    --alias-name "${KMS_ALIAS}" \
+    --target-key-id "${KEY_ARN}" \
+    --region "${region}"
+
+  echo "[Central Logs]   KMS key created: ${KEY_ARN}"
+fi
+
+# Always apply KMS key policy (idempotent — ensures new services are added)
+echo "[Central Logs]   Applying KMS key policy..."
+KEY_ID=$(aws kms describe-key --key-id "${KEY_ARN}" --region "${region}" \
+  --query 'KeyMetadata.KeyId' --output text)
+
+KMS_SERVICE_STMT=$(build_kms_service_statement)
+POLICY_FILE=$(mktemp)
+cat > "${POLICY_FILE}" <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -129,35 +157,14 @@ ${KMS_SERVICE_STMT}
   ]
 }
 EOF
-  # Create key, then apply policy and rotation separately for CLI compatibility
-  KEY_ARN=$(aws kms create-key \
-    --description "Integration test KMS key for central logs bucket encryption" \
-    --region "${region}" \
-    --tags TagKey=Accelerator,TagValue="${acceleratorPrefix}" TagKey=Purpose,TagValue=IntegrationTest \
-    --query 'KeyMetadata.Arn' --output text)
 
-  KEY_ID=$(aws kms describe-key --key-id "${KEY_ARN}" --region "${region}" \
-    --query 'KeyMetadata.KeyId' --output text)
-
-  aws kms put-key-policy \
-    --key-id "${KEY_ID}" \
-    --policy-name default \
-    --policy "file://${POLICY_FILE}" \
-    --region "${region}"
-
-  aws kms enable-key-rotation \
-    --key-id "${KEY_ID}" \
-    --region "${region}"
-
-  rm -f "${POLICY_FILE}"
-
-  aws kms create-alias \
-    --alias-name "${KMS_ALIAS}" \
-    --target-key-id "${KEY_ARN}" \
-    --region "${region}"
-
-  echo "[Central Logs]   KMS key created: ${KEY_ARN}"
-fi
+aws kms put-key-policy \
+  --key-id "${KEY_ID}" \
+  --policy-name default \
+  --policy "file://${POLICY_FILE}" \
+  --region "${region}"
+rm -f "${POLICY_FILE}"
+echo "[Central Logs]   KMS key policy applied."
 
 # ------------------------------------------------------------------
 # S3 bucket
@@ -195,11 +202,24 @@ aws s3api put-bucket-versioning \
 
 BUCKET_SERVICE_STMT=$(build_bucket_service_statement)
 POLICY_FILE=$(mktemp)
+
 cat > "${POLICY_FILE}" <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
 ${BUCKET_SERVICE_STMT},
+    {
+      "Sid": "AllowOrgPrincipalsReadAccess",
+      "Effect": "Allow",
+      "Principal": { "AWS": "*" },
+      "Action": ["s3:GetObject*", "s3:GetBucket*", "s3:List*"],
+      "Resource": ["${BUCKET_ARN}", "${BUCKET_ARN}/*"],
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        }
+      }
+    },
     {
       "Sid": "DenyUnencryptedUploads",
       "Effect": "Deny",
@@ -226,6 +246,24 @@ aws s3api put-bucket-policy \
 rm -f "${POLICY_FILE}"
 
 echo "[Central Logs]   Bucket configuration applied."
+
+# ------------------------------------------------------------------
+# Create service prefix folders (GuardDuty requires prefix to exist)
+# ------------------------------------------------------------------
+echo "[Central Logs]   Creating service prefix folders..."
+for svc_prefix in guardduty macie; do
+  if aws s3api head-object --bucket "${BUCKET_NAME}" --key "${svc_prefix}/" --region "${region}" 2>/dev/null; then
+    echo "[Central Logs]     ${svc_prefix}/ already exists"
+  else
+    aws s3api put-object \
+      --bucket "${BUCKET_NAME}" \
+      --key "${svc_prefix}/" \
+      --server-side-encryption aws:kms \
+      --ssekms-key-id "${KEY_ARN}" \
+      --region "${region}"
+    echo "[Central Logs]     Created ${svc_prefix}/"
+  fi
+done
 
 # ------------------------------------------------------------------
 # Export outputs

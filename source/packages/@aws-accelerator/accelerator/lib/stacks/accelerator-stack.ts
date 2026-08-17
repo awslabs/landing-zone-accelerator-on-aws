@@ -253,6 +253,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected createMacieCustomResource: boolean;
 
   /**
+   * Flag to control whether GuardDuty custom resources are created in the stack.
+   * When false (default), the GuardDuty module handles all operations via SDK.
+   * Override via SkipGuardDutyModule environment variable (set to 'true' to skip module and create custom resources).
+   */
+  protected createGuardDutyCustomResource: boolean;
+
+  /**
    * Flag indicating whether the entire stack resources retention module is skipped.
    *
    * When true: Entire retention module is skipped, all custom resources should remain as safety net.
@@ -445,6 +452,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
      *
      * Current services:
      * - Macie: SKIP_MACIE_MODULE
+     * - GuardDuty: SKIP_GUARDDUTY_MODULE
      *
      */
 
@@ -452,6 +460,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.createMacieCustomResource = false;
     if (this.skipResourcesRetentionModule || process.env['SKIP_MACIE_MODULE']?.toLowerCase() === 'true') {
       this.createMacieCustomResource = true;
+    }
+
+    // GuardDuty custom resources
+    this.createGuardDutyCustomResource = false;
+    if (this.skipResourcesRetentionModule || process.env['SKIP_GUARDDUTY_MODULE']?.toLowerCase() === 'true') {
+      this.createGuardDutyCustomResource = true;
     }
 
     // TGW association/propagation custom resources

@@ -48,3 +48,17 @@ describe('SecurityStack with SkipMacie', () => {
   const getStackWithSkipMacie = memoize(Create.stackProvider(`Management-us-east-1`, AcceleratorStage.SECURITY));
   snapShotTest('Construct(SecurityStack with SkipMacie): ', getStackWithSkipMacie);
 });
+
+// Test with SKIP_GUARDDUTY_MODULE environment variable set
+describe('SecurityStack with SkipGuardDuty', () => {
+  beforeAll(() => {
+    process.env['SKIP_GUARDDUTY_MODULE'] = 'true';
+  });
+
+  afterAll(() => {
+    delete process.env['SKIP_GUARDDUTY_MODULE'];
+  });
+
+  const getStackWithSkipGuardDuty = memoize(Create.stackProvider(`Management-us-east-1`, AcceleratorStage.SECURITY));
+  snapShotTest('Construct(SecurityStack with SkipGuardDuty): ', getStackWithSkipGuardDuty);
+});

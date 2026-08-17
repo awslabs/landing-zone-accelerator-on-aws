@@ -154,11 +154,10 @@ export const RESOURCE_RETENTION_REGISTRY: Record<string, IServiceRetentionConfig
       serviceName: AcceleratorModules.MACIE,
       resourceTypes: ['Custom::MacieEnableOrganizationAdminAccount'],
     },
-    // Add more services as they are migrated:
-    // {
-    //   serviceName: AcceleratorModules.GUARDDUTY,
-    //   resourceTypes: ['Custom::GuardDutyEnableOrganizationAdminAccount']
-    // }
+    {
+      serviceName: AcceleratorModules.GUARDDUTY,
+      resourceTypes: ['Custom::GuardDutyEnableOrganizationAdminAccount'],
+    },
   ],
 
   /**
@@ -177,6 +176,10 @@ export const RESOURCE_RETENTION_REGISTRY: Record<string, IServiceRetentionConfig
       serviceName: AcceleratorModules.MACIE,
       resourceTypes: ['Custom::MacieCreateMember'],
     },
+    {
+      serviceName: AcceleratorModules.GUARDDUTY,
+      resourceTypes: ['Custom::GuardDutyCreateMembers', 'Custom::GuardDutyUpdateDetector'],
+    },
   ],
 
   /**
@@ -194,6 +197,10 @@ export const RESOURCE_RETENTION_REGISTRY: Record<string, IServiceRetentionConfig
     {
       serviceName: AcceleratorModules.MACIE,
       resourceTypes: ['Custom::MaciePutClassificationExportConfiguration'],
+    },
+    {
+      serviceName: AcceleratorModules.GUARDDUTY,
+      resourceTypes: ['Custom::GuardDutyCreatePublishingDestinationCommand'],
     },
   ],
 

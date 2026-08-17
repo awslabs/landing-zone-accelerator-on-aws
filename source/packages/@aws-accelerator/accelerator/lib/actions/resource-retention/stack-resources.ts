@@ -120,7 +120,8 @@ const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).n
 
 /**
  * Check if stack needs retention based on current state.
- * Returns false if retention already completed or stack not found.
+ * Returns false if retention already completed or stack not found, unless new resource
+ * types have been added to the registry since the last retention run.
  *
  * This function is designed for batch operations where all retention states
  * are fetched once and checked in-memory for optimal performance.
@@ -131,19 +132,24 @@ const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).n
  * @param stackName - CloudFormation stack name
  * @param logPrefix - Logging prefix
  * @param allStates - Map of all retention states for batch optimization (O(1) lookup)
- * @returns True if retention needed, false if already completed or not found
+ * @param currentResourceTypes - Current resource types from the registry for this stack.
+ *   Used to detect when new services are added after initial retention (e.g., GuardDuty
+ *   added after Macie was already retained). When new types are found, the stack is
+ *   re-processed to retain the new resources.
+ * @returns Object with `needed` boolean and optional `reason` string
  *
  * @example
  * ```typescript
  * // Batch check (uses in-memory Map, no DynamoDB query per stack)
- * const allStates = await getAllRetentionStates('macie', params, logPrefix);
- * const needed = await needsRetention(
- *   'macie',
+ * const allStates = await getAllRetentionStates('stack-resources-retention', params, logPrefix);
+ * const result = await needsRetention(
+ *   'stack-resources-retention',
  *   'XXXXXXXXXXXX',
  *   'us-east-1',
  *   'AWSAccelerator-SecurityStack-XXXXXXXXXXXX-us-east-1',
  *   logPrefix,
- *   allStates  // O(1) lookup, no DynamoDB query
+ *   allStates,
+ *   ['Custom::MacieExportConfig', 'Custom::GuardDutyCreatePublishingDestinationCommand']
  * );
  * ```
  */
@@ -154,6 +160,7 @@ async function needsRetention(
   stackName: string,
   logPrefix: string,
   allStates: Map<string, IResourceRetentionState>,
+  currentResourceTypes?: string[],
 ): Promise<{ needed: boolean; reason?: string }> {
   try {
     logger.info(`Checking if retention needed for ${serviceName} stack ${stackName}`, logPrefix);
@@ -170,6 +177,18 @@ async function needsRetention(
 
     // Check if retention already completed or stack not found
     if (state.retentionStatus === RetentionStatus.COMPLETED || state.retentionStatus === RetentionStatus.NOT_FOUND) {
+      // Check if new resource types were added since last retention
+      if (currentResourceTypes && currentResourceTypes.length > 0 && state.resourceTypes) {
+        const storedTypes = new Set(state.resourceTypes);
+        const newTypes = currentResourceTypes.filter(t => !storedTypes.has(t));
+        if (newTypes.length > 0) {
+          logger.info(
+            `New resource types found for ${serviceName} stack ${stackName}: [${newTypes.join(', ')}] - re-processing retention`,
+            logPrefix,
+          );
+          return { needed: true };
+        }
+      }
       logger.info(
         `Retention already ${state.retentionStatus} for ${serviceName} stack ${stackName} - skipping`,
         logPrefix,
@@ -332,6 +351,7 @@ async function retainStackResources(
         status: finalStatus,
         error: resultStatus === 'FAILED' ? response.message : undefined,
         dryRun: params.runnerParameters.dryRun,
+        resourceTypes: finalStatus === RetentionStatus.COMPLETED ? resourceTypes : undefined,
       },
       params,
       logPrefix,
@@ -551,6 +571,7 @@ async function retainStackResourcesBatch(
       stackConfig.stackName,
       logPrefix,
       allStates,
+      stackConfig.resourceTypes,
     );
 
     if (result.needed) {

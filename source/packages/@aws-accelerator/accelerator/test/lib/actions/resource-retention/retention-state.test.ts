@@ -412,6 +412,49 @@ describe('retention-state utils', () => {
         ),
       ).resolves.toBeUndefined();
     });
+
+    it('should persist resourceTypes when provided in config', async () => {
+      const existingState = {
+        serviceName: 'guardduty',
+        accountId: '111111111111',
+        region: 'us-east-1',
+        stackName: 'AWSAccelerator-SecurityAuditStack-111111111111-us-east-1',
+        resourceTypes: ['Custom::GuardDutyCreateMembers'],
+        retentionStatus: 'IN_PROGRESS',
+        retentionTime: undefined,
+        retentionAttempts: 0,
+        lastError: undefined,
+        resourcesRetained: false,
+      };
+
+      vi.mocked(dynamodb.getItem).mockResolvedValue(existingState);
+      vi.mocked(dynamodb.putItem).mockResolvedValue(undefined);
+
+      await updateRetentionStatus(
+        {
+          serviceName: 'guardduty',
+          accountId: '111111111111',
+          region: 'us-east-1',
+          stackName: 'AWSAccelerator-SecurityAuditStack-111111111111-us-east-1',
+          status: RetentionStatus.COMPLETED,
+          dryRun: false,
+          resourceTypes: ['Custom::GuardDutyCreateMembers', 'Custom::GuardDutyUpdateDetector'],
+        },
+        mockParams,
+        'test-prefix',
+      );
+
+      expect(dynamodb.putItem).toHaveBeenCalledWith(
+        expect.anything(),
+        'AWSAccelerator-Resource-Retention-123456789012-us-east-1',
+        expect.objectContaining({
+          resourceTypes: ['Custom::GuardDutyCreateMembers', 'Custom::GuardDutyUpdateDetector'],
+          retentionStatus: RetentionStatus.COMPLETED,
+        }),
+        'test-prefix',
+        false,
+      );
+    });
   });
 
   describe('getAllRetentionStates', () => {

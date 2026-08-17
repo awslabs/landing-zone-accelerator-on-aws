@@ -108,6 +108,20 @@ export enum AcceleratorModules {
   MACIE = 'macie',
 
   /**
+   * Amazon GuardDuty threat detection service module.
+   *
+   * @description
+   * Configures Amazon GuardDuty for continuous threat detection and monitoring
+   * across the AWS organization. This module handles:
+   * - Delegated administrator account setup and configuration
+   * - Member account enrollment and management
+   * - Protection plan configuration (S3, EKS, EC2, RDS, Lambda)
+   * - Findings export to S3 with KMS encryption
+   * - Regional deployment control and filtering
+   */
+  GUARDDUTY = 'guardduty',
+
+  /**
    * AWS Control Tower Landing Zone module setup module.
    *
    * @description

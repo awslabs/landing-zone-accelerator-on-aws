@@ -1,0 +1,63 @@
+{
+    "name": "enable-all-protections",
+    "description": "Enable GuardDuty with all protections \u2014 S3, EKS, EC2, RDS, Lambda",
+    "order": 3,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "eksProtection": {
+            "enable": true,
+            "manageAgent": true,
+            "excludeRegions": []
+        },
+        "ec2Protection": {
+            "enable": true,
+            "keepSnapshots": false,
+            "excludeRegions": []
+        },
+        "rdsProtection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "lambdaProtection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": true,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksProtection": true,
+            "ec2Protection": true,
+            "rdsProtection": true,
+            "lambdaProtection": true
+        }
+    },
+    "skipCleanup": true
+}

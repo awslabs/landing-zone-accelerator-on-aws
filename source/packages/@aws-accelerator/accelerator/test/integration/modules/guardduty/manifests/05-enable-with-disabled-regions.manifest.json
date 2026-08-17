@@ -1,0 +1,65 @@
+{
+    "name": "enable-with-disabled-regions",
+    "description": "Enable GuardDuty with multi-region boundary \u2014 us-east-1 enabled, us-west-2 actively disabled",
+    "order": 5,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "us-west-2",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": [
+                "us-west-2"
+            ]
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "eksProtection": {
+            "enable": true,
+            "manageAgent": true,
+            "excludeRegions": []
+        },
+        "ec2Protection": {
+            "enable": true,
+            "keepSnapshots": true,
+            "excludeRegions": []
+        },
+        "rdsProtection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "lambdaProtection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": false,
+            "exportFrequency": "SIX_HOURS"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksProtection": true,
+            "ec2Protection": true,
+            "rdsProtection": true,
+            "lambdaProtection": true
+        }
+    },
+    "skipCleanup": true
+}

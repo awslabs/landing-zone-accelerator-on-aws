@@ -1,0 +1,38 @@
+{
+    "name": "enable-no-export",
+    "description": "Enable GuardDuty without findings export — verify detector active but no publishing destination",
+    "order": 7,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": false,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": false,
+        "protectionsEnabled": {
+            "s3Protection": true
+        }
+    },
+    "skipCleanup": true
+}

@@ -95,6 +95,7 @@
 import { AcceleratorStage } from './accelerator-stage';
 import { TgwAssociationsAndPropagations } from './actions/network/tgw-associations-and-propagations';
 import { StackResources } from './actions/resource-retention/stack-resources';
+import { AmazonGuardDuty } from './actions/security/amazon-guardduty';
 import { AmazonMacie } from './actions/security/amazon-macie';
 import {
   AcceleratorModules,
@@ -538,6 +539,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
         runOrder: 1,
         handler: async (params: ModuleParams) => {
           return await AmazonMacie.configure(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+      {
+        name: AcceleratorModules.GUARDDUTY,
+        description: 'Configure Amazon GuardDuty for the AWS Organizations',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await AmazonGuardDuty.configure(params);
         },
         executionPhase: ModuleExecutionPhase.DEPLOY,
       },

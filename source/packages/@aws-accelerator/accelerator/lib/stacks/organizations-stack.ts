@@ -182,7 +182,11 @@ export class OrganizationsStack extends AcceleratorStack {
     }
 
     //GuardDuty Config
-    this.enableGuardDutyDelegatedAdminAccount(securityAdminAccountId);
+    // Only create custom resources if GuardDuty module is skipped
+    // When module runs successfully, it manages GuardDuty via API calls
+    if (this.createGuardDutyCustomResource) {
+      this.enableGuardDutyDelegatedAdminAccount(securityAdminAccountId);
+    }
 
     //Audit Manager Config
     this.enableAuditManagerDelegatedAdminAccount(securityAdminAccountId);

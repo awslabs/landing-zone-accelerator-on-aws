@@ -158,8 +158,13 @@ export { IDeleteDefaultSecurityGroupRulesParameter } from './interfaces/amazon-e
 //
 // AWS GuardDuty Module resources
 //
-export { manageGuardDutyAdminAccount } from './executors/accelerator-aws-guardduty';
-export { IGuardDutyManageOrganizationAdminParameter } from './interfaces/aws-guardduty/manage-organization-admin';
+export { configureGuardDuty } from './lib/guardduty/guardduty';
+export {
+  IGuardDutyModuleDataSources,
+  IGuardDutyModuleRequest,
+  IGuardDutyModuleResponse,
+} from './lib/guardduty/interfaces';
+export { OrgFeatureStatus as GuardDutyOrgFeatureStatus } from '@aws-sdk/client-guardduty';
 
 // AWS IAM Module resources
 export { configureRootUserManagment } from './executors/accelerator-aws-iam';
@@ -178,6 +183,7 @@ export { ClassificationScopeUpdateOperation as MacieClassificationScopeUpdateOpe
 export { IMacieModuleDataSources, IMacieModuleRequest, IMacieModuleResponse } from './lib/amazon-macie/interfaces';
 export { configureMacie } from './lib/amazon-macie/macie';
 export { isMacieAvailableInPartition } from './lib/amazon-macie/functions';
+export { isGuardDutyAvailableInPartition } from './lib/guardduty/functions';
 
 //
 // AWS Lambda Module Resources

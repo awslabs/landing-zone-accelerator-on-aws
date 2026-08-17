@@ -475,6 +475,62 @@ describe('StackResources', () => {
       expect(cfnRetention.retainResources).not.toHaveBeenCalled();
     });
 
+    it('should re-process completed stacks when new resource types are added to registry', async () => {
+      // Registry now has both Macie AND GuardDuty types for SecurityAuditStack
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityAuditStack': [
+          {
+            serviceName: AcceleratorModules.MACIE,
+            resourceTypes: ['Custom::MacieCreateMember'],
+          },
+          {
+            serviceName: AcceleratorModules.GUARDDUTY,
+            resourceTypes: ['Custom::GuardDutyCreateMembers', 'Custom::GuardDutyUpdateDetector'],
+          },
+        ],
+      };
+
+      const allStates = new Map();
+      // Existing state only has Macie types (GuardDuty was added later)
+      const accounts = ['111111111111'];
+      const regions = ['us-east-1'];
+      for (const accountId of accounts) {
+        for (const region of regions) {
+          const stackName = `AWSAccelerator-SecurityAuditStack-${accountId}-${region}`;
+          allStates.set(`${accountId}:${region}:${stackName}`, {
+            serviceName: AcceleratorModules.MACIE,
+            accountId,
+            region,
+            stackName,
+            resourceTypes: ['Custom::MacieCreateMember'], // Only Macie — GuardDuty missing
+            retentionStatus: RetentionStatus.COMPLETED,
+            retentionAttempts: 1,
+            resourcesRetained: true,
+          });
+        }
+      }
+
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(allStates);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'Resources retained successfully',
+        requestedResourceTypes: ['Custom::GuardDutyCreateMembers', 'Custom::GuardDutyUpdateDetector'],
+        resourceRetentionStatus: {
+          stackName: 'AWSAccelerator-SecurityAuditStack-111111111111-us-east-1',
+          stackModificationStatus: 'SUCCEEDED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 2,
+        },
+      });
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+
+      const result = await StackResources.retain(mockParams);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      // The stack should be re-processed (not skipped) because GuardDuty types are new
+      expect(cfnRetention.retainResources).toHaveBeenCalled();
+    });
+
     it('should retry failed stacks', async () => {
       vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
         'AWSAccelerator-SecurityStack': [

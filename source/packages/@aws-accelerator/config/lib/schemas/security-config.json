@@ -789,6 +789,13 @@
           "$ref": "#/definitions/IDeploymentTargets",
           "description": "Specifies which organizational units and accounts should have GuardDuty enabled."
         },
+        "disabledRegions": {
+          "description": "Specifies AWS regions where GuardDuty will be explicitly disabled when the service is enabled (`enable: true`). LZA will enable the service in all enabled regions defined in the global config, except those listed in `excludeRegions` and `disabledRegions`.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "ec2Protection": {
           "$ref": "#/definitions/IGuardDutyEc2ProtectionConfig",
           "description": "Configuration for GuardDuty EC2 Malware Protection that scans your EC2 instances for malicious software."
@@ -822,6 +829,11 @@
             "$ref": "#/definitions/ILifecycleRule"
           },
           "type": "array"
+        },
+        "overrideExisting": {
+          "default": false,
+          "description": "(OPTIONAL) Override existing state check for GuardDuty module execution",
+          "type": "boolean"
         },
         "rdsProtection": {
           "$ref": "#/definitions/IGuardDutyRdsProtectionConfig",

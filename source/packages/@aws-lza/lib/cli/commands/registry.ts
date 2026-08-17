@@ -25,6 +25,7 @@
  * - Extensible architecture for new modules
  */
 
+import { GuardDutyCommands } from './amazon-guardduty';
 import { MacieCommands } from './amazon-macie';
 import { ControlTowerCommands } from './aws-control-tower';
 import { CliExecutionParameterType, CommandOptionsType } from '../handlers/root';
@@ -59,6 +60,7 @@ export const Commands: Record<string, CommandStructure> = {
     description: 'Setup and configure AWS services across organizations',
     resources: {
       macie: MacieCommands.setup,
+      guardduty: GuardDutyCommands.setup,
       'control-tower': ControlTowerCommands.setup,
     },
   },

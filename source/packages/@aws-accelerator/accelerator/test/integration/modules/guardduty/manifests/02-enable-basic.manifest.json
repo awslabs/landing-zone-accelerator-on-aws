@@ -1,0 +1,41 @@
+{
+    "name": "enable-basic",
+    "description": "Enable GuardDuty with basic settings \u2014 S3 protection only, export to S3",
+    "order": 2,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true
+        }
+    },
+    "skipCleanup": true
+}

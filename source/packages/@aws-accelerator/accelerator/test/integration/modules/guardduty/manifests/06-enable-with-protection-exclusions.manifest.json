@@ -1,0 +1,61 @@
+{
+    "name": "enable-with-protection-exclusions",
+    "description": "Enable GuardDuty with per-protection region exclusions and malware snapshot retention",
+    "order": 6,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "us-west-2"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": ["us-west-2"]
+        },
+        "eksProtection": {
+            "enable": true,
+            "manageAgent": true,
+            "excludeRegions": ["us-west-2"]
+        },
+        "ec2Protection": {
+            "enable": true,
+            "keepSnapshots": true,
+            "excludeRegions": []
+        },
+        "rdsProtection": {
+            "enable": true,
+            "excludeRegions": ["us-west-2"]
+        },
+        "lambdaProtection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": true,
+            "exportFrequency": "SIX_HOURS"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksProtection": true,
+            "ec2Protection": true,
+            "rdsProtection": true,
+            "lambdaProtection": true
+        }
+    },
+    "skipCleanup": true
+}

@@ -878,6 +878,24 @@ export interface IGuardDutyConfig {
    */
   readonly excludeRegions?: string[];
   /**
+   * Specifies AWS regions where GuardDuty will be explicitly disabled when the service
+   * is enabled (`enable: true`). LZA will enable the service in all enabled regions defined in the
+   * global config, except those listed in `excludeRegions` and `disabledRegions`.
+   *
+   * @remarks
+   * - Only applicable when `enable: true`
+   * - Cannot overlap with regions specified in `excludeRegions`
+   * - Service will be enabled in: (enabledRegions from global config) - (excludeRegions) - (disabledRegions)
+   * - Service will be disabled in: (disabledRegions)
+   * - Service will not be configured in: (excludeRegions)
+   */
+  readonly disabledRegions?: string[];
+  /**
+   * (OPTIONAL) Override existing state check for GuardDuty module execution
+   * @default false
+   */
+  readonly overrideExisting?: boolean;
+  /**
    * Specifies which organizational units and accounts should have GuardDuty enabled.
    *
    * @remarks

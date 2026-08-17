@@ -1,0 +1,36 @@
+{
+    "name": "disable",
+    "description": "Disable GuardDuty across the organization — full teardown",
+    "order": 1,
+    "moduleConfig": {
+        "enable": false,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "us-west-2",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": false,
+        "s3Protection": {
+            "enable": false,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": false,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": false,
+        "delegatedAdminRemoved": true
+    }
+}
