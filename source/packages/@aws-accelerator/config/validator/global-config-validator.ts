@@ -18,6 +18,7 @@ import path from 'path';
 import winston from 'winston';
 import { AccountsConfig } from '../lib/accounts-config';
 import { GlobalConfig, CloudWatchKinesisConfig, CloudWatchFirehoseLamdaProcessorConfig } from '../lib/global-config';
+import { IAdvancedEventSelector } from '../lib/models/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { SecurityConfig } from '../lib/security-config';
 import { OrganizationConfig } from '../lib/organization-config';
@@ -1167,6 +1168,98 @@ export class GlobalConfigValidator {
         errors.push(
           `The account CloudTrail with the name ${accountTrail.name} setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
         );
+      }
+    }
+
+    // CloudFormation only allows a trail to have EventSelectors or AdvancedEventSelectors, never both.
+    // When advancedEventSelectors is set, LZA drops the basic selectors entirely -- including the
+    // management-events selector CloudTrail's Trail construct builds from the managementEvents toggle.
+    // Require managementEvents: false so that drop is explicit in config rather than silent, and callers
+    // who still want management events must describe them as a field selector in advancedEventSelectors.
+    if (values.logging.cloudtrail.organizationTrailSettings?.advancedEventSelectors) {
+      if (values.logging.cloudtrail.organizationTrailSettings.managementEvents !== false) {
+        errors.push(
+          `The organization CloudTrail setting advancedEventSelectors is set, so basic event selectors (including management events) are not applied. Set organizationTrailSettings.managementEvents to false and, if management events should still be logged, add an equivalent field selector (eventCategory equals Management) to advancedEventSelectors`,
+        );
+      }
+      this.validateAdvancedEventSelectors(
+        'organization CloudTrail',
+        values.logging.cloudtrail.organizationTrailSettings.advancedEventSelectors,
+        errors,
+      );
+    }
+    for (const accountTrail of values.logging.cloudtrail.accountTrails ?? []) {
+      if (accountTrail.settings.advancedEventSelectors) {
+        if (accountTrail.settings.managementEvents !== false) {
+          errors.push(
+            `The account CloudTrail with the name ${accountTrail.name} has advancedEventSelectors set, so basic event selectors (including management events) are not applied. Set managementEvents to false and, if management events should still be logged, add an equivalent field selector (eventCategory equals Management) to advancedEventSelectors`,
+          );
+        }
+        this.validateAdvancedEventSelectors(
+          `account CloudTrail with the name ${accountTrail.name}`,
+          accountTrail.settings.advancedEventSelectors,
+          errors,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validate advanced event selector contents against CloudTrail's documented rules, so typos fail at
+   * config validation instead of at CloudFormation deploy time.
+   * @param trailLabel string identifying the trail in error messages
+   * @param advancedEventSelectors IAdvancedEventSelector[]
+   * @param errors string[]
+   */
+  private validateAdvancedEventSelectors(
+    trailLabel: string,
+    advancedEventSelectors: IAdvancedEventSelector[],
+    errors: string[],
+  ) {
+    // Field names CloudTrail accepts for trails (management, data, and network activity events), per the
+    // AWS::CloudTrail::Trail AdvancedFieldSelector documentation. AWS adds fields over time; extend this
+    // list when CloudTrail documents new ones.
+    const validFields = [
+      'eventCategory',
+      'eventSource',
+      'eventName',
+      'eventType',
+      'readOnly',
+      'resources.type',
+      'resources.ARN',
+      'sessionCredentialFromConsole',
+      'userIdentity.arn',
+      'errorCode',
+      'vpcEndpointId',
+    ];
+    const operatorKeys = ['equals', 'notEquals', 'startsWith', 'notStartsWith', 'endsWith', 'notEndsWith'] as const;
+
+    for (const selector of advancedEventSelectors) {
+      const selectorLabel = selector.name ? `advanced event selector "${selector.name}"` : 'an advanced event selector';
+
+      const eventCategorySelector = selector.fieldSelectors.find(item => item.field === 'eventCategory');
+      if (!eventCategorySelector) {
+        errors.push(
+          `The ${trailLabel} has ${selectorLabel} without an eventCategory field selector. CloudTrail requires every advanced event selector to include an eventCategory field selector using the equals operator`,
+        );
+      } else if (!eventCategorySelector.equals || eventCategorySelector.equals.length === 0) {
+        errors.push(
+          `The ${trailLabel} has ${selectorLabel} whose eventCategory field selector does not use the equals operator. CloudTrail only supports equals for eventCategory`,
+        );
+      }
+
+      for (const fieldSelector of selector.fieldSelectors) {
+        if (!validFields.includes(fieldSelector.field)) {
+          errors.push(
+            `The ${trailLabel} has ${selectorLabel} with unsupported field "${fieldSelector.field}". Supported fields are: ${validFields.join(', ')}. Field names are case-sensitive`,
+          );
+        }
+        const hasOperator = operatorKeys.some(key => (fieldSelector[key]?.length ?? 0) > 0);
+        if (!hasOperator) {
+          errors.push(
+            `The ${trailLabel} has ${selectorLabel} whose field selector for "${fieldSelector.field}" sets no operator. Provide at least one non-empty operator array (equals, notEquals, startsWith, notStartsWith, endsWith, or notEndsWith)`,
+          );
+        }
       }
     }
   }

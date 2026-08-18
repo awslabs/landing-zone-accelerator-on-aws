@@ -1711,6 +1711,141 @@ export interface ICloudTrailSettingsConfig {
    * @see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-insights-events-with-cloudtrail.html | Working with CloudTrail Insights} for more information
    */
   readonly apiCallRateInsight: boolean;
+  /**
+   * **Advanced Event Selectors** *(Optional)*
+   *
+   * Configures CloudTrail advanced event selectors for the trail. When set, this replaces the basic
+   * {@link ICloudTrailSettingsConfig.s3DataEvents} and {@link ICloudTrailSettingsConfig.lambdaDataEvents}
+   * selectors for this trail with the advanced selectors below, matching CloudTrail's own behavior of
+   * treating basic and advanced event selectors as mutually exclusive per trail.
+   *
+   * Use this to scope S3 data-event logging to specific buckets, or to exclude buckets (such as the
+   * trail's own delivery bucket, a replication/DR bucket, or log-aggregation buckets) to avoid a
+   * circular-logging feedback loop where the trail records its own log deliveries as data events.
+   *
+   * Because basic and advanced event selectors are mutually exclusive, setting this also drops the
+   * management-events selector CloudTrail otherwise builds from {@link ICloudTrailSettingsConfig.managementEvents}.
+   * You must set `managementEvents: false` alongside `advancedEventSelectors`, and include your own
+   * `eventCategory: Management` field selector (see the example below) if you still want management
+   * events logged. LZA's config validator enforces this.
+   *
+   * ### Example
+   * ```yaml
+   * advancedEventSelectors:
+   *   - name: Management events
+   *     fieldSelectors:
+   *       - field: eventCategory
+   *         equals:
+   *           - Management
+   *   - name: S3 data events excluding logging infrastructure
+   *     fieldSelectors:
+   *       - field: eventCategory
+   *         equals:
+   *           - Data
+   *       - field: resources.type
+   *         equals:
+   *           - AWS::S3::Object
+   *       - field: resources.ARN
+   *         notStartsWith:
+   *           - arn:aws:s3:::my-cloudtrail-bucket/
+   *           - arn:aws:s3:::my-cloudtrail-dr-bucket/
+   * ```
+   *
+   * @see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-data-event-selectors-advanced.html | Logging data events with advanced event selectors} for more information
+   */
+  readonly advancedEventSelectors?: IAdvancedEventSelector[];
+}
+
+/**
+ * ## Advanced Event Selector Configuration
+ *
+ * A named group of field selectors used to narrow which events a CloudTrail advanced event selector matches.
+ *
+ * ### Example
+ * ```yaml
+ * name: S3 data events excluding logging infrastructure
+ * fieldSelectors:
+ *   - field: eventCategory
+ *     equals:
+ *       - Data
+ *   - field: resources.type
+ *     equals:
+ *       - AWS::S3::Object
+ *   - field: resources.ARN
+ *     notStartsWith:
+ *       - arn:aws:s3:::my-cloudtrail-bucket/
+ * ```
+ *
+ * @category Global Configuration
+ */
+export interface IAdvancedEventSelector {
+  /**
+   * **Name** *(Optional)*
+   *
+   * A descriptive name for this advanced event selector.
+   */
+  readonly name?: string;
+  /**
+   * **Field Selectors** *(Required)*
+   *
+   * One or more field selectors that together determine which events this advanced event selector matches.
+   */
+  readonly fieldSelectors: IAdvancedEventSelectorFieldSelector[];
+}
+
+/**
+ * ## Advanced Event Selector Field Selector Configuration
+ *
+ * A single field-level filter within a CloudTrail advanced event selector.
+ *
+ * @see {@link https://docs.aws.amazon.com/awscloudtrail/latest/userguide/creating-data-event-selectors-advanced.html#advanced-event-selector-fields | Advanced event selector fields} for the full list of supported fields
+ *
+ * @category Global Configuration
+ */
+export interface IAdvancedEventSelectorFieldSelector {
+  /**
+   * **Field** *(Required)*
+   *
+   * The field to filter on, e.g. `eventCategory`, `eventName`, `resources.type`, or `resources.ARN`.
+   */
+  readonly field: string;
+  /**
+   * **Equals** *(Optional)*
+   *
+   * Matches events where the field's value equals one of the given values.
+   */
+  readonly equals?: string[];
+  /**
+   * **Not Equals** *(Optional)*
+   *
+   * Matches events where the field's value does not equal any of the given values.
+   */
+  readonly notEquals?: string[];
+  /**
+   * **Starts With** *(Optional)*
+   *
+   * Matches events where the field's value starts with one of the given values.
+   */
+  readonly startsWith?: string[];
+  /**
+   * **Not Starts With** *(Optional)*
+   *
+   * Matches events where the field's value does not start with any of the given values. Use this to exclude
+   * specific bucket ARNs from S3 data-event recording.
+   */
+  readonly notStartsWith?: string[];
+  /**
+   * **Ends With** *(Optional)*
+   *
+   * Matches events where the field's value ends with one of the given values.
+   */
+  readonly endsWith?: string[];
+  /**
+   * **Not Ends With** *(Optional)*
+   *
+   * Matches events where the field's value does not end with any of the given values.
+   */
+  readonly notEndsWith?: string[];
 }
 
 /**

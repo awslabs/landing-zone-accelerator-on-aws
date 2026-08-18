@@ -1554,18 +1554,24 @@ export class SecurityResourcesStack extends AcceleratorStack {
       managementEvents: managementEventType,
       sendToCloudWatchLogs: accountTrail.settings.sendToCloudWatchLogs ?? false,
       trailName: trailName,
+      advancedEventSelectors: accountTrail.settings.advancedEventSelectors,
     });
 
-    if (accountTrail.settings.s3DataEvents) {
-      accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
-        `arn:${cdk.Stack.of(this).partition}:s3:::`,
-      ]);
-    }
+    // Advanced event selectors are mutually exclusive with basic event selectors on a single trail, so
+    // when advanced event selectors are configured they fully replace the s3DataEvents/lambdaDataEvents
+    // basic selectors below.
+    if (!accountTrail.settings.advancedEventSelectors) {
+      if (accountTrail.settings.s3DataEvents) {
+        accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
+          `arn:${cdk.Stack.of(this).partition}:s3:::`,
+        ]);
+      }
 
-    if (accountTrail.settings.lambdaDataEvents) {
-      accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-        `arn:${cdk.Stack.of(this).partition}:lambda`,
-      ]);
+      if (accountTrail.settings.lambdaDataEvents) {
+        accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+          `arn:${cdk.Stack.of(this).partition}:lambda`,
+        ]);
+      }
     }
   }
 

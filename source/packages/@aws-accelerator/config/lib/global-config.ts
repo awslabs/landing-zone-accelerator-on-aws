@@ -78,6 +78,7 @@ export class CloudTrailSettingsConfig implements i.ICloudTrailSettingsConfig {
   sendToCloudWatchLogs = true;
   readonly apiErrorRateInsight = false;
   readonly apiCallRateInsight = false;
+  readonly advancedEventSelectors: i.IAdvancedEventSelector[] | undefined = undefined;
 }
 
 export class AccountCloudTrailConfig implements i.IAccountCloudTrailConfig {
