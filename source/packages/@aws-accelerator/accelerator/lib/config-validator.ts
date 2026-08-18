@@ -400,6 +400,7 @@ function runValidators(
         networkConfig,
         securityConfig,
         customizationsConfig,
+        organizationConfig,
       ).validate();
     } catch (e) {
       configErrors.push(e);

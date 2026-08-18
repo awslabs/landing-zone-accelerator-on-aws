@@ -13,11 +13,18 @@
 
 /* eslint @typescript-eslint/no-explicit-any: 0 */
 
-import { CloudWatchLogsConfig, ControlTowerConfig, GlobalConfig, LoggingConfig } from '@aws-accelerator/config';
+import {
+  CloudWatchLogsConfig,
+  ControlTowerConfig,
+  GlobalConfig,
+  LoggingConfig,
+  OrganizationConfig,
+} from '@aws-accelerator/config';
 import { beforeEach, describe, expect, vi, test } from 'vitest';
 import * as cdk from 'aws-cdk-lib';
 import { Capture, Template } from 'aws-cdk-lib/assertions';
 import { IKey } from 'aws-cdk-lib/aws-kms';
+import path from 'node:path';
 import { AcceleratorStackProps } from '../../lib/stacks/accelerator-stack';
 import { OrganizationsStack } from '../../lib/stacks/organizations-stack';
 import { createAcceleratorStackProps } from './stack-props-test-helper';
@@ -66,6 +73,37 @@ describe('OrganizationsStack cdk assert tests', () => {
       dependsOnCount++;
     } while (dependsOnCapture.next());
     expect(dependsOnCount).toBe(5);
+  });
+
+  test('Account-only backup policy creates no policy attachment custom resources', () => {
+    const baseProps = createAcceleratorStackProps();
+    const props = createAcceleratorStackProps({
+      ...baseProps,
+      configDirPath: path.join(__dirname, '../configs/all-enabled'),
+      organizationConfig: {
+        ...baseProps.organizationConfig,
+        backupPolicies: [
+          {
+            name: 'AccountOnlyBackupPolicy',
+            description: 'Account-only backup policy',
+            policy: 'backup-policies/org-backup-policies.json',
+            deploymentTargets: {
+              accounts: ['Management'],
+              excludedAccounts: [],
+            },
+          },
+        ],
+      } as OrganizationConfig,
+    });
+
+    const stack = new OrganizationsStack(app, 'unit-test-account-only-backup-policy', props);
+    const template = Template.fromStack(stack);
+
+    template.hasResourceProperties('Custom::CreatePolicy', {
+      name: 'AccountOnlyBackupPolicy',
+      type: 'BACKUP_POLICY',
+    });
+    template.resourceCountIs('Custom::AttachPolicy', 0);
   });
 });
 

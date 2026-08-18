@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(modules): consume configured direct account targets for AWS Organizations tag and backup policies so existing targets take effect after upgrade
 - feat(config): add configurationValidationMode (off/warn/strict) to detect unrecognized keys in config files
 - feat(ec2): add blockPublicAmi configuration to block public access to AMIs across organization accounts
 - feat(networking): add encryptionSupport option to transit gateway config to enable VPC Encryption Controls support
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(config): preserve commas in String remediation parameters
+- fix(organizations): preserve external policy attachments, use create-only reconciliation after failed executions, and reseed ownership after success
 - fix(lambda): remove unused rolePolicyFile from targetDocumentLambda remediation config
 - fix(networking): make ALB listener targetGroup optional for redirect and fixed-response, and reject it where not allowed
 - fix(idc): missing org id for Identity Center dependency policy replacement

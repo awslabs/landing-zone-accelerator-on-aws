@@ -12,13 +12,12 @@
  */
 
 /**
- * @fileoverview Interface definitions for the unified accounts module.
+ * @fileoverview Interface definitions for AWS Organizations modules.
  *
  * @description
- * All interfaces for the accounts module (alias + tags) are co-located here,
- * matching the pattern used by Amazon Macie where module interfaces live
- * alongside the implementation in `lib/` rather than in a top-level
- * `interfaces/` directory.
+ * Module interfaces are co-located here, matching the pattern used by Amazon
+ * Macie where interfaces live alongside the implementation in `lib/` rather
+ * than in a top-level `interfaces/` directory.
  */
 
 import { IModuleRequest } from '../common/interfaces';
@@ -225,4 +224,144 @@ export interface IManageAccountTagsPerAccountResult {
  */
 export interface IManageAccountTagsModuleResponse {
   readonly perAccountResults: readonly IManageAccountTagsPerAccountResult[];
+}
+
+// ─── Tag and Backup Policy Account Attachments ─────────────────────────────
+
+/**
+ * Organizations policy types supported by direct-account reconciliation.
+ */
+export type TagAndBackupPolicyType = 'TAG_POLICY' | 'BACKUP_POLICY';
+
+/**
+ * Desired direct-account attachments for one LZA-managed Organizations policy.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentConfig {
+  /** Exact Organizations policy name */
+  readonly policyName: string;
+  /** Organizations policy type */
+  readonly policyType: TagAndBackupPolicyType;
+  /** Complete desired set of direct account target IDs */
+  readonly accountIds: ReadonlyArray<string>;
+  /**
+   * Direct account target IDs owned by the previous successful module configuration.
+   *
+   * Only these account IDs are eligible for detachment when they are no longer
+   * present in {@link accountIds}.
+   */
+  readonly ownedAccountIds: ReadonlyArray<string>;
+  /**
+   * Whether the policy exists only in the previous ownership state.
+   *
+   * A missing cleanup-only policy is considered already cleaned up after
+   * bounded discovery because the Organizations stack may have deleted it.
+   */
+  readonly cleanupOnly: boolean;
+}
+
+/**
+ * Configuration for Tag Policy and Backup Policy account attachments.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentsConfiguration {
+  /** Policies whose direct account targets must be reconciled */
+  readonly policies: ReadonlyArray<ITagAndBackupPolicyAccountAttachmentConfig>;
+}
+
+/**
+ * Module request for direct account policy attachment reconciliation.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentsModuleRequest extends IModuleRequest {
+  /** Tag Policy and Backup Policy attachment configuration */
+  readonly configuration: ITagAndBackupPolicyAccountAttachmentsConfiguration;
+}
+
+/**
+ * Outcome for one account attachment operation.
+ */
+export type TagAndBackupPolicyAccountAttachmentStatus =
+  | 'no-change'
+  | 'attached'
+  | 'detached'
+  | 'dry-run'
+  | 'deferred'
+  | 'pending-create'
+  | 'failed';
+
+/**
+ * Result of one direct account attachment operation.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentResult {
+  /** Target AWS account ID */
+  readonly accountId: string;
+  /** Attachment operation evaluated for the account */
+  readonly operation: 'attach' | 'detach';
+  /**
+   * Outcome of the attachment operation.
+   *
+   * `deferred` means the safety gate intentionally retained current coverage,
+   * while `pending-create` means Organizations CDK must create the policy
+   * before the attachment can be applied.
+   */
+  readonly status: TagAndBackupPolicyAccountAttachmentStatus;
+  /** Human-readable operation summary */
+  readonly message: string;
+  /** Error details when the operation failed */
+  readonly error?: {
+    /** Error class or stable module error name */
+    readonly name: string;
+    /** Error detail suitable for logs and module output */
+    readonly message: string;
+  };
+}
+
+/**
+ * Aggregated direct-account attachment result for one policy.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentPolicyResult {
+  /** Exact Organizations policy name */
+  readonly policyName: string;
+  /** Organizations policy type */
+  readonly policyType: TagAndBackupPolicyType;
+  /** Organizations policy ID when discovery succeeded */
+  readonly policyId?: string;
+  /**
+   * Aggregated outcome across the policy's direct account targets.
+   *
+   * `pending-create` is a non-failing approval dry-run state for work expected
+   * from the Organizations CDK deployment.
+   * `deferred` means destructive operations were retained by the global
+   * add-before-remove safety gate.
+   */
+  readonly status: 'no-change' | 'reconciled' | 'dry-run' | 'deferred' | 'pending-create' | 'failed';
+  /** Per-account attachment outcomes */
+  readonly accountResults: ReadonlyArray<ITagAndBackupPolicyAccountAttachmentResult>;
+  /**
+   * Stable-sorted live direct account IDs outside the current desired configuration and previous LZA ownership.
+   *
+   * These attachments are preserved and are not represented as planned attachment changes.
+   */
+  readonly unmanagedAccountIds: ReadonlyArray<string>;
+  /** Human-readable policy reconciliation summary */
+  readonly message: string;
+  /** Error details when policy reconciliation failed */
+  readonly error?: {
+    /** Error class or stable module error name */
+    readonly name: string;
+    /** Error detail suitable for logs and module output */
+    readonly message: string;
+  };
+}
+
+/**
+ * Structured response payload for direct account policy attachment reconciliation.
+ */
+export interface ITagAndBackupPolicyAccountAttachmentsModuleResponse {
+  /** Reconciliation results for every configured Tag Policy and Backup Policy */
+  readonly perPolicyResults: ReadonlyArray<ITagAndBackupPolicyAccountAttachmentPolicyResult>;
+  /**
+   * Complete resource IDs owned by the successful execution.
+   *
+   * Omitted from failed responses so a retry cannot use partial results to authorize detachments.
+   */
+  readonly ownedResources?: ReadonlyArray<string>;
 }

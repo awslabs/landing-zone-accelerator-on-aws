@@ -123,6 +123,18 @@ export {
 export { manageAccountTags } from './lib/aws-organizations/manage-account-tags';
 
 export {
+  ITagAndBackupPolicyAccountAttachmentConfig,
+  ITagAndBackupPolicyAccountAttachmentPolicyResult,
+  ITagAndBackupPolicyAccountAttachmentResult,
+  ITagAndBackupPolicyAccountAttachmentsConfiguration,
+  ITagAndBackupPolicyAccountAttachmentsModuleRequest,
+  ITagAndBackupPolicyAccountAttachmentsModuleResponse,
+  TagAndBackupPolicyAccountAttachmentStatus,
+  TagAndBackupPolicyType,
+} from './lib/aws-organizations/interfaces';
+export { manageTagAndBackupPolicyAccountAttachments } from './lib/aws-organizations/tag-and-backup-policy-account-attachments';
+
+export {
   IAccountConfig,
   IAccountsConfiguration,
   IAccountsModuleRequest,

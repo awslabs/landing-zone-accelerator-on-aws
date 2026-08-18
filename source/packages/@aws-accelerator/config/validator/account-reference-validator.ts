@@ -17,6 +17,7 @@ import { CustomizationsConfig } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
 import { NetworkConfig } from '../lib/network-config';
+import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
 import { getValidAccountNameSet } from './common/common-validator-functions';
 
@@ -56,6 +57,7 @@ export class AccountReferenceValidator {
   private readonly networkConfig?: NetworkConfig;
   private readonly securityConfig?: SecurityConfig;
   private readonly customizationsConfig?: CustomizationsConfig;
+  private readonly organizationConfig?: OrganizationConfig;
   private readonly logger = createLogger(['account-reference-validator']);
 
   constructor(
@@ -65,6 +67,7 @@ export class AccountReferenceValidator {
     networkConfig?: NetworkConfig,
     securityConfig?: SecurityConfig,
     customizationsConfig?: CustomizationsConfig,
+    organizationConfig?: OrganizationConfig,
   ) {
     this.accountsConfig = accountsConfig;
     this.globalConfig = globalConfig;
@@ -72,6 +75,7 @@ export class AccountReferenceValidator {
     this.networkConfig = networkConfig;
     this.securityConfig = securityConfig;
     this.customizationsConfig = customizationsConfig;
+    this.organizationConfig = organizationConfig;
   }
 
   public validate(): void {
@@ -94,6 +98,9 @@ export class AccountReferenceValidator {
     }
     if (this.customizationsConfig) {
       this.walk(this.customizationsConfig, CustomizationsConfig.FILENAME, validNames, errors);
+    }
+    if (this.organizationConfig) {
+      this.walk(this.organizationConfig, OrganizationConfig.FILENAME, validNames, errors);
     }
 
     if (errors.length) {

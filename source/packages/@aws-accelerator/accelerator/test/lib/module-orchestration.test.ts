@@ -89,6 +89,9 @@ vi.mock('../../lib/actions/resource-retention/stack-resources', () => ({
     }),
   },
 }));
+vi.mock('../../lib/actions/aws-organizations/tag-and-backup-policy-account-attachments', () => ({
+  TagAndBackupPolicyAccountAttachments: { configure: vi.fn() },
+}));
 
 import {
   AcceleratorModuleStageDetails,
@@ -234,6 +237,12 @@ describe('module-orchestration', () => {
       const maxOrder = Math.max(...Object.values(AcceleratorModuleStageOrders).map(s => s.runOrder));
       expect(AcceleratorModuleStageOrders[MODULE_SUPPORTED_STAGES.FINALIZE].runOrder).toBe(maxOrder);
     });
+
+    it('should run SECURITY_AUDIT after the Organizations deployment stage', () => {
+      expect(AcceleratorModuleStageOrders[MODULE_SUPPORTED_STAGES.SECURITY_AUDIT].runOrder).toBeGreaterThan(
+        AcceleratorModuleStageOrders[MODULE_SUPPORTED_STAGES.ORGANIZATIONS].runOrder,
+      );
+    });
   });
 
   describe('AcceleratorModuleStageDetails', () => {
@@ -262,6 +271,17 @@ describe('module-orchestration', () => {
     it('should have modules registered in SECURITY stage', () => {
       const security = AcceleratorModuleStageDetails.find(d => d.stage.name === MODULE_SUPPORTED_STAGES.SECURITY);
       expect(security?.modules.length).toBeGreaterThan(0);
+    });
+
+    it('should register tag and backup policy account attachments in SECURITY_AUDIT deploy phase', () => {
+      const securityAudit = AcceleratorModuleStageDetails.find(
+        detail => detail.stage.name === MODULE_SUPPORTED_STAGES.SECURITY_AUDIT,
+      );
+      const module = securityAudit?.modules.find(
+        item => item.name === AcceleratorModules.TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS,
+      );
+
+      expect(module?.executionPhase).toBe(ModuleExecutionPhase.DEPLOY);
     });
 
     it('should have modules registered in NETWORK_VPC stage', () => {

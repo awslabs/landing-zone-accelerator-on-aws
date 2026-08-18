@@ -316,7 +316,7 @@ export class OrganizationsStack extends AcceleratorStack {
 
         policy.node.addDependency(enablePolicyTypeBackup);
 
-        for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits) {
+        for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits ?? []) {
           const backupPolicyAttachment = new PolicyAttachment(
             this,
             pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`),

@@ -37,6 +37,7 @@ export const isThrottlingError = (
     e.retryable === true ||
     // SDKv2 Error Structure
     e.code === 'ConcurrentModificationException' || // Retry for AWS Organizations
+    e.code === 'PolicyChangesInProgressException' || // Retry AWS Organizations policy changes that are still propagating
     e.code === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
     e.code === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
     e.code === 'ConcurrentModifications' || // Retry for AssociateHostedZone
@@ -56,6 +57,7 @@ export const isThrottlingError = (
     // SDKv3 Error Structure
     e.name === 'PolicyTypeNotEnabledException' || // Retry for Resource Control Policies
     e.name === 'ConcurrentModificationException' || // Retry for AWS Organizations
+    e.name === 'PolicyChangesInProgressException' || // Retry AWS Organizations policy changes that are still propagating
     e.name === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
     e.name === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
     e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone

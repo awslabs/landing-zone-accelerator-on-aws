@@ -12,7 +12,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { OrganizationConfig } from '../lib/organization-config';
+import { BackupPolicyConfig, OrganizationConfig, TaggingPolicyConfig } from '../lib/organization-config';
 import { createLogger } from '@aws-accelerator/utils';
 import { ReplacementsConfig } from '../lib/replacements-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
@@ -20,6 +20,7 @@ import { CommonValidatorFunctions } from './common/common-validator-functions';
 export class OrganizationConfigValidator {
   private readonly ouScpLimit = Number(process.env['ORGANIZATIONAL_UNIT_SCP_LIMIT']) || 10;
   private readonly accountScpLimit = Number(process.env['ACCOUNT_SCP_LIMIT']) || 10;
+  private readonly directAccountPolicyTypeLimit = 10;
 
   constructor(values: OrganizationConfig, replacementsConfig: ReplacementsConfig | undefined, configDir: string) {
     const errors: string[] = [];
@@ -42,6 +43,9 @@ export class OrganizationConfigValidator {
 
     // Validate presence of backup policy file
     this.validateBackupPolicyFile(configDir, values, errors);
+
+    this.validateDirectAccountPolicyAttachmentCount(values.taggingPolicies, 'Tag Policy', errors);
+    this.validateDirectAccountPolicyAttachmentCount(values.backupPolicies, 'Backup Policy', errors);
 
     // Validate definition of static parameter in policy file
     this.validateSCPParameters(configDir, values, replacementsConfig, errors);
@@ -169,6 +173,41 @@ export class OrganizationConfigValidator {
     for (const backupPolicy of values.backupPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
         errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name}!`);
+      }
+    }
+  }
+
+  /**
+   * Validate the AWS Organizations hard limit for policies of one type directly attached to an account.
+   *
+   * @param policies Configured policies of one Organizations policy type
+   * @param policyType Display name for the policy type
+   * @param errors Validation errors
+   */
+  private validateDirectAccountPolicyAttachmentCount(
+    policies: ReadonlyArray<TaggingPolicyConfig | BackupPolicyConfig>,
+    policyType: 'Tag Policy' | 'Backup Policy',
+    errors: string[],
+  ): void {
+    const policyNamesByAccount = new Map<string, Set<string>>();
+
+    for (const policy of policies) {
+      const excludedAccounts = new Set(policy.deploymentTargets.excludedAccounts ?? []);
+      for (const account of new Set(policy.deploymentTargets.accounts ?? [])) {
+        if (excludedAccounts.has(account)) {
+          continue;
+        }
+        const policyNames = policyNamesByAccount.get(account) ?? new Set<string>();
+        policyNames.add(policy.name);
+        policyNamesByAccount.set(account, policyNames);
+      }
+    }
+
+    for (const [account, policyNames] of policyNamesByAccount) {
+      if (policyNames.size > this.directAccountPolicyTypeLimit) {
+        errors.push(
+          `Account - ${account} has ${policyNames.size} configured direct ${policyType} attachments, exceeding the AWS Organizations hard limit of ${this.directAccountPolicyTypeLimit} policies of this type per account. Configured policies: ${[...policyNames].join(', ')}`,
+        );
       }
     }
   }

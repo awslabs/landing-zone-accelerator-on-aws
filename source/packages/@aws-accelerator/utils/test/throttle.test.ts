@@ -24,6 +24,11 @@ describe('isThrottlingError', () => {
     expect(isThrottlingError({ code: 'ThrottlingException' })).toBe(true);
   });
 
+  test('returns true when AWS Organizations reports policy changes in progress', () => {
+    expect(isThrottlingError({ code: 'PolicyChangesInProgressException' })).toBe(true);
+    expect(isThrottlingError({ name: 'PolicyChangesInProgressException' })).toBe(true);
+  });
+
   test('returns false for non-retryable errors', () => {
     expect(isThrottlingError({ name: 'AccessDeniedException' })).toBe(false);
     expect(isThrottlingError({ name: 'ResourceAlreadyExistsException' })).toBe(false);

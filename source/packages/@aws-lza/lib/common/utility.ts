@@ -201,6 +201,7 @@ export function validateRegionFilters(
  * @param handler - Async function to execute for each item
  * @param logger - Logger instance for progress logging
  * @param logPrefix - Prefix for log messages
+ * @param batchDelayMs - Delay between completed batches in milliseconds; defaults to no delay
  * @throws Error with aggregated failure details if any items fail
  *
  * @example
@@ -220,6 +221,7 @@ export async function processInBatches<T>(
   handler: (item: T) => Promise<void>,
   logger: IconLogger,
   logPrefix: string,
+  batchDelayMs = 0,
 ): Promise<void> {
   const totalBatches = Math.ceil(items.length / batchSize);
   const errors: { index: number; error: unknown }[] = [];
@@ -241,6 +243,10 @@ export async function processInBatches<T>(
           logPrefix,
         );
       }
+    }
+
+    if (batchDelayMs > 0 && i + batchSize < items.length) {
+      await new Promise<void>(resolve => setTimeout(resolve, batchDelayMs));
     }
   }
 

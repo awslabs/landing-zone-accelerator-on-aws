@@ -283,8 +283,8 @@ export interface ITaggingPolicyConfig {
    */
   readonly policy: t.NonEmptyString;
   /**
-   * Specifies which organizational units this tagging policy will be applied to.
-   * Determines the scope of tag standardization enforcement.
+   * Specifies organizational unit and direct account targets for this tagging policy.
+   * `accounts` contains direct targets, and `excludedAccounts` excludes matching accounts.
    */
   readonly deploymentTargets: t.IDeploymentTargets;
 }
@@ -365,8 +365,8 @@ export interface IBackupPolicyConfig {
    */
   readonly policy: t.NonEmptyString;
   /**
-   * Specifies which organizational units this backup policy will be applied to.
-   * Determines the scope of backup requirement enforcement.
+   * Specifies organizational unit and direct account targets for this backup policy.
+   * `accounts` contains direct targets, and `excludedAccounts` excludes matching accounts.
    */
   readonly deploymentTargets: t.IDeploymentTargets;
 }
@@ -481,8 +481,8 @@ export interface IOrganizationConfig {
    */
   readonly serviceControlPolicies: IServiceControlPolicyConfig[];
   /**
-   * Tagging policy configurations that standardize tags across resources in organizational units.
-   * The policy content is loaded from a JSON file from the path specified and deployed to the specified organizational units.
+   * Tagging policy configurations that standardize tags across resources in organizational units and direct accounts.
+   * The policy content is loaded from a JSON file from the path specified and deployed to the specified organizational units and direct accounts.
    * File must exist in the configuration repository.
    *
    * @see https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
@@ -496,6 +496,7 @@ export interface IOrganizationConfig {
    *     deploymentTargets:
    *         organizationalUnits:
    *           - Root
+   *         accounts: [Audit]
    * ```
    */
   readonly taggingPolicies: ITaggingPolicyConfig[];
@@ -521,9 +522,9 @@ export interface IOrganizationConfig {
    */
   readonly chatbotPolicies?: IChatbotPolicyConfig[];
   /**
-   * Backup policy configurations that enforce organization-wide backup requirements across organizational units.
+   * Backup policy configurations that enforce organization-wide backup requirements across organizational units and direct accounts.
    * These policies ensure consistent backup strategies and compliance across accounts.
-   * The policy content is loaded from a JSON file from the path specified and deployed to the specified organizational units.
+   * The policy content is loaded from a JSON file from the path specified and deployed to the specified organizational units and direct accounts.
    * File must exist in the configuration repository.
    *
    * @see https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
@@ -537,6 +538,7 @@ export interface IOrganizationConfig {
    *     deploymentTargets:
    *         organizationalUnits:
    *           - Root
+   *         accounts: [Audit]
    * ```
    */
   readonly backupPolicies: IBackupPolicyConfig[];

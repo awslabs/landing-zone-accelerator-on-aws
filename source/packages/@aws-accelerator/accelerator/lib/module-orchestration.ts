@@ -112,6 +112,7 @@ import { CreateOrganizationalUnitModule } from '../../modules/lib/actions/aws-or
 import { InviteAccountsToOrganizationsModule } from '../../modules/lib/actions/aws-organizations/invite-accounts-to-organizations';
 import { MoveAccountModule } from '../../modules/lib/actions/aws-organizations/move-accounts';
 import { Accounts } from './actions/aws-organizations/accounts';
+import { TagAndBackupPolicyAccountAttachments } from './actions/aws-organizations/tag-and-backup-policy-account-attachments';
 import { RegisterOrganizationalUnitModule } from '../../modules/lib/actions/control-tower/register-organizational-unit';
 import { SetupControlTowerLandingZoneModule } from '../../modules/lib/actions/control-tower/setup-control-tower-landing-zone';
 import { EnrollAccountsModule } from '../../modules/lib/actions/control-tower/enroll-accounts';
@@ -558,7 +559,17 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       name: MODULE_SUPPORTED_STAGES.SECURITY_AUDIT,
       runOrder: AcceleratorModuleStageOrders[MODULE_SUPPORTED_STAGES.SECURITY_AUDIT].runOrder,
     },
-    modules: [],
+    modules: [
+      {
+        name: AcceleratorModules.TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS,
+        description: 'Manage direct-account attachments for Organizations tag and backup policies',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await TagAndBackupPolicyAccountAttachments.configure(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
+    ],
   },
   {
     stage: {

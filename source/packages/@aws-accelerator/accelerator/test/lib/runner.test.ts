@@ -24,6 +24,8 @@ import {
   PromiseItemType,
 } from '../../lib/types';
 
+const mockCachingCredentialProviderInit = vi.hoisted(() => vi.fn());
+
 // Shared mock objects from SHARED_MOCK_CONSTANTS
 const mockAcceleratorResourceNames = SHARED_MOCK_CONSTANTS.acceleratorResourceNames;
 
@@ -95,14 +97,32 @@ const createMockOrganizationsClient = (sendMock: ReturnType<typeof vi.fn>) =>
   }) as any;
 
 // Mock all external dependencies
-vi.mock('path', () => ({
-  default: {
-    parse: vi.fn(function () {
-      return { name: 'runner' };
-    }),
-    basename: vi.fn(() => 'runner.ts'),
-  },
-}));
+vi.mock('path', () => {
+  const parse = vi.fn(function () {
+    return { name: 'runner' };
+  });
+  const basename = vi.fn(() => 'runner.ts');
+  return {
+    default: { parse, basename },
+    parse,
+    basename,
+  };
+});
+
+vi.mock('@aws-accelerator/utils', async importOriginal => {
+  const actual = await importOriginal<typeof import('@aws-accelerator/utils')>();
+  mockCachingCredentialProviderInit.mockImplementation(
+    (options: Parameters<typeof actual.CachingCredentialProvider.init>[0]) =>
+      actual.CachingCredentialProvider.init(options),
+  );
+  return {
+    ...actual,
+    CachingCredentialProvider: {
+      init: mockCachingCredentialProviderInit,
+      get: () => actual.CachingCredentialProvider.get(),
+    },
+  };
+});
 
 vi.mock('yargs', () => ({
   default: vi.fn(() => ({
@@ -310,6 +330,8 @@ describe('ModuleRunner', () => {
     delete process.env['CDK_OPTIONS'];
     delete process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'];
     delete process.env['SKIP_TEST_MODULE'];
+    delete process.env['SKIP_MACIE_MODULE'];
+    delete process.env['SKIP_TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS_MODULE'];
 
     // Get fresh references to mocked modules
     const awsLza = await import('aws-lza');
@@ -377,6 +399,8 @@ describe('ModuleRunner', () => {
     process.on = originalProcessOn;
     // Clean up test environment variable
     delete process.env['NODE_ENV'];
+    delete process.env['SKIP_MACIE_MODULE'];
+    delete process.env['SKIP_TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS_MODULE'];
   });
 
   describe('getStageRunOrder', () => {
@@ -439,9 +463,6 @@ describe('ModuleRunner', () => {
     });
 
     it('should initialize CachingCredentialProvider with the session context before loading config', async () => {
-      // Dynamic import to avoid hoisting issues
-      const { ModuleRunner } = await import('../../lib/runner.js');
-      const moduleOrchestration = await import('../../lib/module-orchestration.js');
       const { CachingCredentialProvider } = await import('@aws-accelerator/utils');
 
       // Reset any singleton left over from a previous test so init() args are observable.
@@ -450,7 +471,8 @@ describe('ModuleRunner', () => {
       } catch {
         // not initialized yet
       }
-      const initSpy = vi.spyOn(CachingCredentialProvider, 'init');
+      const { ModuleRunner } = await import('../../lib/runner.js');
+      const moduleOrchestration = await import('../../lib/module-orchestration.js');
 
       // Provide a non-empty stage list so execute() passes its guard. Using a stage name
       // that is not present makes execute() return early (SKIPPED) without loading
@@ -477,7 +499,7 @@ describe('ModuleRunner', () => {
 
       await ModuleRunner.execute(mockRunnerParameters);
 
-      expect(initSpy).toHaveBeenCalledWith(
+      expect(mockCachingCredentialProviderInit).toHaveBeenCalledWith(
         expect.objectContaining({
           partition: 'aws',
           regions: expect.arrayContaining(['us-east-1', 'ca-central-1']),
@@ -659,75 +681,86 @@ describe('ModuleRunner', () => {
       );
     });
 
-    it('should skip modules when environment variable is set', async () => {
+    it.each([
+      {
+        moduleName: AcceleratorModules.MACIE,
+        environmentVariable: 'SKIP_MACIE_MODULE',
+      },
+      {
+        moduleName: AcceleratorModules.TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS,
+        environmentVariable: 'SKIP_TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS_MODULE',
+      },
+    ])('should skip $moduleName before invoking its handler', async ({ moduleName, environmentVariable }) => {
       // Setup
-      process.env['SKIP_MACIE_MODULE'] = 'true';
+      process.env[environmentVariable] = 'true';
 
-      // Dynamic import to avoid hoisting issues
-      const { ModuleRunner } = await import('../../lib/runner.js');
-      const moduleOrchestration = await import('../../lib/module-orchestration.js');
-      const awsLza = await import('aws-lza');
-      const configLoader = await import('../../lib/config-loader.js');
+      try {
+        // Dynamic import to avoid hoisting issues
+        const { ModuleRunner } = await import('../../lib/runner.js');
+        const moduleOrchestration = await import('../../lib/module-orchestration.js');
+        const awsLza = await import('aws-lza');
+        const configLoader = await import('../../lib/config-loader.js');
 
-      // Mock the required configurations FIRST
-      vi.mocked(awsLza.getCurrentSessionDetails).mockResolvedValue({
-        invokingAccountId: '123456789012',
-        region: 'us-east-1',
-        partition: 'aws',
-        globalRegion: 'us-east-1',
-      });
-
-      vi.mocked(configLoader.ConfigLoader.getAcceleratorConfigurations).mockResolvedValue({
-        globalConfig: MOCK_CONSTANTS.configs.globalConfig,
-        accountsConfig: MOCK_CONSTANTS.configs.accountsConfig,
-        organizationConfig: MOCK_CONSTANTS.configs.organizationConfig,
-        securityConfig: MOCK_CONSTANTS.configs.securityConfig,
-        networkConfig: MOCK_CONSTANTS.configs.networkConfig,
-        iamConfig: MOCK_CONSTANTS.configs.iamConfig,
-        customizationsConfig: MOCK_CONSTANTS.configs.customizationsConfig,
-        replacementsConfig: MOCK_CONSTANTS.configs.replacementsConfig,
-      } as any);
-
-      // Add test-specific data - ensure we only add one stage entry
-      moduleOrchestration.EXECUTION_CONTROLLABLE_MODULES.push(AcceleratorModules.MACIE);
-      moduleOrchestration.AcceleratorModuleStageDetails.push({
-        stage: { name: MODULE_SUPPORTED_STAGES.PREPARE, runOrder: 1 },
-        modules: [
-          {
-            name: AcceleratorModules.MACIE,
-            description: 'Test module',
-            runOrder: 1,
-            executionPhase: ModuleExecutionPhase.DEPLOY,
-            handler: mockModuleHandler,
-          },
-        ],
-      });
-
-      const mockRunnerParameters = {
-        sessionContext: {
+        // Mock the required configurations FIRST
+        vi.mocked(awsLza.getCurrentSessionDetails).mockResolvedValue({
           invokingAccountId: '123456789012',
           region: 'us-east-1',
           partition: 'aws',
           globalRegion: 'us-east-1',
-        },
-        configDirPath: '/mock/config',
-        stage: MODULE_SUPPORTED_STAGES.PREPARE,
-        prefix: 'AWSAccelerator',
-        solutionId: 'AwsSolution/SO0199/1.0.0',
-        dryRun: false,
-        loadOrganizationsFromDynamoDbTable: false,
-      };
+        });
 
-      // Execute
-      const result = await ModuleRunner.execute(mockRunnerParameters);
+        vi.mocked(configLoader.ConfigLoader.getAcceleratorConfigurations).mockResolvedValue({
+          globalConfig: MOCK_CONSTANTS.configs.globalConfig,
+          accountsConfig: MOCK_CONSTANTS.configs.accountsConfig,
+          organizationConfig: MOCK_CONSTANTS.configs.organizationConfig,
+          securityConfig: MOCK_CONSTANTS.configs.securityConfig,
+          networkConfig: MOCK_CONSTANTS.configs.networkConfig,
+          iamConfig: MOCK_CONSTANTS.configs.iamConfig,
+          customizationsConfig: MOCK_CONSTANTS.configs.customizationsConfig,
+          replacementsConfig: MOCK_CONSTANTS.configs.replacementsConfig,
+        } as any);
 
-      // Verify - when all modules are skipped by environment variable
-      expect(result).toHaveLength(1);
-      expect(result[0].status).toBe('skipped');
-      expect(result[0].summary).toContain('were skipped');
+        // Add test-specific data - ensure we only add one stage entry
+        moduleOrchestration.EXECUTION_CONTROLLABLE_MODULES.push(moduleName);
+        moduleOrchestration.AcceleratorModuleStageDetails.push({
+          stage: { name: MODULE_SUPPORTED_STAGES.PREPARE, runOrder: 1 },
+          modules: [
+            {
+              name: moduleName,
+              description: 'Test module',
+              runOrder: 1,
+              executionPhase: ModuleExecutionPhase.DEPLOY,
+              handler: mockModuleHandler,
+            },
+          ],
+        });
 
-      // Cleanup
-      delete process.env['SKIP_MACIE_MODULE'];
+        const mockRunnerParameters = {
+          sessionContext: {
+            invokingAccountId: '123456789012',
+            region: 'us-east-1',
+            partition: 'aws',
+            globalRegion: 'us-east-1',
+          },
+          configDirPath: '/mock/config',
+          stage: MODULE_SUPPORTED_STAGES.PREPARE,
+          prefix: 'AWSAccelerator',
+          solutionId: 'AwsSolution/SO0199/1.0.0',
+          dryRun: false,
+          loadOrganizationsFromDynamoDbTable: false,
+        };
+
+        // Execute
+        const result = await ModuleRunner.execute(mockRunnerParameters);
+
+        // Verify - when all modules are skipped by environment variable
+        expect(result).toHaveLength(1);
+        expect(result[0].status).toBe('skipped');
+        expect(result[0].summary).toContain('were skipped');
+        expect(mockModuleHandler).not.toHaveBeenCalled();
+      } finally {
+        delete process.env[environmentVariable];
+      }
     });
 
     it('should throw error when organization is enabled but AWS Organizations is not configured', async () => {

@@ -377,5 +377,29 @@ describe('utility', () => {
       expect(handler).toHaveBeenCalledTimes(2);
       expect(mockLogger.info).toHaveBeenCalledWith('Processing batch 1 of 1 (2 items)', 'test');
     });
+
+    test('should wait between batches without delaying after the final batch', async () => {
+      vi.useFakeTimers();
+      const started: number[] = [];
+      const handler = vi.fn(async (item: number) => {
+        started.push(item);
+      });
+
+      const resultPromise = processInBatches([1, 2, 3, 4, 5], 2, handler, mockLogger, 'test', 1000);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(started).toEqual([1, 2]);
+
+      await vi.advanceTimersByTimeAsync(999);
+      expect(started).toEqual([1, 2]);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(started).toEqual([1, 2, 3, 4]);
+
+      await vi.advanceTimersByTimeAsync(1000);
+      await resultPromise;
+
+      expect(started).toEqual([1, 2, 3, 4, 5]);
+      expect(vi.getTimerCount()).toBe(0);
+    });
   });
 });

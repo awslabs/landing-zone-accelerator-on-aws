@@ -209,6 +209,7 @@ export const isThrottlingError = (
   e.retryable === true ||
   e.name === 'PolicyTypeNotEnabledException' || // Retry for Resource Control Policies
   e.name === 'ConcurrentModificationException' || // Retry for AWS Organizations
+  e.name === 'PolicyChangesInProgressException' || // Retry for AWS Organizations policy operations
   e.name === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.name === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
   e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone

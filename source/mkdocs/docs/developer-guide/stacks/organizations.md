@@ -37,6 +37,8 @@ Enables delegated administrator for security services in the audit account:
 - **Tagging policies** — Defined in `organization-config.yaml → taggingPolicies`
 - **Chatbot policies** — Defined in `organization-config.yaml → chatbotPolicies`
 
+The Organizations stack creates Tag Policies and Backup Policies and manages their root and organizational unit attachments. Direct account attachments for these policy types are reconciled after stack deployment by the `tag-and-backup-policy-account-attachments` Module Runner module in the `security-audit` stage. On its first successful run, the module attaches missing configured accounts and adopts only configured direct attachments without detaching other live direct attachments. On later runs, it detaches a direct attachment only when that policy and account were owned by the previous successful configuration and the account has since been removed from `accounts` or selected by `excludedAccounts`. External direct attachments never owned by LZA are preserved, while root and organizational unit attachments remain owned by the Organizations stack.
+
 ### Control Tower Controls
 - Enables Control Tower controls (guardrails) on specified OUs
 - Configured via `organization-config.yaml → controlTower.controls`

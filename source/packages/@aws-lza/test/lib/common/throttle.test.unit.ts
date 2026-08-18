@@ -94,6 +94,10 @@ describe('throttle', () => {
       expect(isThrottlingError({ name: 'ConcurrentModificationException' })).toBe(true);
     });
 
+    test('should return true for PolicyChangesInProgressException', () => {
+      expect(isThrottlingError({ name: 'PolicyChangesInProgressException' })).toBe(true);
+    });
+
     test('should return true for InsufficientDeliveryPolicyException', () => {
       expect(isThrottlingError({ name: 'InsufficientDeliveryPolicyException' })).toBe(true);
     });

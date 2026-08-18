@@ -17,6 +17,7 @@ import { CustomizationsConfig } from '../../lib/customizations-config';
 import { GlobalConfig } from '../../lib/global-config';
 import { IamConfig } from '../../lib/iam-config';
 import { NetworkConfig } from '../../lib/network-config';
+import { OrganizationConfig } from '../../lib/organization-config';
 import { SecurityConfig } from '../../lib/security-config';
 import { AccountReferenceValidator } from '../../validator/account-reference-validator';
 
@@ -71,6 +72,69 @@ describe('AccountReferenceValidator', () => {
     } as unknown as GlobalConfig;
 
     expect(() => new AccountReferenceValidator(accounts, globalConfig).validate()).toThrow(/Removed/);
+  });
+
+  test('flags an unknown Tag Policy account target in organization-config', () => {
+    const accounts = makeAccountsConfig();
+    const organizationConfig = new OrganizationConfig({
+      enable: true,
+      organizationalUnits: [],
+      serviceControlPolicies: [],
+      taggingPolicies: [
+        {
+          name: 'TagPolicy',
+          description: 'Test tag policy',
+          policy: 'tag-policy.json',
+          deploymentTargets: { accounts: ['DeletedAccount'] },
+        },
+      ],
+      backupPolicies: [],
+    });
+
+    expect(() =>
+      new AccountReferenceValidator(
+        accounts,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        organizationConfig,
+      ).validate(),
+    ).toThrow(/organization-config\.yaml.*taggingPolicies\[0\].*accounts\[0\].*DeletedAccount/s);
+  });
+
+  test('flags an unknown Backup Policy excluded account in organization-config', () => {
+    const accounts = makeAccountsConfig();
+    const organizationConfig = new OrganizationConfig({
+      enable: true,
+      organizationalUnits: [],
+      serviceControlPolicies: [],
+      taggingPolicies: [],
+      backupPolicies: [
+        {
+          name: 'BackupPolicy',
+          description: 'Test backup policy',
+          policy: 'backup-policy.json',
+          deploymentTargets: {
+            accounts: ['Workload'],
+            excludedAccounts: ['RemovedAccount'],
+          },
+        },
+      ],
+    });
+
+    expect(() =>
+      new AccountReferenceValidator(
+        accounts,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        organizationConfig,
+      ).validate(),
+    ).toThrow(/organization-config\.yaml.*backupPolicies\[0\].*excludedAccounts\[0\].*RemovedAccount/s);
   });
 
   test('flags dangling reference in shareTargets.accounts', () => {

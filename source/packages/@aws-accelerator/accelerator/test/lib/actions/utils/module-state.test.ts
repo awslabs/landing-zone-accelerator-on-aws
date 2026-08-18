@@ -688,7 +688,7 @@ describe('module-state utils', () => {
       );
     });
 
-    it('should not throw error when save fails', async () => {
+    it('should suppress save errors by default', async () => {
       vi.mocked(dynamodb.getItem).mockResolvedValue(null);
       vi.mocked(dynamodb.putItem).mockRejectedValue(new Error('DynamoDB error'));
 

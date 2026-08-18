@@ -712,7 +712,6 @@ export async function saveModuleExecutionState<T = unknown>(
 
     logger.info(`Saved latest execution state for ${stateConfig.serviceName} at ${executionTime}`, logPrefix);
   } catch (error: unknown) {
-    // Log error but don't fail - state save is not critical
     logger.error(`Error saving module execution state for ${stateConfig.serviceName}: ${error}`, logPrefix);
     logger.warn(`Continuing execution despite state save failure for ${stateConfig.serviceName}`, logPrefix);
   }

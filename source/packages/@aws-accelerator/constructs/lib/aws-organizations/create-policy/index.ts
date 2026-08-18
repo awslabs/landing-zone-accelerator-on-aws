@@ -21,6 +21,7 @@ import {
   DetachPolicyCommand,
   PolicyNotAttachedException,
   PolicyNotFoundException,
+  TargetNotFoundException,
   CreatePolicyCommand,
   UpdatePolicyCommand,
   DuplicatePolicyException,
@@ -30,6 +31,13 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
+
+/**
+ * AWS Organizations policy mutation APIs have a baseline quota of two requests per second.
+ * Process detach operations at the baseline rate without relying on the service's burst capacity.
+ */
+const POLICY_DETACH_BATCH_SIZE = 2;
+const POLICY_DETACH_BATCH_DELAY_MS = 1000;
 
 /**
  * create-policy - lambda handler
@@ -170,12 +178,27 @@ async function detachPolicyFromAllAttachedTargets(
     }
   }
 
-  const targetDetachPromise = [];
-  for (const targetId of targetIds) {
-    console.log(`Started detach of target ${targetId} from policy ${removePolicy.id}`);
-    targetDetachPromise.push(detachTargetFromSpecificTarget(targetId, organizationsClient, removePolicy));
+  for (let batchStart = 0; batchStart < targetIds.length; batchStart += POLICY_DETACH_BATCH_SIZE) {
+    const targetIdBatch = targetIds.slice(batchStart, batchStart + POLICY_DETACH_BATCH_SIZE);
+    await Promise.all(
+      targetIdBatch.map(targetId => {
+        console.log(`Started detach of target ${targetId} from policy ${removePolicy.id}`);
+        return detachTargetFromSpecificTarget(targetId, organizationsClient, removePolicy);
+      }),
+    );
+
+    if (batchStart + POLICY_DETACH_BATCH_SIZE < targetIds.length) {
+      await delay(POLICY_DETACH_BATCH_DELAY_MS);
+    }
   }
-  await Promise.all(targetDetachPromise);
+}
+
+/**
+ * Waits before the next policy mutation batch starts.
+ * @param milliseconds Time to wait in milliseconds
+ */
+function delay(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 /**
@@ -191,14 +214,18 @@ async function detachTargetFromSpecificTarget(
     name: string;
     id: string;
   },
-) {
+): Promise<void> {
   try {
-    throttlingBackOff(() =>
+    await throttlingBackOff(() =>
       organizationsClient.send(new DetachPolicyCommand({ PolicyId: removePolicy.id, TargetId: targetId })),
     );
-  } catch (error) {
-    if (error instanceof PolicyNotAttachedException) {
-      console.log(`${removePolicy.name} policy not found to detach`);
+  } catch (error: unknown) {
+    if (
+      error instanceof PolicyNotAttachedException ||
+      error instanceof TargetNotFoundException ||
+      error instanceof PolicyNotFoundException
+    ) {
+      console.log(`${removePolicy.name} policy is already detached from target ${targetId}. Continuing...`);
     } else {
       throw new Error(`Policy ${removePolicy.name} detach error message - ${JSON.stringify(error)}`);
     }

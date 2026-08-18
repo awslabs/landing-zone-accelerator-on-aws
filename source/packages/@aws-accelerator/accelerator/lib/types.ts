@@ -189,6 +189,11 @@ export enum AcceleratorModules {
   ACCOUNTS = 'accounts',
 
   /**
+   * Reconcile direct-account attachments for Organizations tag and backup policies.
+   */
+  TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS = 'tag-and-backup-policy-account-attachments',
+
+  /**
    * Accelerator prerequisites module.
    */
   ACCELERATOR_PREREQUISITES = 'accelerator-prerequisites',
