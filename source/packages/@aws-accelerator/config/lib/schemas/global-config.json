@@ -130,6 +130,83 @@
       ],
       "type": "object"
     },
+    "IAdvancedEventSelector": {
+      "additionalProperties": false,
+      "description": "## Advanced Event Selector Configuration\n\nA named group of field selectors used to narrow which events a CloudTrail advanced event selector matches.\n\n### Example ```yaml name: S3 data events excluding logging infrastructure fieldSelectors:   - field: eventCategory     equals:       - Data   - field: resources.type     equals:       - AWS::S3::Object   - field: resources.ARN     notStartsWith:       - arn:aws:s3:::my-cloudtrail-bucket/ ```",
+      "properties": {
+        "fieldSelectors": {
+          "description": "**Field Selectors** *(Required)*\n\nOne or more field selectors that together determine which events this advanced event selector matches.",
+          "items": {
+            "$ref": "#/definitions/IAdvancedEventSelectorFieldSelector"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "**Name** *(Optional)*\n\nA descriptive name for this advanced event selector.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fieldSelectors"
+      ],
+      "type": "object"
+    },
+    "IAdvancedEventSelectorFieldSelector": {
+      "additionalProperties": false,
+      "description": "## Advanced Event Selector Field Selector Configuration\n\nA single field-level filter within a CloudTrail advanced event selector.",
+      "properties": {
+        "endsWith": {
+          "description": "**Ends With** *(Optional)*\n\nMatches events where the field's value ends with one of the given values.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "equals": {
+          "description": "**Equals** *(Optional)*\n\nMatches events where the field's value equals one of the given values.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "field": {
+          "description": "**Field** *(Required)*\n\nThe field to filter on, e.g. `eventCategory`, `eventName`, `resources.type`, or `resources.ARN`.",
+          "type": "string"
+        },
+        "notEndsWith": {
+          "description": "**Not Ends With** *(Optional)*\n\nMatches events where the field's value does not end with any of the given values.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notEquals": {
+          "description": "**Not Equals** *(Optional)*\n\nMatches events where the field's value does not equal any of the given values.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notStartsWith": {
+          "description": "**Not Starts With** *(Optional)*\n\nMatches events where the field's value does not start with any of the given values. Use this to exclude specific bucket ARNs from S3 data-event recording.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "startsWith": {
+          "description": "**Starts With** *(Optional)*\n\nMatches events where the field's value starts with one of the given values.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "type": "object"
+    },
     "IAssetBucketConfig": {
       "additionalProperties": false,
       "description": "## Asset Bucket Configuration\n\nConfiguration for the asset bucket.\n\n### Key Features\n- **Resource Policies**: Attach resource policies to the bucket\n- **KMS Policy**: Apply KMS policy to the bucket encryption key\n- **Imported Bucket**: Import existing bucket and apply resource policies and encryption key policies\n\n### Example ```yaml assetBucket:   s3ResourcePolicyAttachments:     - policy: s3-policies/policy1.json   importedBucket:     name: aws-accelerator-assets     applyAcceleratorManagedBucketPolicy: true ```",
@@ -443,6 +520,13 @@
       "additionalProperties": false,
       "description": "## Cloud Trail Settings Configuration\n\nAdditional settings used to configure an organization-level trail.\n\n### Example ```yaml multiRegionTrail: true globalServiceEvents: true managementEvents: true s3DataEvents: true lambdaDataEvents: true sendToCloudWatchLogs: true apiErrorRateInsight: false apiCallRateInsight: false ```",
       "properties": {
+        "advancedEventSelectors": {
+          "description": "**Advanced Event Selectors** *(Optional)*\n\nConfigures CloudTrail advanced event selectors for the trail. When set, this replaces the basic  {@link  ICloudTrailSettingsConfig.s3DataEvents }  and  {@link  ICloudTrailSettingsConfig.lambdaDataEvents }  selectors for this trail with the advanced selectors below, matching CloudTrail's own behavior of treating basic and advanced event selectors as mutually exclusive per trail.\n\nUse this to scope S3 data-event logging to specific buckets, or to exclude buckets (such as the trail's own delivery bucket, a replication/DR bucket, or log-aggregation buckets) to avoid a circular-logging feedback loop where the trail records its own log deliveries as data events.\n\nBecause basic and advanced event selectors are mutually exclusive, setting this also drops the management-events selector CloudTrail otherwise builds from  {@link  ICloudTrailSettingsConfig.managementEvents } . You must set `managementEvents: false` alongside `advancedEventSelectors`, and include your own `eventCategory: Management` field selector (see the example below) if you still want management events logged. LZA's config validator enforces this.\n\n### Example ```yaml advancedEventSelectors:   - name: Management events     fieldSelectors:       - field: eventCategory         equals:           - Management   - name: S3 data events excluding logging infrastructure     fieldSelectors:       - field: eventCategory         equals:           - Data       - field: resources.type         equals:           - AWS::S3::Object       - field: resources.ARN         notStartsWith:           - arn:aws:s3:::my-cloudtrail-bucket/           - arn:aws:s3:::my-cloudtrail-dr-bucket/ ```",
+          "items": {
+            "$ref": "#/definitions/IAdvancedEventSelector"
+          },
+          "type": "array"
+        },
         "apiCallRateInsight": {
           "description": "**API Call Rate Insight** *(Required)*\n\nWill enable CloudTrail Insights and enable the API Call Rate Insight",
           "type": "boolean"

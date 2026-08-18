@@ -1,0 +1,50 @@
+description: IAM Role Policy
+schemaVersion: '0.3'
+assumeRole: '{{ AutomationAssumeRole }}'
+parameters:
+  ResourceId:
+    type: String
+  AWSManagedPolicies:
+    type: StringList
+  CustomerManagedPolicies:
+    type: StringList
+    minItems: 0
+    default: []
+  AutomationAssumeRole:
+    type: String
+mainSteps:
+  - name: attachPolicy
+    action: 'aws:executeScript'
+    inputs:
+      Runtime: python3.7
+      Handler: script_handler
+      Script: |-
+        import boto3
+        partition = boto3.client("sts").get_caller_identity()['Arn'].split(":")[1]
+        iam = boto3.client("iam")
+        config = boto3.client("config")
+        def script_handler(events, context):
+          resource_id = events["ResourceId"]
+          response = config.batch_get_resource_config(
+            resourceKeys=[{
+              'resourceType': 'AWS::IAM::Role',
+              'resourceId': resource_id
+            }]
+          )
+          role_name = response["baseConfigurationItems"][0]['resourceName']
+          aws_policy_names = events["AWSManagedPolicies"]
+          customer_policy_names = events["CustomerManagedPolicies"]
+          for policy in aws_policy_names:
+            iam.attach_role_policy(
+              PolicyArn="arn:%s:iam::aws:policy/%s" %(partition, policy),
+              RoleName=role_name
+            )
+          for policy in customer_policy_names:
+            iam.attach_role_policy(
+              PolicyArn=policy,
+              RoleName=role_name
+            )
+      InputPayload:
+        ResourceId: '{{ ResourceId }}'
+        AWSManagedPolicies: '{{ AWSManagedPolicies }}'
+        CustomerManagedPolicies: '{{ CustomerManagedPolicies }}'

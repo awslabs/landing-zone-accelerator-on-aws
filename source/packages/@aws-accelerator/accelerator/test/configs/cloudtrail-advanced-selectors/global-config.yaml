@@ -1,0 +1,175 @@
+homeRegion: &HOME_REGION us-east-1
+enabledRegions:
+  - *HOME_REGION
+  - us-west-2
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+defaultEventBus:
+  policy: event-bus-policies/eventbus-policy.json
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+acceleratorMetadata:
+  enable: true
+  account: LogArchive
+  readOnlyAccessRoleArns:
+    - arn:aws:iam::111111111111:role/test-access-role
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - notify-security@example.com
+terminationProtection: true
+controlTower:
+  enable: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
+logging:
+  account: LogArchive
+  centralizedLoggingRegion: us-west-2
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: false
+      s3DataEvents: false
+      lambdaDataEvents: false
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: false
+      advancedEventSelectors:
+        - name: ManagementEvents
+          fieldSelectors:
+            - field: eventCategory
+              equals:
+                - Management
+        - name: S3DataEventsExcludingCentralLogBucket
+          fieldSelectors:
+            - field: eventCategory
+              equals:
+                - Data
+            - field: resources.type
+              equals:
+                - AWS::S3::Object
+            - field: resources.ARN
+              notStartsWith:
+                - arn:aws:s3:::central-log-bucket/
+    accountTrails:
+      - name: AccountTrailWithAdvancedSelectors
+        regions:
+          - us-east-1
+        deploymentTargets:
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: false
+          s3DataEvents: false
+          lambdaDataEvents: false
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+          advancedEventSelectors:
+            - name: AccountS3DataEvents
+              fieldSelectors:
+                - field: eventCategory
+                  equals:
+                    - Data
+                - field: resources.type
+                  equals:
+                    - AWS::S3::Object
+                - field: resources.ARN
+                  notStartsWith:
+                    - arn:aws:s3:::account-log-bucket/
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: true
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+    kinesis: 
+      streamingMode: ON_DEMAND
+      retention: 28
+    exclusions:
+      - organizationalUnits:
+          - Infrastructure
+        excludeAll: true
+      - accounts:
+          - Management
+        regions:
+          - us-east-1
+        logGroupNames:
+          - test/*
+
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accelerator-cur
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root

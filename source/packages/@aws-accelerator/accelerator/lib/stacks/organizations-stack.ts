@@ -906,6 +906,9 @@ export class OrganizationsStack extends AcceleratorStack {
         managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
       }
     }
+    const advancedEventSelectors =
+      this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.advancedEventSelectors;
+
     const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
       bucket: cdk.aws_s3.Bucket.fromBucketName(this, 'CentralLogsBucket', this.centralLogsBucketName),
       s3KeyPrefix: 'cloudtrail-organization',
@@ -926,26 +929,32 @@ export class OrganizationsStack extends AcceleratorStack {
       sendToCloudWatchLogs:
         this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.sendToCloudWatchLogs ?? true,
       trailName: `${this.props.prefixes.accelerator}-Organizations-CloudTrail`,
+      advancedEventSelectors,
     });
 
-    if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
-      organizationsTrail.addEventSelector(
-        cdk.aws_cloudtrail.DataResourceType.S3_OBJECT,
-        [`arn:${cdk.Stack.of(this).partition}:s3:::`],
-        {
-          includeManagementEvents: false,
-        },
-      );
-    }
+    // Advanced event selectors are mutually exclusive with basic event selectors on a single trail, so
+    // when advanced event selectors are configured they fully replace the s3DataEvents/lambdaDataEvents
+    // basic selectors below.
+    if (!advancedEventSelectors) {
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
+        organizationsTrail.addEventSelector(
+          cdk.aws_cloudtrail.DataResourceType.S3_OBJECT,
+          [`arn:${cdk.Stack.of(this).partition}:s3:::`],
+          {
+            includeManagementEvents: false,
+          },
+        );
+      }
 
-    if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
-      organizationsTrail.addEventSelector(
-        cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION,
-        [`arn:${cdk.Stack.of(this).partition}:lambda`],
-        {
-          includeManagementEvents: false,
-        },
-      );
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
+        organizationsTrail.addEventSelector(
+          cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION,
+          [`arn:${cdk.Stack.of(this).partition}:lambda`],
+          {
+            includeManagementEvents: false,
+          },
+        );
+      }
     }
 
     organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);

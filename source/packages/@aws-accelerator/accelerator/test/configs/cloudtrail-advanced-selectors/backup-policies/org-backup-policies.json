@@ -1,0 +1,267 @@
+{
+    "plans": {
+        "Organization_Backup_Plan": {
+            "rules": {
+                "Monthly_Rule": {
+                    "schedule_expression": {
+                        "@@assign": "cron(0 8 1 * ? *)"
+                    },
+                    "start_backup_window_minutes": {
+                        "@@assign": "60"
+                    },
+                    "complete_backup_window_minutes": {
+                        "@@assign": "604800"
+                    },
+                    "enable_continuous_backup": {
+                        "@@assign": false
+                    },
+                    "target_backup_vault_name": {
+                        "@@assign": "BackupVault"
+                    },
+                    "recovery_point_tags": {
+                        "Owner": {
+                            "tag_key": {
+                                "@@assign": "Owner"
+                            },
+                            "tag_value": {
+                                "@@assign": "Backup"
+                            }
+                        }
+                    },
+                    "lifecycle": {
+                        "move_to_cold_storage_after_days": {
+                            "@@assign": "365"
+                        },
+                        "delete_after_days": {
+                            "@@assign": "1825"
+                        }
+                    }
+                },
+                "Weekly_Rule": {
+                    "schedule_expression": {
+                        "@@assign": "cron(0 8 ? * MON *)"
+                    },
+                    "start_backup_window_minutes": {
+                        "@@assign": "60"
+                    },
+                    "complete_backup_window_minutes": {
+                        "@@assign": "604800"
+                    },
+                    "enable_continuous_backup": {
+                        "@@assign": false
+                    },
+                    "target_backup_vault_name": {
+                        "@@assign": "BackupVault"
+                    },
+                    "recovery_point_tags": {
+                        "Owner": {
+                            "tag_key": {
+                                "@@assign": "Owner"
+                            },
+                            "tag_value": {
+                                "@@assign": "Backup"
+                            }
+                        }
+                    },
+                    "lifecycle": {
+                        "move_to_cold_storage_after_days": {
+                            "@@assign": "365"
+                        },
+                        "delete_after_days": {
+                            "@@assign": "1825"
+                        }
+                    }
+                },
+                "Daily_Rule": {
+                    "schedule_expression": {
+                        "@@assign": "cron(15 10 * * ? *)"
+                    },
+                    "start_backup_window_minutes": {
+                        "@@assign": "60"
+                    },
+                    "complete_backup_window_minutes": {
+                        "@@assign": "604800"
+                    },
+                    "enable_continuous_backup": {
+                        "@@assign": false
+                    },
+                    "target_backup_vault_name": {
+                        "@@assign": "BackupVault"
+                    },
+                    "recovery_point_tags": {
+                        "Owner": {
+                            "tag_key": {
+                                "@@assign": "Owner"
+                            },
+                            "tag_value": {
+                                "@@assign": "Backup"
+                            }
+                        }
+                    },
+                    "lifecycle": {
+                        "move_to_cold_storage_after_days": {
+                            "@@assign": "365"
+                        },
+                        "delete_after_days": {
+                            "@@assign": "1825"
+                        }
+                    }
+                },
+                "NinetyDay_Rule": {
+                    "schedule_expression": {
+                        "@@assign": "cron(0 8 1 */3 ? *)"
+                    },
+                    "start_backup_window_minutes": {
+                        "@@assign": "60"
+                    },
+                    "complete_backup_window_minutes": {
+                        "@@assign": "604800"
+                    },
+                    "enable_continuous_backup": {
+                        "@@assign": false
+                    },
+                    "target_backup_vault_name": {
+                        "@@assign": "BackupVault"
+                    },
+                    "recovery_point_tags": {
+                        "Owner": {
+                            "tag_key": {
+                                "@@assign": "Owner"
+                            },
+                            "tag_value": {
+                                "@@assign": "Backup"
+                            }
+                        }
+                    },
+                    "lifecycle": {
+                        "move_to_cold_storage_after_days": {
+                            "@@assign": "365"
+                        },
+                        "delete_after_days": {
+                            "@@assign": "1825"
+                        }
+                    }
+                },
+                "Yearly_Rule": {
+                    "schedule_expression": {
+                        "@@assign": "cron(0 8 1 */12 ? *)"
+                    },
+                    "start_backup_window_minutes": {
+                        "@@assign": "60"
+                    },
+                    "complete_backup_window_minutes": {
+                        "@@assign": "604800"
+                    },
+                    "enable_continuous_backup": {
+                        "@@assign": false
+                    },
+                    "target_backup_vault_name": {
+                        "@@assign": "BackupVault"
+                    },
+                    "recovery_point_tags": {
+                        "Owner": {
+                            "tag_key": {
+                                "@@assign": "Owner"
+                            },
+                            "tag_value": {
+                                "@@assign": "Backup"
+                            }
+                        }
+                    },
+                    "lifecycle": {
+                        "move_to_cold_storage_after_days": {
+                            "@@assign": "1825"
+                        },
+                        "delete_after_days": {
+                            "@@assign": "365"
+                        }
+                    }
+                }
+            },
+            "regions": {
+                "@@append": [
+                    "us-east-1"
+                ]
+            },
+            "selections": {
+                "tags": {
+                    "Monthly_Backup_Assignment": {
+                        "iam_role_arn": {
+                            "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+                        },
+                        "tag_key": {
+                            "@@assign": "orgBackupMonthly"
+                        },
+                        "tag_value": {
+                            "@@assign": [
+                                "Monthly"
+                            ]
+                        }
+                    },
+                    "Weekly_Backup_Assignment": {
+                        "iam_role_arn": {
+                            "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+                        },
+                        "tag_key": {
+                            "@@assign": "orgBackupWeekly"
+                        },
+                        "tag_value": {
+                            "@@assign": [
+                                "Weekly"
+                            ]
+                        }
+                    },
+                    "Daily_Backup_Assignment": {
+                        "iam_role_arn": {
+                            "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+                        },
+                        "tag_key": {
+                            "@@assign": "orgBackupDaily"
+                        },
+                        "tag_value": {
+                            "@@assign": [
+                                "Daily"
+                            ]
+                        }
+                    },
+                    "NinetyDay_Backup_Assignment": {
+                        "iam_role_arn": {
+                            "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+                        },
+                        "tag_key": {
+                            "@@assign": "orgBackupNinetyDay"
+                        },
+                        "tag_value": {
+                            "@@assign": [
+                                "NinetyDay"
+                            ]
+                        }
+                    },
+                    "Yearly_Backup_Assignment": {
+                        "iam_role_arn": {
+                            "@@assign": "arn:aws:iam::$account:role/Backup-Role"
+                        },
+                        "tag_key": {
+                            "@@assign": "orgBackupYearly"
+                        },
+                        "tag_value": {
+                            "@@assign": [
+                                "Yearly"
+                            ]
+                        }
+                    }
+                }
+            },
+            "backup_plan_tags": {
+                "stage": {
+                    "tag_key": {
+                        "@@assign": "Stage"
+                    },
+                    "tag_value": {
+                        "@@assign": "Released"
+                    }
+                }
+            }
+        }
+    }
+}

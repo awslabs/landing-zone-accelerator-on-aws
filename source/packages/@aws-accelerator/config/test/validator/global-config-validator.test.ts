@@ -136,6 +136,200 @@ describe('SecurityConfigValidator', () => {
     });
   });
 
+  describe('validateCloudTrailSettings', () => {
+    it('should fail if organization trail advancedEventSelectors is set without managementEvents: false', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            organizationTrail: true,
+            organizationTrailSettings: {
+              advancedEventSelectors: [{ fieldSelectors: [{ field: 'eventCategory', equals: ['Data'] }] }],
+            },
+          } as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(/advancedEventSelectors is set.*managementEvents to false/s);
+    });
+
+    it('should pass if organization trail advancedEventSelectors is set with managementEvents: false', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            organizationTrail: true,
+            organizationTrailSettings: {
+              managementEvents: false,
+              advancedEventSelectors: [{ fieldSelectors: [{ field: 'eventCategory', equals: ['Data'] }] }],
+            },
+          } as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).not.toThrow();
+    });
+
+    it('should fail on an unsupported advanced event selector field name', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            organizationTrail: true,
+            organizationTrailSettings: {
+              managementEvents: false,
+              advancedEventSelectors: [
+                {
+                  fieldSelectors: [
+                    { field: 'eventCategory', equals: ['Data'] },
+                    { field: 'resources.arn', notStartsWith: ['arn:aws:s3:::my-log-bucket/'] },
+                  ],
+                },
+              ],
+            },
+          } as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(/unsupported field "resources\.arn"/);
+    });
+
+    it('should fail if an advanced event selector has no eventCategory field selector', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            organizationTrail: true,
+            organizationTrailSettings: {
+              managementEvents: false,
+              advancedEventSelectors: [
+                {
+                  name: 'MissingCategory',
+                  fieldSelectors: [{ field: 'resources.ARN', notStartsWith: ['arn:aws:s3:::my-log-bucket/'] }],
+                },
+              ],
+            },
+          } as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(/MissingCategory.*without an eventCategory field selector/s);
+    });
+
+    it('should fail if a field selector sets no operator', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            organizationTrail: true,
+            organizationTrailSettings: {
+              managementEvents: false,
+              advancedEventSelectors: [
+                {
+                  fieldSelectors: [{ field: 'eventCategory', equals: ['Data'] }, { field: 'resources.ARN' }],
+                },
+              ],
+            },
+          } as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(/field selector for "resources\.ARN" sets no operator/);
+    });
+
+    it('should fail if an account trail advancedEventSelectors is set without managementEvents: false', () => {
+      const globalConfig = {
+        ...createGlobalConfig(),
+        logging: {
+          cloudtrail: {
+            accountTrails: [
+              {
+                name: 'AccountTrail',
+                settings: {
+                  advancedEventSelectors: [{ fieldSelectors: [{ field: 'eventCategory', equals: ['Data'] }] }],
+                },
+              },
+            ],
+          } as unknown as CloudTrailConfig,
+          sessionManager: {} as SessionManagerConfig,
+          account: 'LogArchive',
+        },
+      } as GlobalConfig;
+
+      expect(
+        () =>
+          new GlobalConfigValidator(
+            globalConfig,
+            mockAccountsConfig,
+            mockIamConfig,
+            mockOrganizationConfig,
+            mockSecurityConfig,
+            mockConfigDir,
+          ),
+      ).toThrow(/AccountTrail.*advancedEventSelectors.*managementEvents to false/s);
+    });
+  });
+
   describe('validateStackPolicy', () => {
     it('validate disabled does not fail validation', () => {
       const stackPolicy: StackPolicyConfig = {

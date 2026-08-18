@@ -1,0 +1,28 @@
+description: Enables Encryption on S3 Bucket
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
+parameters:
+  BucketName:
+    type: String
+    description: (Required) The name of the S3 Bucket whose content will be encrypted.
+  KMSMasterKey:
+    type: String
+    description: (Optional) AWS Key Management Service (KMS) customer master key ARN to use for the default encryption.
+  AutomationAssumeRole:
+    type: String
+    description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+    default: ""
+mainSteps:
+- name: PutBucketEncryption
+  action: aws:executeAwsApi
+  inputs:
+    Service: s3
+    Api:  PutBucketEncryption
+    Bucket: "{{BucketName}}"
+    ServerSideEncryptionConfiguration:
+        Rules:
+        -
+          ApplyServerSideEncryptionByDefault:
+            SSEAlgorithm: "aws:kms"
+            KMSMasterKeyID: "{{KMSMasterKey}}"
+  isEnd: true

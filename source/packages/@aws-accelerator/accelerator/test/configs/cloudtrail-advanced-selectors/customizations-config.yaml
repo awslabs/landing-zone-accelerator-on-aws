@@ -1,0 +1,334 @@
+customizations:
+  cloudFormationStacks:
+    - deploymentTargets:
+        accounts:
+          - Management
+      description: Sample stack description
+      name: Custom-S3-Stack
+      regions:
+        - us-east-1
+      runOrder: 1
+      template: cloudformation-templates/custom-s3-bucket.yaml
+      terminationProtection: false
+    - deploymentTargets:
+        organizationalUnits:
+          - Security
+      description: Second sample stack description
+      name: Custom-S3-Stack-2
+      regions:
+        - us-east-1
+        - us-west-2
+      runOrder: 2
+      template: cloudformation-templates/custom-s3-bucket.yaml
+      terminationProtection: true
+    - deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Infrastructure
+      description: Third sample stack description
+      name: Custom-S3-Stack-3
+      regions:
+        - us-east-1
+        - us-west-2
+      runOrder: 2
+      template: cloudformation-templates/custom-s3-bucket.yaml
+      terminationProtection: true
+  cloudFormationStackSets:
+    - capabilities: [CAPABILITY_IAM]
+      deploymentTargets:
+        organizationalUnits:
+          - Infrastructure
+        accounts:
+          - Management
+      description: Sample stackset description
+      name: Custom-S3-Stackset
+      regions:
+        - us-east-1
+      runOrder: 1
+      template: cloudformation-templates/custom-s3-bucket.yaml
+  serviceCatalogPortfolios:
+    - name: My-Portfolio
+      provider: LZA
+      account: Management
+      regions:
+        - us-east-1
+        - us-west-2
+      shareTargets:
+        organizationalUnits:
+          - Security
+      shareTagOptions: true
+      portfolioAssociations:
+        - type: Group
+          name: Administrators
+          propagateAssociation: true
+        - type: Role
+          name: EC2-Default-SSM-AD-Role
+        - type: User
+          name: breakGlassUser01
+      products:
+        - name: My-Product
+          description: Sample product by lZA.
+          owner: LZA
+          distributor: LZA
+          versions:
+            - name: v1
+              description: product version is v1
+              template: cloudformation-templates/custom-s3-bucket.yaml
+              deprecated: false
+          support:
+            description: Please include account ID and provisioned product ID.
+            email: support@example.com
+            url: https://support.amazon.com
+    - name: Portfolio-2
+      provider: LZA
+      account: SharedServices
+      regions:
+        - us-east-1
+      shareTargets:
+        accounts:
+          - Audit
+      portfolioAssociations:
+        - type: Role
+          name: EC2-Default-SSM-AD-Role
+          propagateAssociation: true
+        - type: PermissionSet
+          name: PermissionSet1
+      products:
+        - name: Product2
+          description: Sample product by lZA.
+          owner: LZA
+          distributor: LZA
+          versions:
+            - name: v1
+              description: product version is v1
+              template: cloudformation-templates/custom-s3-bucket.yaml
+              deprecated: false
+          support:
+            description: Please include account ID and provisioned product ID.
+            email: support@example.com
+            url: https://support.amazon.com
+
+applications:
+  - name: appA
+    # vpc name is taken from network-config.yaml under vpcs
+    vpc: SharedServices-Main
+    deploymentTargets:
+      accounts:
+        - SharedServices
+      excludedRegions:
+        - us-west-2
+    autoscaling:
+      name: appA-asg
+      maxSize: 4
+      minSize: 1
+      desiredSize: 2
+      # Launch Template name should match name from launchTemplate section
+      launchTemplate: appA-lt
+      healthCheckGracePeriod: 300
+      healthCheckType: ELB # EC2|ELB
+      # target group names should match the names from targetGroup section
+      targetGroups:
+        - appA-nlb-tg-1
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+
+    launchTemplate:
+      name: appA-lt
+      blockDeviceMappings:
+        - deviceName: /dev/xvda
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            # this kms key is in security-config.yaml under keyManagementService
+            kmsKeyId: key1
+        - deviceName: /dev/xvdg
+          ebs:
+            deleteOnTermination: true
+            encrypted: true
+            volumeSize: 20
+      securityGroups:
+        # security group is from network-config.yaml under the same vpc
+        - SharedServices-Main-Rsyslog-sg
+      # Key pair should exist in that account and region
+      keyName: keyName
+      # this instance profile is in iam-config.yaml under roleSets
+      iamInstanceProfile: EC2-Default-SSM-AD-Role
+      # Local or public SSM parameter store lookup for Image ID
+      imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+      instanceType: t3.xlarge
+      networkInterfaces:
+        - deleteOnTermination: true
+          description: secondary network interface
+          deviceIndex: 1
+          groups:
+            # security group is from network-config.yaml under the same vpc
+            - SharedServices-Main-Rsyslog-sg
+          networkCardIndex: 1
+          # subnet is from network-config.yaml under the same vpc
+          subnetId: SharedServices-App-A
+      # this path is relative to the config repository and the content should be in regular text.
+      # Its encoded in base64 before passing in to launch Template
+      userData: appConfigs/appA/launchTemplate/userData.sh
+
+    targetGroups:
+      - name: appA-nlb-tg
+        port: 80
+        protocol: HTTP
+        type: instance
+        protocolVersion: HTTP1
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+      - name: appA-alb-tg-1
+        port: 80
+        protocol: HTTP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
+    networkLoadBalancer:
+      name: appA-nlb
+      scheme: internal
+      deletionProtection: true
+      subnets:
+        # subnets are from network-config.yaml under the same vpc
+        - SharedServices-App-A
+        - SharedServices-App-B
+      crossZoneLoadBalancing: true
+      listeners:
+        - name: appA-listener-1
+          port: 80
+          protocol: TCP
+          # target group names should match the names from targetGroup section
+          targetGroup: appA-nlb-tg
+
+    applicationLoadBalancer:
+      name: appA-alb-01
+      scheme: internet-facing
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+      securityGroups:
+        - SharedServices-Main-Rsyslog-sg
+      listeners:
+        - name: appA-listener-2
+          port: 80
+          protocol: HTTP
+          targetGroup: appA-alb-tg-1
+          type: forward
+
+firewalls:
+  instances:
+    - name: accelerator-firewall
+      launchTemplate:
+        name: firewall-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+        securityGroups: []
+      vpc: Network-Inspection
+  autoscalingGroups:
+    - name: test-asg
+      autoscaling:
+        name: firewall-asg
+        minSize: 1
+        maxSize: 4
+        desiredSize: 2
+        launchTemplate: test-asg
+        healthCheckGracePeriod: 300
+        healthCheckType: EC2
+        targetGroups:
+          - asg-target
+        subnets:
+          - Network-Inspection-A
+          - Network-Inspection-B
+      launchTemplate:
+        name: asg
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups:
+              - Data
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+        securityGroups: []
+      vpc: Network-Inspection
+  managerInstances:
+    - name: accelerator-manager
+      launchTemplate:
+        name: manager-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+        securityGroups: []
+      vpc: Network-Inspection
+  targetGroups:
+    - name: instance-target
+      port: 6081
+      protocol: GENEVE
+      type: instance
+      targets:
+        - accelerator-firewall
+      attributes:
+        targetFailover: rebalance
+    - name: asg-target
+      port: 6081
+      protocol: GENEVE
+      type: instance

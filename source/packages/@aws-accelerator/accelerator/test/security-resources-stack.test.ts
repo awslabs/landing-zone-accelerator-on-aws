@@ -12,6 +12,7 @@
  */
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, test } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
@@ -33,6 +34,39 @@ describe('delegatedAdminStack', () => {
       'all-enabled-delegated-admin',
     ]),
   );
+});
+
+describe('SecurityResourcesStack with CloudTrail advanced event selectors', () => {
+  test('account trail is created with AdvancedEventSelectors and without basic EventSelectors', () => {
+    const stack = Create.stack('Management-us-east-1', [
+      AcceleratorStage.SECURITY_RESOURCES,
+      'aws',
+      'us-east-1',
+      'cloudtrail-advanced-selectors',
+    ])!;
+    const template = Template.fromStack(stack);
+
+    template.hasResourceProperties('AWS::CloudTrail::Trail', {
+      AdvancedEventSelectors: [
+        {
+          Name: 'AccountS3DataEvents',
+          FieldSelectors: [
+            { Field: 'eventCategory', Equals: ['Data'] },
+            { Field: 'resources.type', Equals: ['AWS::S3::Object'] },
+            { Field: 'resources.ARN', NotStartsWith: ['arn:aws:s3:::account-log-bucket/'] },
+          ],
+        },
+      ],
+    });
+
+    // Basic and advanced event selectors are mutually exclusive on a trail; the synthesized
+    // template must not carry the basic selectors CloudTrail's Trail construct builds by default.
+    const trails = template.findResources('AWS::CloudTrail::Trail');
+    expect(Object.keys(trails)).toHaveLength(1);
+    for (const trail of Object.values(trails)) {
+      expect(trail['Properties']['EventSelectors']).toBeUndefined();
+    }
+  });
 });
 
 describe('SecurityResourcesStack.getRemediationParameters', () => {
