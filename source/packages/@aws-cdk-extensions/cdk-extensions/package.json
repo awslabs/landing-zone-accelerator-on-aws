@@ -24,7 +24,6 @@
     "aws-cdk-lib": "2.262.0"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "2.68.0",
     "@types/node": "18.19.50",
     "@vitest/coverage-v8": "4.1.8",
     "constructs": "10.5.0",

@@ -45,8 +45,55 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SynthUtils } from '@aws-cdk/assert';
 import { expect, test } from 'vitest';
+
+/**
+ * aws-cdk-lib 2.262.0 auto-registers a CloudFormation Validate plugin (WASM rule
+ * engine) on every app synth, which adds seconds per snapshot test. Registering our
+ * own no-op CloudFormationValidatePlugin suppresses the auto-registration; snapshot
+ * tests assert template shape, not policy compliance.
+ */
+class NoopCfnValidatePlugin extends cdk.CloudFormationValidatePlugin {
+  override validate(): cdk.PolicyValidationPluginReport {
+    return { success: true, violations: [] };
+  }
+}
+
+const appsWithNoopValidation = new WeakSet<cdk.App>();
+
+function suppressCfnValidation(stack: cdk.Stack): void {
+  const root = stack.node.root;
+  if (cdk.App.isApp(root) && !appsWithNoopValidation.has(root)) {
+    cdk.Validations.of(root).addPlugins(new NoopCfnValidatePlugin());
+    appsWithNoopValidation.add(root);
+  }
+}
+
+/**
+ * Replacement for the deprecated SynthUtils.toCloudFormation. Force-synthesizes so
+ * mutations made after an earlier synth are applied, and strips the CDK
+ * bootstrap-version parameter and rule the same way SynthUtils did so existing
+ * snapshots stay unchanged.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toCloudFormation(stack: cdk.Stack): any {
+  const root = stack.node.root;
+  if (!cdk.Stage.isStage(root)) {
+    throw new Error('unexpected: all stacks must be part of a Stage or an App');
+  }
+  suppressCfnValidation(stack);
+  const assembly = root.synth({ force: true });
+  const template = assembly.getStackArtifact(stack.artifactId).template;
+  delete template.Rules?.CheckBootstrapVersion;
+  if (Object.keys(template.Rules ?? {}).length === 0) {
+    delete template.Rules;
+  }
+  delete template.Parameters?.BootstrapVersion;
+  if (Object.keys(template.Parameters ?? {}).length === 0) {
+    delete template.Parameters;
+  }
+  return template;
+}
 
 /**
  * Creates a snapshot test for a CDK stack
@@ -80,7 +127,7 @@ export function snapShotTest(testNamePrefix: string, stackProvider: () => cdk.St
     configureSnapshotSerializers();
 
     // Synthesize the stack to CloudFormation and compare with snapshot
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+    expect(toCloudFormation(stack)).toMatchSnapshot();
   }, 120000); // 120s timeout for CDK synthesis
 }
 

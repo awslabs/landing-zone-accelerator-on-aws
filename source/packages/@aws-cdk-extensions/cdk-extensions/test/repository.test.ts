@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import { expect as expectCDK, haveResource, SynthUtils } from '@aws-cdk/assert';
 import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
 import * as CdkExtensions from '../index';
 import { test, describe, expect } from 'vitest';
+import { toCloudFormation } from './synth-utils';
 
 describe('Initialized CodeCommit Repository', () => {
   const props: CdkExtensions.RepositoryProps = {
@@ -29,18 +30,16 @@ describe('Initialized CodeCommit Repository', () => {
 
     new CdkExtensions.Repository(stack, 'SnapshotTest', props);
 
-    expectCDK(stack).to(
-      haveResource('AWS::CodeCommit::Repository', {
-        RepositoryName: props.repositoryName,
-        Code: {
-          BranchName: props.repositoryBranchName,
-          S3: {
-            Bucket: props.s3BucketName,
-            Key: props.s3key,
-          },
+    Template.fromStack(stack).hasResourceProperties('AWS::CodeCommit::Repository', {
+      RepositoryName: props.repositoryName,
+      Code: {
+        BranchName: props.repositoryBranchName,
+        S3: {
+          Bucket: props.s3BucketName,
+          Key: props.s3key,
         },
-      }),
-    );
+      },
+    });
   });
 
   /**
@@ -57,6 +56,6 @@ describe('Initialized CodeCommit Repository', () => {
       s3key: props.s3key,
     });
 
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+    expect(toCloudFormation(stack)).toMatchSnapshot();
   });
 });

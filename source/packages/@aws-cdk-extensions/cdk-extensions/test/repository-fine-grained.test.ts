@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { expect as expectCDK, haveResourceLike } from '@aws-cdk/assert';
+import { Template } from 'aws-cdk-lib/assertions';
 import { test, describe } from 'vitest';
 import * as TestConfig from './test-config';
 import * as CdkExtensions from '../index';
@@ -20,17 +20,15 @@ describe('Initialized CodeCommit Repository', () => {
   test('Initialization Properties Test', () => {
     new CdkExtensions.Repository(TestConfig.stack, 'SnapshotTest', TestConfig.repositoryProps);
 
-    expectCDK(TestConfig.stack).to(
-      haveResourceLike('AWS::CodeCommit::Repository', {
-        RepositoryName: TestConfig.repositoryProps.repositoryName,
-        Code: {
-          BranchName: TestConfig.repositoryProps.repositoryBranchName,
-          S3: {
-            Bucket: TestConfig.repositoryProps.s3BucketName,
-            Key: TestConfig.repositoryProps.s3key,
-          },
+    Template.fromStack(TestConfig.stack).hasResourceProperties('AWS::CodeCommit::Repository', {
+      RepositoryName: TestConfig.repositoryProps.repositoryName,
+      Code: {
+        BranchName: TestConfig.repositoryProps.repositoryBranchName,
+        S3: {
+          Bucket: TestConfig.repositoryProps.s3BucketName,
+          Key: TestConfig.repositoryProps.s3key,
         },
-      }),
-    );
+      },
+    });
   });
 });

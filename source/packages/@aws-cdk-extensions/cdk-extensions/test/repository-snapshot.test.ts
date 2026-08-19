@@ -11,10 +11,10 @@
  *  and limitations under the License.
  */
 
-import { SynthUtils } from '@aws-cdk/assert';
 import { test, describe, expect } from 'vitest';
 import * as CdkExtensions from '../index';
 import * as TestConfig from './test-config';
+import { toCloudFormation } from './synth-utils';
 
 describe('Initialized CodeCommit Repository', () => {
   /**
@@ -22,6 +22,6 @@ describe('Initialized CodeCommit Repository', () => {
    */
   test('Snapshot Test', () => {
     new CdkExtensions.Repository(TestConfig.stack, 'SnapshotTest', TestConfig.repositoryProps);
-    expect(SynthUtils.toCloudFormation(TestConfig.stack)).toMatchSnapshot();
+    expect(toCloudFormation(TestConfig.stack)).toMatchSnapshot();
   });
 });

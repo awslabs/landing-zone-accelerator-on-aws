@@ -2467,7 +2467,6 @@ __metadata:
     "@aws-accelerator/cdk-utils": "npm:^0.0.0"
     "@aws-accelerator/installer": "npm:^0.0.0"
     "@aws-cdk-extensions/cdk-extensions": "npm:^0.0.0"
-    "@aws-cdk/assert": "npm:2.68.0"
     "@types/cfn-response": "npm:1.0.8"
     "@types/node": "npm:18.19.50"
     "@vitest/coverage-v8": "npm:4.1.8"
@@ -2803,7 +2802,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@aws-cdk-extensions/cdk-extensions@workspace:packages/@aws-cdk-extensions/cdk-extensions"
   dependencies:
-    "@aws-cdk/assert": "npm:2.68.0"
     "@types/node": "npm:18.19.50"
     "@vitest/coverage-v8": "npm:4.1.8"
     aws-cdk-lib: "npm:2.262.0"
@@ -2820,23 +2818,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@aws-cdk/assert@npm:2.68.0":
-  version: 2.68.0
-  resolution: "@aws-cdk/assert@npm:2.68.0"
-  dependencies:
-    "@aws-cdk/cloudformation-diff": "npm:2.68.0"
-  peerDependencies:
-    aws-cdk-lib: ^2.68.0
-    constructs: ^10.0.0
-    jest: ">=26.6.3"
-  checksum: 10c0/4f5ed8b4ab45e32e014f698faf8298e3a1e73a7ad1ac19395efa7379b9c6f9bdb4bf6f747136341c420c870763ff1a566c4b08f72be49e9c3231778672bd0a85
-  languageName: node
-  linkType: hard
-
-"@aws-cdk/asset-awscli-v1@npm:2.2.274":
-  version: 2.2.274
-  resolution: "@aws-cdk/asset-awscli-v1@npm:2.2.274"
-  checksum: 10c0/41c328bfbaeb6ceffb7855421c745397ffb57e9959ff831780e711f5588c2edf9a2c70a76e07de7ff9d8da68bf31d1e8ea38331108f2fd4f29dfc2dbf0184728
+"@aws-cdk/asset-awscli-v1@npm:2.2.282":
+  version: 2.2.282
+  resolution: "@aws-cdk/asset-awscli-v1@npm:2.2.282"
+  checksum: 10c0/4c3014292a2d5a13d99151bbbba291e96dcc6d44d841b77415bc422db588ca6ea14999e29ed94c9bff3c8d1b4a7ebf9327eb7cf89caf3f9d5bfb3d0f1749fa8d
   languageName: node
   linkType: hard
 
@@ -2886,16 +2871,6 @@ __metadata:
     picomatch: "npm:^4.0.4"
     yazl: "npm:^3.3.1"
   checksum: 10c0/0eb134be3bc8d0b637dac9361c3a805f02613543930fcf2bc47c9b6cd542c84d47a8f7057731fa563b050faddb330ff707f4d0334fd75ddd3b461a7930a21275
-  languageName: node
-  linkType: hard
-
-"@aws-cdk/cfnspec@npm:2.68.0":
-  version: 2.68.0
-  resolution: "@aws-cdk/cfnspec@npm:2.68.0"
-  dependencies:
-    fs-extra: "npm:^9.1.0"
-    md5: "npm:^2.3.0"
-  checksum: 10c0/5a55815e30aedb1f7965ad1c120b446dae723dec18f3f963a29e4775697cf21107f786e4dfd280396fbec964834371e6943ac13cf50a3a5adcd556e8d6049e0f
   languageName: node
   linkType: hard
 
@@ -2953,20 +2928,6 @@ __metadata:
     string-width: "npm:^4.2.3"
     table: "npm:^6.8.2"
   checksum: 10c0/d84440f2a53ea7420b995fa7292d617d7a7b2c0842742d9152e336ecd625878b929a2a352f6cb2dafbc2cd40a04cdfb45f241c712d5a9ff396bfa213a7fb7ab4
-  languageName: node
-  linkType: hard
-
-"@aws-cdk/cloudformation-diff@npm:2.68.0":
-  version: 2.68.0
-  resolution: "@aws-cdk/cloudformation-diff@npm:2.68.0"
-  dependencies:
-    "@aws-cdk/cfnspec": "npm:2.68.0"
-    chalk: "npm:^4"
-    diff: "npm:^5.1.0"
-    fast-deep-equal: "npm:^3.1.3"
-    string-width: "npm:^4.2.3"
-    table: "npm:^6.8.1"
-  checksum: 10c0/535d58adf4e16872b3f6c7335757d58852e990995c74815a2ee738f32393423457f0ac2492e3e408ef99b8592fa04d73b2c765c246e6603ca61821d9855d749f
   languageName: node
   linkType: hard
 
@@ -11489,13 +11450,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"at-least-node@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "at-least-node@npm:1.0.0"
-  checksum: 10c0/4c058baf6df1bc5a1697cf182e2029c58cd99975288a13f9e70068ef5d6f4e1f1fd7c4d2c3c4912eae44797d1725be9700995736deca441b39f3e66d8dee97ef
-  languageName: node
-  linkType: hard
-
 "available-typed-arrays@npm:^1.0.7":
   version: 1.0.7
   resolution: "available-typed-arrays@npm:1.0.7"
@@ -11877,13 +11831,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"charenc@npm:0.0.2":
-  version: 0.0.2
-  resolution: "charenc@npm:0.0.2"
-  checksum: 10c0/a45ec39363a16799d0f9365c8dd0c78e711415113c6f14787a22462ef451f5013efae8a28f1c058f81fc01f2a6a16955f7a5fd0cd56247ce94a45349c89877d8
-  languageName: node
-  linkType: hard
-
 "chokidar@npm:3.5.3":
   version: 3.5.3
   resolution: "chokidar@npm:3.5.3"
@@ -12133,13 +12080,6 @@ __metadata:
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
   checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
-  languageName: node
-  linkType: hard
-
-"crypt@npm:0.0.2":
-  version: 0.0.2
-  resolution: "crypt@npm:0.0.2"
-  checksum: 10c0/adbf263441dd801665d5425f044647533f39f4612544071b1471962209d235042fb703c27eea2795c7c53e1dfc242405173003f83cf4f4761a633d11f9653f18
   languageName: node
   linkType: hard
 
@@ -13206,18 +13146,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^9.1.0":
-  version: 9.1.0
-  resolution: "fs-extra@npm:9.1.0"
-  dependencies:
-    at-least-node: "npm:^1.0.0"
-    graceful-fs: "npm:^4.2.0"
-    jsonfile: "npm:^6.0.1"
-    universalify: "npm:^2.0.0"
-  checksum: 10c0/9b808bd884beff5cb940773018179a6b94a966381d005479f00adda6b44e5e3d4abf765135773d849cc27efe68c349e4a7b86acd7d3306d5932c14f3a4b17a92
-  languageName: node
-  linkType: hard
-
 "fsevents@npm:2.3.2":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2"
@@ -13767,13 +13695,6 @@ __metadata:
     call-bound: "npm:^1.0.3"
     has-tostringtag: "npm:^1.0.2"
   checksum: 10c0/36ff6baf6bd18b3130186990026f5a95c709345c39cd368468e6c1b6ab52201e9fd26d8e1f4c066357b4938b0f0401e1a5000e08257787c1a02f3a719457001e
-  languageName: node
-  linkType: hard
-
-"is-buffer@npm:~1.1.6":
-  version: 1.1.6
-  resolution: "is-buffer@npm:1.1.6"
-  checksum: 10c0/ae18aa0b6e113d6c490ad1db5e8df9bdb57758382b313f5a22c9c61084875c6396d50bbf49315f5b1926d142d74dfb8d31b40d993a383e0a158b15fea7a82234
   languageName: node
   linkType: hard
 
@@ -14663,17 +14584,6 @@ __metadata:
   version: 1.1.0
   resolution: "math-intrinsics@npm:1.1.0"
   checksum: 10c0/7579ff94e899e2f76ab64491d76cf606274c874d8f2af4a442c016bd85688927fcfca157ba6bf74b08e9439dc010b248ce05b96cc7c126a354c3bae7fcb48b7f
-  languageName: node
-  linkType: hard
-
-"md5@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "md5@npm:2.3.0"
-  dependencies:
-    charenc: "npm:0.0.2"
-    crypt: "npm:0.0.2"
-    is-buffer: "npm:~1.1.6"
-  checksum: 10c0/14a21d597d92e5b738255fbe7fe379905b8cb97e0a49d44a20b58526a646ec5518c337b817ce0094ca94d3e81a3313879c4c7b510d250c282d53afbbdede9110
   languageName: node
   linkType: hard
 
@@ -16143,7 +16053,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"table@npm:^6, table@npm:^6.8.1, table@npm:^6.8.2":
+"table@npm:^6, table@npm:^6.8.2":
   version: 6.9.0
   resolution: "table@npm:6.9.0"
   dependencies:

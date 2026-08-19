@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { InstallerStack } from '../lib/installer-stack';
-import { SynthUtils } from '@aws-cdk/assert';
+import { toCloudFormation } from './synth-utils';
 import { expect, test, describe } from 'vitest';
 
 // Test prefix
@@ -155,7 +155,7 @@ const stacks: InstallerStack[] = [
  */
 describe('InstallerStack', () => {
   test(`${testNamePrefix} Snapshot Test`, () => {
-    stacks.forEach(item => expect(SynthUtils.toCloudFormation(item)).toMatchSnapshot());
+    stacks.forEach(item => expect(toCloudFormation(item)).toMatchSnapshot());
   });
 
   test(`${testNamePrefix} customS3Path uses environment variable when set`, () => {
@@ -172,7 +172,7 @@ describe('InstallerStack', () => {
       setNodeVersion: false,
     });
 
-    const template = SynthUtils.toCloudFormation(stack);
+    const template = toCloudFormation(stack);
     expect(JSON.stringify(template)).toContain('custom/path/source.zip');
 
     // Restore original environment

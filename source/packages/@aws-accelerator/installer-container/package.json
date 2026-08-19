@@ -32,7 +32,6 @@
     "cdk-nag": "2.5.2"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "2.68.0",
     "@types/cfn-response": "1.0.8",
     "@types/node": "18.19.50",
     "@vitest/coverage-v8": "4.1.8",

@@ -98,7 +98,6 @@
     }
   },
   "resolutions": {
-    "@aws-cdk/asset-awscli-v1": "2.2.274",
     "axios": "1.18.0",
     "esbuild": "0.28.1",
     "fast-xml-parser": "5.7.2",

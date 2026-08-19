@@ -11,10 +11,10 @@
  *  and limitations under the License.
  */
 
-import { SynthUtils } from '@aws-cdk/assert';
 import { test, describe, expect } from 'vitest';
 import * as CdkExtensions from '../index';
 import * as TestConfig from './test-config';
+import { toCloudFormation } from './synth-utils';
 
 describe('CloudTrailExtension', () => {
   /**
@@ -22,6 +22,6 @@ describe('CloudTrailExtension', () => {
    */
   test('Snapshot Test', () => {
     new CdkExtensions.Trail(TestConfig.stack, 'SnapshotTest', TestConfig.trailProps);
-    expect(SynthUtils.toCloudFormation(TestConfig.stack)).toMatchSnapshot();
+    expect(toCloudFormation(TestConfig.stack)).toMatchSnapshot();
   });
 });
