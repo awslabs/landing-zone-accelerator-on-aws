@@ -12,9 +12,24 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { describe, expect, it } from 'vitest';
+import { Match, Template } from 'aws-cdk-lib/assertions';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import {
+  AccountConfig,
+  AppConfigItem,
+  CloudFormationStackConfig,
+  CustomizationConfig,
+  CustomizationsConfig,
+  DeploymentTargets,
+} from '@aws-accelerator/config';
+import { describe, expect, it, vi } from 'vitest';
 
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { ApplicationsStack } from '../lib/stacks/applications-stack';
+import { CustomStack } from '../lib/stacks/custom-stack';
+import { createAcceleratorStackProps } from './stacks/stack-props-test-helper';
 import {
   AcceleratorContext,
   AcceleratorEnvironment,
@@ -22,7 +37,12 @@ import {
   setAcceleratorEnvironment,
   setResourcePrefixes,
 } from '../utils/app-utils';
-import { createDiagnosticsPackStack, createPipelineStack, createTesterStack } from '../utils/stack-utils';
+import {
+  createCustomizationsStacks,
+  createDiagnosticsPackStack,
+  createPipelineStack,
+  createTesterStack,
+} from '../utils/stack-utils';
 
 const pipelineAccountId = '111111111111';
 const managementAccountId = '222222222222';
@@ -196,5 +216,104 @@ describe('createTesterStack', () => {
       resourcePrefixes,
     );
     expectDeploymentRole(app, 'AWSAccelerator-Management-Deployment-Role');
+  });
+});
+
+describe('createCustomizationsStacks', () => {
+  it('does not inject SOLUTION_ID into customer templates through any customizations aspect registration', () => {
+    const accountId = pipelineAccountId;
+    const region = 'us-east-1';
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lza-stack-utils-test-'));
+    const templateFile = 'customer-lambda.yaml';
+
+    try {
+      fs.writeFileSync(
+        path.join(tmpDir, templateFile),
+        [
+          "AWSTemplateFormatVersion: '2010-09-09'",
+          'Resources:',
+          '  CustomerFunction:',
+          '    Type: AWS::Lambda::Function',
+          '    Properties:',
+          '      Handler: index.handler',
+          '      Role: arn:aws:iam::111111111111:role/customer-role',
+          '      Runtime: nodejs22.x',
+          '      Code:',
+          '        ZipFile: exports.handler = async () => {};',
+          '      Environment:',
+          '        Variables:',
+          '          CUSTOMER_VALUE: preserved',
+          '',
+        ].join('\n'),
+      );
+
+      const deploymentTargets = Object.assign(new DeploymentTargets(), {
+        organizationalUnits: ['Root'],
+      });
+      const account = Object.assign(new AccountConfig(), {
+        name: 'TestAccount',
+        description: 'Test account',
+        email: 'test@example.com',
+        organizationalUnit: 'Test',
+      });
+      const customStackConfig = Object.assign(new CloudFormationStackConfig(), {
+        deploymentTargets,
+        description: 'Customer Lambda stack',
+        name: 'CustomerLambda',
+        regions: [region],
+        template: templateFile,
+      });
+      const customizationConfig = Object.assign(new CustomizationConfig(), {
+        cloudFormationStacks: [customStackConfig],
+      });
+      const application = Object.assign(new AppConfigItem(), {
+        name: 'NoOpApplication',
+        vpc: 'NoVpc',
+        deploymentTargets,
+      });
+      const customizationsConfig = new CustomizationsConfig({
+        customizations: customizationConfig,
+        applications: [application],
+      });
+      const props = createAcceleratorStackProps({
+        configDirPath: tmpDir,
+        partition: 'aws',
+        customizationsConfig,
+        env: { account: accountId, region },
+      });
+
+      Object.assign(props.accountsConfig, {
+        mandatoryAccounts: [account],
+        getAccountId: vi.fn(() => accountId),
+      });
+      Object.assign(props.organizationConfig, {
+        isIgnored: vi.fn(() => false),
+      });
+
+      const app = createCustomizationsStacks(
+        getContext(AcceleratorStage.CUSTOMIZATIONS),
+        props,
+        { account: accountId, region },
+        accountId,
+        region,
+      );
+      expect(app?.node.children.some(child => child instanceof ApplicationsStack)).toBe(true);
+      const customStack = app?.node.children.find(child => child instanceof CustomStack);
+      if (!(customStack instanceof CustomStack)) {
+        throw new Error('Expected customizations orchestration to create a CustomStack');
+      }
+
+      const template = Template.fromStack(customStack);
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        MemorySize: 512,
+        Environment: {
+          Variables: Match.objectEquals({
+            CUSTOMER_VALUE: 'preserved',
+          }),
+        },
+      });
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

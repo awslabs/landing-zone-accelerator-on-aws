@@ -46,7 +46,12 @@ import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { AcceleratorContext, AcceleratorEnvironment, AcceleratorResourcePrefixes } from './app-utils';
 import { ImportAseaResourcesStack } from '../lib/stacks/import-asea-resources-stack';
-import { AcceleratorAspects, AseaLambdaRuntimeAspect, PermissionsBoundaryAspect } from '../lib/accelerator-aspects';
+import {
+  AcceleratorAspects,
+  AcceleratorAspectsOptions,
+  AseaLambdaRuntimeAspect,
+  PermissionsBoundaryAspect,
+} from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
 import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
@@ -57,6 +62,10 @@ import { GuardDutyMalwareStack } from '../lib/stacks/security-guardduty-malware-
 import { addAcceleratorTags } from '@aws-accelerator/cdk-utils';
 
 const logger = createLogger(['stack-utils']);
+const customizationsAcceleratorAspectsOptions: AcceleratorAspectsOptions = {
+  excludeAwsSolutionAspect: stack => stack instanceof CustomStack,
+};
+
 /**
  * This function returns a CDK stack synthesizer based on configuration options
  * @param props
@@ -1238,7 +1247,12 @@ export function createCustomizationsStacks(
     createCustomStacks(app, props, env, accountId, enabledRegion, dependencyStacks);
     dependencyStacks = app.node.children.filter(child => child instanceof cdk.Stack) as cdk.Stack[];
     createApplicationsStacks(app, context, props, env, accountId, enabledRegion, dependencyStacks);
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+    new AcceleratorAspects(
+      app,
+      context.partition,
+      context.useExistingRoles ?? false,
+      customizationsAcceleratorAspectsOptions,
+    );
     const resourcePolicyEnforcementStackName = `${
       AcceleratorStackNames[AcceleratorStage.RESOURCE_POLICY_ENFORCEMENT]
     }-${accountId}-${enabledRegion}`;
@@ -1264,7 +1278,12 @@ export function createCustomizationsStacks(
     );
     cdk.Aspects.of(resourcePolicyEnforcementStack).add(new AwsSolutionsChecks());
     cdk.Aspects.of(resourcePolicyEnforcementStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+    new AcceleratorAspects(
+      app,
+      context.partition,
+      context.useExistingRoles ?? false,
+      customizationsAcceleratorAspectsOptions,
+    );
     return app;
   }
   return undefined;
@@ -1491,7 +1510,12 @@ function createApplicationsStacks(
       });
       cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
       cdk.Aspects.of(applicationStack).add(new PermissionsBoundaryAspect(accountId, context.partition));
-      new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
+      new AcceleratorAspects(
+        app,
+        context.partition,
+        context.useExistingRoles ?? false,
+        customizationsAcceleratorAspectsOptions,
+      );
       dependencyStacks.forEach(stack => applicationStack.addDependency(stack));
     }
   }

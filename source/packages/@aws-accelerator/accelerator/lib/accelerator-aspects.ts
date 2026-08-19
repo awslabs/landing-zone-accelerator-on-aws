@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 import { createLogger, getGlobalRegion, getNodeVersion } from '@aws-accelerator/utils';
-import { CustomStack } from './stacks/custom-stack';
 
 const logger = createLogger(['accelerator-aspects']);
 /**
@@ -193,15 +192,12 @@ class IamServiceLinkedRoleAspect implements cdk.IAspect {
  * Solution ID override for Lambda resources
  */
 class AwsSolutionAspect implements cdk.IAspect {
+  constructor(private readonly excludeAwsSolutionAspect?: (stack: cdk.Stack) => boolean) {}
+
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
-        // Skip Lambda functions defined in customer-provided customization templates.
-        // These are imported verbatim via CfnInclude in CustomStack, and injecting the
-        // SOLUTION_ID environment variable would modify customer code. It also breaks
-        // Lambda@Edge functions, which do not support environment variables.
-        // See https://github.com/awslabs/landing-zone-accelerator-on-aws/issues/643
-        if (cdk.Stack.of(node) instanceof CustomStack) {
+        if (this.excludeAwsSolutionAspect?.(cdk.Stack.of(node))) {
           return;
         }
         node.addPropertyOverride('Environment.Variables.SOLUTION_ID', `AwsSolution/SO0199/${version}`);
@@ -428,6 +424,20 @@ export class PermissionsBoundaryAspect implements cdk.IAspect {
 }
 
 /**
+ * Options for applying accelerator aspects.
+ */
+export interface AcceleratorAspectsOptions {
+  /**
+   * Determines whether the AWS solution aspect should be excluded from a stack.
+   *
+   * Other accelerator aspects continue to apply when this predicate returns true.
+   *
+   * @default false
+   */
+  readonly excludeAwsSolutionAspect?: (stack: cdk.Stack) => boolean;
+}
+
+/**
  * Add accelerator specific aspects to the application based on partition
  */
 export class AcceleratorAspects {
@@ -437,7 +447,12 @@ export class AcceleratorAspects {
    */
   public readonly globalRegion: string;
 
-  constructor(app: cdk.App | cdk.Stack, partition: string, useExistingRoles: boolean) {
+  constructor(
+    app: cdk.App | cdk.Stack,
+    partition: string,
+    useExistingRoles: boolean,
+    options: AcceleratorAspectsOptions = {},
+  ) {
     const globalRegion = getGlobalRegion(partition);
     // Add partition specific overrides
     switch (partition) {
@@ -473,7 +488,7 @@ export class AcceleratorAspects {
        * Calling the invoke API action failed with this message: Lambda was unable to decrypt the environment variables because KMS access was denied. Please check the function's KMS key settings. KMS Exception: AccessDeniedExceptionKMS Message: The ciphertext refers to a customer master key that does not exist, does not exist in this region, or you are not allowed to access
        */
       // removing solutions aspect to prevent this error
-      cdk.Aspects.of(app).add(new AwsSolutionAspect());
+      cdk.Aspects.of(app).add(new AwsSolutionAspect(options.excludeAwsSolutionAspect));
     }
     // Set global region
     this.globalRegion = globalRegion;

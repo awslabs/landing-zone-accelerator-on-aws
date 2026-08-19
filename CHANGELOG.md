@@ -55,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): reject Identity Center assignment principalId values that are not identity store ids
 - fix(pipeline): derive generated organization-config organizational units from the generated accounts instead of hard-coded names
 - fix(installer): deploy the installer stages with the account deployment role and stop the redundant home region re-bootstrap when the pipeline account is not the management account
+- fix(customizations): stop injecting the SOLUTION_ID environment variable into Lambda functions defined in customization CloudFormation templates.
 
 ## [1.16.0] - 2026-07-24
 

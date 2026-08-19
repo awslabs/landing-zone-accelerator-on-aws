@@ -247,7 +247,7 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('AwsSolutionAspect', () => {
-    test('should add SOLUTION_ID environment variable to LZA-managed Lambda functions', () => {
+    test('should add SOLUTION_ID environment variable when no exclusion predicate is configured', () => {
       // GIVEN
       new cdk.aws_lambda.Function(stack, 'TestFunction', {
         runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
@@ -269,7 +269,31 @@ describe('AcceleratorAspects', () => {
       });
     });
 
-    test('should not modify Lambda functions defined in a customization CustomStack (issue #643)', () => {
+    test('should add SOLUTION_ID environment variable when the exclusion predicate does not match the stack', () => {
+      // GIVEN
+      new cdk.aws_lambda.Function(stack, 'TestFunction', {
+        runtime: cdk.aws_lambda.Runtime.NODEJS_20_X,
+        handler: 'index.handler',
+        code: cdk.aws_lambda.Code.fromInline('exports.handler = function() { }'),
+      });
+
+      // WHEN
+      new AcceleratorAspects(app, 'aws', false, {
+        excludeAwsSolutionAspect: candidateStack => candidateStack instanceof CustomStack,
+      });
+
+      // THEN
+      template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        Environment: {
+          Variables: {
+            SOLUTION_ID: Match.stringLikeRegexp('AwsSolution/SO0199/.*'),
+          },
+        },
+      });
+    });
+
+    test('should not inject SOLUTION_ID into Lambda functions in a customization CustomStack (issue #643)', () => {
       // GIVEN - a customer customization template imported verbatim via CfnInclude
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lza-aspect-test-'));
       const templateFile = 'lambda-edge.yaml';
@@ -320,12 +344,15 @@ describe('AcceleratorAspects', () => {
       });
 
       // WHEN
-      new AcceleratorAspects(app, 'aws', false);
+      new AcceleratorAspects(app, 'aws', false, {
+        excludeAwsSolutionAspect: candidateStack => candidateStack instanceof CustomStack,
+      });
 
-      // THEN - the customer Lambda must be left untouched (no Environment/SOLUTION_ID injected)
+      // THEN - only AwsSolutionAspect is excluded; the default memory aspect still applies
       const customTemplate = Template.fromStack(customStack);
       customTemplate.hasResourceProperties('AWS::Lambda::Function', {
         Handler: 'index.lambda_handler',
+        MemorySize: 512,
         Environment: Match.absent(),
       });
 
