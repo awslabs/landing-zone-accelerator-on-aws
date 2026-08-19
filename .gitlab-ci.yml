@@ -688,6 +688,9 @@ govcloud-account-vending:
   tags:
     - arch:amd64
   script:
+    # Force the released prefix; a project/group-level ACCELERATOR_PREFIX (e.g. LzaIntegTest)
+    # would otherwise rename the synthesized template and break the cp below.
+    - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "cd source/packages/@aws-accelerator/govcloud-account-vending"
     - "yarn cdk synth"
     - "cp cdk.out/AWSAccelerator-GovCloudAccountVending.template.json $CI_PROJECT_DIR/AWSAccelerator-GovCloudAccountVending.template.json"
