@@ -37,6 +37,12 @@ interface GuardDutyManifestConfig {
   regionFilters: IModuleRegionFilters;
   autoEnableOrgMembers: boolean;
   overrideExisting?: boolean;
+  deploymentTargets?: {
+    accounts?: string[];
+    organizationalUnits?: string[];
+    excludedAccounts?: string[];
+    excludedRegions?: string[];
+  };
   s3Protection: {
     enable: boolean;
     excludeRegions?: string[];
@@ -111,6 +117,7 @@ export const guardDutyPlugin: ModuleTestPlugin = {
               rdsProtection: gdConfig.rdsProtection,
               lambdaProtection: gdConfig.lambdaProtection,
               exportConfiguration: gdConfig.exportConfiguration,
+              ...(gdConfig.deploymentTargets && { deploymentTargets: gdConfig.deploymentTargets }),
             },
             delegatedAdminAccount: delegatedAdminAccountName,
           },

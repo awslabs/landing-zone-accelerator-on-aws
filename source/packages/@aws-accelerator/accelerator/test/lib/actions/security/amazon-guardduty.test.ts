@@ -1264,7 +1264,16 @@ describe('AmazonGuardDuty', () => {
       expect(result.status).toBe('COMPLETED');
     });
 
-    it('should throw error when deploymentTargets does not include delegated admin account', async () => {
+    it('should auto-include delegated admin account when deploymentTargets omits it', async () => {
+      const { configureGuardDuty } = await import('aws-lza');
+      vi.mocked(configureGuardDuty).mockResolvedValue({
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      });
+
       const params = createMockModuleParams({
         configs: {
           accountsConfig: {
@@ -1284,12 +1293,33 @@ describe('AmazonGuardDuty', () => {
         },
       });
 
-      await expect(AmazonGuardDuty.configure(params)).rejects.toThrow(
-        'GuardDuty deploymentTargets must include the delegated admin account (YYYYYYYYYYYY)',
+      const result = await AmazonGuardDuty.configure(params);
+
+      // Management (111111111111) was present; delegated admin (YYYYYYYYYYYY) is auto-added.
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            boundary: expect.objectContaining({
+              accounts: expect.arrayContaining(['111111111111', '333333333333', 'YYYYYYYYYYYY']),
+            }),
+          }),
+        }),
       );
+      const gdCallAccounts1 = vi.mocked(configureGuardDuty).mock.calls[0][0].configuration.boundary!.accounts;
+      expect(gdCallAccounts1).toHaveLength(3);
+      expect(result.status).toBe('COMPLETED');
     });
 
-    it('should throw error when deploymentTargets does not include management account', async () => {
+    it('should auto-include management account when deploymentTargets omits it', async () => {
+      const { configureGuardDuty } = await import('aws-lza');
+      vi.mocked(configureGuardDuty).mockResolvedValue({
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      });
+
       const params = createMockModuleParams({
         configs: {
           accountsConfig: {
@@ -1309,12 +1339,33 @@ describe('AmazonGuardDuty', () => {
         },
       });
 
-      await expect(AmazonGuardDuty.configure(params)).rejects.toThrow(
-        'GuardDuty deploymentTargets must include the management account (111111111111)',
+      const result = await AmazonGuardDuty.configure(params);
+
+      // Delegated admin (YYYYYYYYYYYY) was present; management (111111111111) is auto-added.
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            boundary: expect.objectContaining({
+              accounts: expect.arrayContaining(['YYYYYYYYYYYY', '333333333333', '111111111111']),
+            }),
+          }),
+        }),
       );
+      const gdCallAccounts2 = vi.mocked(configureGuardDuty).mock.calls[0][0].configuration.boundary!.accounts;
+      expect(gdCallAccounts2).toHaveLength(3);
+      expect(result.status).toBe('COMPLETED');
     });
 
-    it('should throw error when deploymentTargets is missing both management and delegated admin', async () => {
+    it('should auto-include both management and delegated admin when deploymentTargets omits both', async () => {
+      const { configureGuardDuty } = await import('aws-lza');
+      vi.mocked(configureGuardDuty).mockResolvedValue({
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      });
+
       const params = createMockModuleParams({
         configs: {
           accountsConfig: {
@@ -1334,9 +1385,61 @@ describe('AmazonGuardDuty', () => {
         },
       });
 
-      await expect(AmazonGuardDuty.configure(params)).rejects.toThrow(
-        'GuardDuty deploymentTargets must include the delegated admin account (YYYYYYYYYYYY) and management account (111111111111)',
+      const result = await AmazonGuardDuty.configure(params);
+
+      // Neither privileged account was present; management and delegated admin are auto-added.
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            boundary: expect.objectContaining({
+              accounts: expect.arrayContaining(['333333333333', '444444444444', '111111111111', 'YYYYYYYYYYYY']),
+            }),
+          }),
+        }),
       );
+      const gdCallAccounts3 = vi.mocked(configureGuardDuty).mock.calls[0][0].configuration.boundary!.accounts;
+      expect(gdCallAccounts3).toHaveLength(4);
+      expect(result.status).toBe('COMPLETED');
+    });
+
+    it('should warn (not just info) when re-adding an explicitly excluded required account', async () => {
+      const { configureGuardDuty, createLogger } = await import('aws-lza');
+      vi.mocked(configureGuardDuty).mockResolvedValue({
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      });
+      const logger = createLogger(['test']);
+      vi.mocked(logger.warn).mockClear();
+
+      const params = createMockModuleParams({
+        configs: {
+          accountsConfig: {
+            ...mockAccountsConfig,
+            // Resolved set excludes management (111111111111) because it was explicitly excluded.
+            getAccountIdsFromDeploymentTarget: vi.fn().mockReturnValue(['YYYYYYYYYYYY', '333333333333']),
+          } as unknown as AccountsConfig,
+          securityConfig: {
+            centralSecurityServices: {
+              guardduty: {
+                ...mockGuardDutyConfig,
+                deploymentTargets: {
+                  accounts: ['Audit'],
+                  excludedAccounts: ['Management'],
+                },
+              },
+            },
+          } as unknown as SecurityConfig,
+        },
+      });
+
+      const result = await AmazonGuardDuty.configure(params);
+
+      expect(result.status).toBe('COMPLETED');
+      // Overriding an explicit exclusion must surface as a warning.
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('111111111111'));
     });
   });
 });

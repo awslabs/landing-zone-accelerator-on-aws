@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
 - fix(config): preserve commas in String remediation parameters
 - fix(organizations): preserve external policy attachments, use create-only reconciliation after failed executions, and reseed ownership after success
 - fix(lambda): remove unused rolePolicyFile from targetDocumentLambda remediation config

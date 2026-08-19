@@ -101,11 +101,15 @@ integ:macie:aws:us-east-1:
     - arch:amd64
   script:
     - "cd source/packages/@aws-accelerator/accelerator"
+    # Publish scenario descriptions.
+    - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts macie 'Amazon Macie' > $CI_PROJECT_DIR/integ-manifest-macie.json"
     - "yarn test:integration test/integration/modules/macie/index.test.integration.ts"
   artifacts:
     when: always
     reports:
       junit: "source/packages/@aws-accelerator/accelerator/test-reports/integration-results.xml"
+    paths:
+      - integ-manifest-macie.json
     expire_in: 7 days
   timeout: 15m
   rules:
@@ -150,11 +154,15 @@ integ:guardduty:aws:us-east-1:
     - arch:amd64
   script:
     - "cd source/packages/@aws-accelerator/accelerator"
+    # Publish scenario descriptions.
+    - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts guardduty 'Amazon GuardDuty' > $CI_PROJECT_DIR/integ-manifest-guardduty.json"
     - "yarn test:integration test/integration/modules/guardduty/index.test.integration.ts"
   artifacts:
     when: always
     reports:
       junit: "source/packages/@aws-accelerator/accelerator/test-reports/integration-results.xml"
+    paths:
+      - integ-manifest-guardduty.json
     expire_in: 7 days
   timeout: 15m
   rules:
@@ -202,11 +210,15 @@ integ:tgw:aws:us-east-1:
     - arch:amd64
   script:
     - "cd source/packages/@aws-accelerator/accelerator"
+    # Publish scenario descriptions.
+    - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts tgw 'Transit Gateway Associations & Propagations' > $CI_PROJECT_DIR/integ-manifest-tgw.json"
     - "yarn test:integration test/integration/modules/tgw/index.test.integration.ts"
   artifacts:
     when: always
     reports:
       junit: "source/packages/@aws-accelerator/accelerator/test-reports/integration-results.xml"
+    paths:
+      - integ-manifest-tgw.json
     expire_in: 7 days
   timeout: 30m
   rules:

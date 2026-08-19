@@ -1,0 +1,43 @@
+{
+    "name": "enable-with-deployment-targets",
+    "description": "Enable GuardDuty with deploymentTargets that omit Management and Audit \u2014 verifies the module auto-includes the management and delegated-admin accounts instead of failing",
+    "order": 8,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": false,
+        "deploymentTargets": {
+            "accounts": [
+                "Network"
+            ]
+        },
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "NONE",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true
+        }
+    },
+    "skipCleanup": true
+}

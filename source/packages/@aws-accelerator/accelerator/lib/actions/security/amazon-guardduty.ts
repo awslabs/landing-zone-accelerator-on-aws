@@ -340,23 +340,36 @@ export abstract class AmazonGuardDuty {
       return undefined;
     }
 
-    // Validate that delegated admin and management accounts are included
+    // The management and delegated-admin (Audit) accounts are always in scope for the module:
+    // it performs organization-admin operations from the management account and member/detector/
+    // publishing operations from the delegated admin. Under the previous CloudFormation
+    // custom-resource behavior, deploymentTargets was a member-only list and these accounts were
+    // implicit, so long-standing configs frequently omit them. To preserve backward compatibility,
+    // auto-include them (rather than failing) when absent from deploymentTargets.
     const managementAccountId = accountsConfig.getManagementAccountId();
     const delegatedAdminAccountId = accountsConfig.getAuditAccountId();
-    const errors: string[] = [];
 
-    if (!accountIds.includes(delegatedAdminAccountId)) {
-      errors.push(`delegated admin account (${delegatedAdminAccountId})`);
-    }
-    if (!accountIds.includes(managementAccountId)) {
-      errors.push(`management account (${managementAccountId})`);
-    }
+    // Account IDs the customer explicitly excluded (already stripped from accountIds above). Re-adding
+    // one of these overrides an explicit intent, so it is surfaced at warn rather than info.
+    const explicitlyExcludedIds = new Set(
+      (guardDutyConfig.deploymentTargets.excludedAccounts ?? []).map(name => accountsConfig.getAccountId(name)),
+    );
 
-    if (errors.length > 0) {
-      throw new Error(
-        `GuardDuty deploymentTargets must include the ${errors.join(' and ')}. ` +
-          `Add them to your deploymentTargets configuration.`,
-      );
+    for (const requiredAccountId of [managementAccountId, delegatedAdminAccountId]) {
+      if (!accountIds.includes(requiredAccountId)) {
+        accountIds.push(requiredAccountId);
+        if (explicitlyExcludedIds.has(requiredAccountId)) {
+          AmazonGuardDuty.logger.warn(
+            `GuardDuty deploymentTargets.excludedAccounts listed required account ${requiredAccountId}; re-adding it ` +
+              `because the management and delegated-admin accounts are always in scope and cannot be excluded`,
+          );
+        } else {
+          AmazonGuardDuty.logger.info(
+            `Added required account ${requiredAccountId} to GuardDuty deployment boundary ` +
+              `(management and delegated-admin accounts are always in scope)`,
+          );
+        }
+      }
     }
 
     AmazonGuardDuty.logger.info(
