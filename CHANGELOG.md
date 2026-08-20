@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: upgrade to node24
 - fix(cloudwatch): skip metric filters referencing the organization CloudTrail log group when the organization trail is not enabled, preventing `The specified log group does not exist` failures (issue #327)
 - fix(identity-center): enable Identity Center delegated admin registration in the aws-eusc partition (issue #1160)
+- fix(config): reject Identity Center assignment principalId values that are not identity store ids
 
 ## [1.16.0] - 2026-07-24
 

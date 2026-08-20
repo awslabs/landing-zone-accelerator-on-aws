@@ -243,6 +243,44 @@ describe('Build Identity Center Assignments - ConflictException retry', () => {
     expect(setTimeoutSpy).not.toHaveBeenCalled();
   });
 
+  it('should not retry a ValidationException raised by an invalid principalId', async () => {
+    // IAM Identity Center returns ValidationException (HTTP 400) when principalId is not an identity
+    // store id. It is a syntax error, so retrying it can only burn backoff attempts.
+    const validationException = Object.assign(
+      new Error(
+        "1 validation error detected: Value 'Platform-Admins' at 'principalId' failed to satisfy constraint: Member must satisfy regular expression pattern: ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}",
+      ),
+      { name: 'ValidationException' },
+    );
+    mockSSOAdminClient = {
+      // every attempt would fail, so a retryable classification would show up as repeated sends
+      send: vi.fn().mockRejectedValue(validationException),
+    };
+    vi.mocked(SSOAdminClient).mockImplementation(function () {
+      return mockSSOAdminClient;
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await expect(
+      handler(
+        createEvent('Create', {
+          ResourceProperties: {
+            instanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
+            identityStoreId: 'd-906751796e',
+            principalId: 'Platform-Admins',
+            principalType: 'GROUP',
+            permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-1111111111111111',
+            accountIds: ['111111111111'],
+          },
+        }),
+      ),
+    ).rejects.toBe(validationException);
+
+    // not retryable: fails fast on the first attempt with no backoff delay
+    expect(mockSSOAdminClient.send).toHaveBeenCalledTimes(1);
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
+  });
+
   it.each([
     {
       requestType: 'Create',

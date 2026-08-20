@@ -282,6 +282,94 @@ describe('Build Identity Center Assignments - Principal ID Lookup', () => {
 
     await expect(handler(mockEvent)).rejects.toThrow("User 'invalid-user' not found in Identity Store 'd-906751796e'");
   });
+
+  it('should reject when a direct principalId is not an identity store id so the framework reports FAILED to CFN', async () => {
+    // IAM Identity Center rejects a principalId that is not an identity store id. The deprecated
+    // principalId property is passed through without a lookup, so the error must surface to
+    // CloudFormation rather than being swallowed into a SUCCESS response.
+    const validationException = Object.assign(
+      new Error(
+        "1 validation error detected: Value 'Platform-Admins' at 'principalId' failed to satisfy constraint: Member must satisfy regular expression pattern: ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}",
+      ),
+      { name: 'ValidationException' },
+    );
+    mockSSOAdminClient.send = vi.fn().mockRejectedValue(validationException);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    const mockEvent = {
+      RequestType: 'Create',
+      ResponseURL: 'https://example.com',
+      StackId: 'test-stack',
+      RequestId: 'test-request',
+      LogicalResourceId: 'test-resource',
+      ResourceType: 'Custom::IdentityCenterAssignments',
+      ResourceProperties: {
+        instanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
+        identityStoreId: 'd-906751796e',
+        principalId: 'Platform-Admins',
+        principalType: 'GROUP',
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-1111111111111111',
+        accountIds: ['111111111111', '222222222222'],
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    await expect(handler(mockEvent)).rejects.toThrow(/failed to satisfy constraint/);
+
+    // The unresolved value is sent verbatim, which is why the config validator has to reject it.
+    expect(CreateAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ PrincipalId: 'Platform-Admins', PrincipalType: 'GROUP' }),
+    );
+    // No Identity Store lookup is performed for the deprecated principalId property.
+    expect(mockIdentityStoreClient.send).not.toHaveBeenCalled();
+    // Two accounts are targeted, but the failure on the first one aborts the remaining work instead of
+    // being caught per account and reported as an overall success.
+    // This file stubs throttlingBackOff as a pass-through, so it cannot observe retry behaviour; that
+    // ValidationException is not retried is covered in build-identity-center-assignments-conflict-retry.test.ts.
+    expect(mockSSOAdminClient.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reject when a direct principalId is not an identity store id on an assignment that also sets principals', async () => {
+    // The runtime ignores principalId whenever principals is present, so a stale non-identifier value
+    // there never reaches CreateAccountAssignment and must not be treated as a deployment failure.
+    mockIdentityStoreClient.send.mockResolvedValueOnce({
+      GroupId: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6',
+      IdentityStoreId: 'd-906751796e',
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    const mockEvent = {
+      RequestType: 'Create',
+      ResponseURL: 'https://example.com',
+      StackId: 'test-stack',
+      RequestId: 'test-request',
+      LogicalResourceId: 'test-resource',
+      ResourceType: 'Custom::IdentityCenterAssignments',
+      ResourceProperties: {
+        instanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
+        identityStoreId: 'd-906751796e',
+        principalId: 'Platform-Admins',
+        principalType: 'GROUP',
+        principals: [{ type: 'GROUP', name: 'Platform-Admins' }],
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-1111111111111111',
+        accountIds: ['111111111111'],
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const result = await handler(mockEvent);
+
+    expect(result?.Status).toBe('SUCCESS');
+    // The resolved group id is used, and the invalid principalId is never sent to IAM Identity Center.
+    expect(CreateAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ PrincipalId: 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6', PrincipalType: 'GROUP' }),
+    );
+    expect(CreateAccountAssignmentCommand).not.toHaveBeenCalledWith(
+      expect.objectContaining({ PrincipalId: 'Platform-Admins' }),
+    );
+  });
 });
 
 describe('Build Identity Center Assignments - Assignment Status Polling', () => {

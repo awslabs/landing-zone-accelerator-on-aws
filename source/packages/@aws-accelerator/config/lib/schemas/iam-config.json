@@ -436,7 +436,7 @@
         "principalId": {
           "$ref": "#/definitions/NonEmptyString",
           "deprecated": "This property is deprecated and will be removed in a future version. Use the `principals`\nproperty instead to specify principal names, which provides better maintainability and\nreadability.",
-          "description": "The unique identifier of the principal (user or group) to grant access to."
+          "description": "The unique identifier of the principal (user or group) to grant access to. Must be an Identity Center identity store id; a user or group name is rejected. Use `principals` to assign by name."
         },
         "principalType": {
           "$ref": "#/definitions/PrincipalType",

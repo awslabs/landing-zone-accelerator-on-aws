@@ -1186,16 +1186,13 @@ export interface IIdentityCenterAssignmentConfig {
    */
   readonly permissionSetName: t.NonEmptyString;
   /**
-   * The unique identifier of the principal (user or group) to grant access to.
+   * The unique identifier of the principal (user or group) to grant access to. Must be an Identity
+   * Center identity store id; a user or group name is rejected. Use `principals` to assign by name.
    *
    * @deprecated
    * This property is deprecated and will be removed in a future version. Use the `principals`
    * property instead to specify principal names, which provides better maintainability and
    * readability.
-   *
-   * @remarks
-   * This is the unique ID from your identity source (such as Active Directory or the Identity
-   * Center identity store).
    */
   readonly principalId?: t.NonEmptyString;
   /**

@@ -32,6 +32,14 @@ type VpcSubnetListsType = {
 };
 
 /**
+ * Identity Center user and group identifier format.
+ *
+ * @see {@link https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_CreateAccountAssignment.html | CreateAccountAssignment PrincipalId}
+ */
+const IDENTITY_CENTER_PRINCIPAL_ID_REGEX =
+  /^([0-9a-f]{10}-)?[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$/;
+
+/**
  * IAM Configuration validator.
  * Validates iam configuration
  */
@@ -530,6 +538,55 @@ export class IamConfigValidator {
     // validate PermissionSet name length
     //
     errors.push(...this.validateIdentityCenterPermissionSetName());
+
+    //
+    // Validate assignment principalId format
+    //
+    errors.push(...this.validateIdentityCenterAssignmentPrincipalIds());
+
+    return errors;
+  }
+
+  /**
+   * Function to validate Identity Center assignment principalId values are identity store ids
+   * @remarks
+   * Only assignments that rely on the deprecated principalId property are checked. Assignments that
+   * set principals resolve names at deployment time and never send principalId to IAM Identity
+   * Center, so their principalId value is not validated.
+   * @returns Array of validation errors
+   */
+  private validateIdentityCenterAssignmentPrincipalIds(): string[] {
+    const errors: string[] = [];
+    const identityCenter = this.iamConfig.identityCenter;
+    if (!identityCenter) {
+      return errors;
+    }
+
+    for (const identityCenterAssignment of identityCenter.identityCenterAssignments ?? []) {
+      const principalId = identityCenterAssignment.principalId;
+      if (!principalId) {
+        continue;
+      }
+
+      // The assignment custom resource branches on the presence of principals, including an empty list,
+      // and only reads principalId in the else branch. So whenever principals is set the principalId
+      // value never reaches CreateAccountAssignment and must not fail validation.
+      if (identityCenterAssignment.principals) {
+        continue;
+      }
+
+      // Unresolved handlebars tokens and CloudFormation dynamic references are preserved verbatim by
+      // replacements-config, so their value is only known at deployment time and cannot be checked here.
+      if (principalId.includes('{{')) {
+        continue;
+      }
+
+      if (!IDENTITY_CENTER_PRINCIPAL_ID_REGEX.test(principalId)) {
+        errors.push(
+          `Identity center ${identityCenter.name} assignment ${identityCenterAssignment.name} principalId ${principalId} is not a valid Identity Center user or group id. principalId must be an identity store id, for example f81d4fae-7dec-11d0-a765-00a0c91e6bf6. To reference a user or group by name, use the principals property instead.`,
+        );
+      }
+    }
 
     return errors;
   }
