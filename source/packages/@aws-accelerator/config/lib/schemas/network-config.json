@@ -4573,7 +4573,7 @@
     },
     "IVpcResolverConfig": {
       "additionalProperties": false,
-      "description": "Use this configuration to define local resolver endpoints and Route 53 query logging to the VPC.",
+      "description": "Use this configuration to define local resolver endpoints and Route 53 query logging to the VPC.\n\nNote: Resolver rules are not supported here. A `rules` array defined on endpoints under\n`vpcRoute53Resolver` is silently ignored. Define resolver rules under\n`centralNetworkServices.route53Resolver` instead.",
       "properties": {
         "endpoints": {
           "description": "(OPTIONAL) An array of Route 53 resolver endpoint configurations.",
