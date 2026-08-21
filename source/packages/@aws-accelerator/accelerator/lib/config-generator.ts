@@ -15,9 +15,11 @@ import {
   AccountsConfig,
   AccountConfig,
   GlobalConfig,
+  GovCloudAccountConfig,
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
+  OrganizationalUnitConfig,
   SecurityConfig,
   ControlTowerLandingZoneConfig,
   CloudWatchLogsConfig,
@@ -218,10 +220,10 @@ export class ConfigGenerator {
     if (this.options.enableSingleAccountMode) {
       const orgConfig = new OrganizationConfig({
         enable: false,
-        organizationalUnits: [
-          { name: 'Security', ignore: undefined },
-          { name: 'LogArchive', ignore: undefined },
-        ],
+        organizationalUnits: this.getReferencedOrganizationalUnits([
+          ...accountsConfig.mandatoryAccounts,
+          ...workloadAccounts,
+        ]),
         organizationalUnitIds: [],
         serviceControlPolicies: [],
         taggingPolicies: [],
@@ -241,6 +243,30 @@ export class ConfigGenerator {
     fs.writeFileSync(path.join(this.tempDirPath, SecurityConfig.FILENAME), yaml.dump(new SecurityConfig()), 'utf8');
 
     return CONFIG_FILE_NAMES;
+  }
+
+  /**
+   * Derive the organizational units that must be declared in organization-config.yaml from the
+   * organizational units referenced by the generated accounts.
+   *
+   * @param accounts - Accounts written to accounts-config.yaml
+   * @returns Unique organizational units referenced by those accounts, excluding Root
+   */
+  private getReferencedOrganizationalUnits(
+    accounts: (AccountConfig | GovCloudAccountConfig)[],
+  ): OrganizationalUnitConfig[] {
+    const organizationalUnitNames: string[] = [];
+    for (const account of accounts) {
+      if (
+        account.organizationalUnit &&
+        account.organizationalUnit !== 'Root' &&
+        !organizationalUnitNames.includes(account.organizationalUnit)
+      ) {
+        organizationalUnitNames.push(account.organizationalUnit);
+      }
+    }
+
+    return organizationalUnitNames.map(name => ({ name, ignore: undefined }));
   }
 
   /**

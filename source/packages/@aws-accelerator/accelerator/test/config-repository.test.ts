@@ -18,10 +18,12 @@ import {
   createConfigZipArchive,
   GenerateConfigFilesProps,
 } from '../lib/config-repository';
+import { AccountsConfig, AccountsConfigValidator, OrganizationConfig } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { Repository } from 'aws-cdk-lib/aws-codecommit';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as fc from 'fast-check';
 import * as yaml from 'js-yaml';
 import AdmZip from 'adm-zip';
@@ -121,10 +123,58 @@ const EXPECTED_CONFIG_FILES = [
   'security-config.yaml',
 ];
 
+/**
+ * Load a generated configuration file from the temporary generation directory
+ */
+function loadGeneratedYaml(tempDirPath: string, fileName: string): Record<string, unknown> {
+  return yaml.load(fs.readFileSync(path.join(tempDirPath, fileName), 'utf8')) as Record<string, unknown>;
+}
+
+/**
+ * Collect the sorted, unique, non-Root organizational units referenced by the generated
+ * accounts-config.yaml. This is the set organization-config.yaml is required to declare.
+ */
+function referencedOrganizationalUnits(tempDirPath: string): string[] {
+  const accountsConfig = loadGeneratedYaml(tempDirPath, 'accounts-config.yaml');
+  const accounts = [
+    ...((accountsConfig['mandatoryAccounts'] ?? []) as Array<{ organizationalUnit: string }>),
+    ...((accountsConfig['workloadAccounts'] ?? []) as Array<{ organizationalUnit: string }>),
+  ];
+
+  return [...new Set(accounts.map(account => account.organizationalUnit).filter(ou => ou && ou !== 'Root'))].sort();
+}
+
 describe('generateConfigFiles Property Tests', () => {
   const tempDirs: string[] = [];
+  const savedEnvironment: Record<string, string | undefined> = {};
+  // Environment variables read by the config generator and by AccountsConfig, reset per test so
+  // that each test controls them explicitly and the suite stays independent
+  const managedEnvironmentVariables: Record<string, string | undefined> = {
+    LZA_DEPLOYMENT_ACCOUNT_EMAIL: undefined,
+    PIPELINE_ACCOUNT_ID: undefined,
+    ACCELERATOR_SSM_PARAM_NAME_PREFIX: '/accelerator',
+  };
+
+  beforeEach(() => {
+    for (const [name, value] of Object.entries(managedEnvironmentVariables)) {
+      savedEnvironment[name] = process.env[name];
+      if (value === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = value;
+      }
+    }
+  });
 
   afterEach(() => {
+    for (const name of Object.keys(managedEnvironmentVariables)) {
+      if (savedEnvironment[name] === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = savedEnvironment[name];
+      }
+    }
+
     // Clean up temp directories after each test
     for (const dir of tempDirs) {
       if (fs.existsSync(dir)) {
@@ -227,7 +277,8 @@ describe('generateConfigFiles Property Tests', () => {
   /**
    * **Feature: s3-config-initializer, Property 5: Single Account Mode Organization Config**
    * *For any* valid input where singleAccountMode is true, the generated organization-config.yaml
-   * SHALL contain `enable: false` and organizational units for Security and LogArchive.
+   * SHALL contain `enable: false` and exactly the organizational units referenced by the generated
+   * accounts, excluding the implicit `Root` organizational unit.
    * **Validates: Requirements 3.1**
    */
   it('Property 5: Single Account Mode Organization Config - sets correct org config when single account mode', () => {
@@ -245,18 +296,93 @@ describe('generateConfigFiles Property Tests', () => {
         const result = generateConfigFiles(props);
         tempDirs.push(result.tempDirPath);
 
-        const orgConfigPath = `${result.tempDirPath}/organization-config.yaml`;
-        const orgConfig = yaml.load(fs.readFileSync(orgConfigPath, 'utf8')) as Record<string, unknown>;
+        const orgConfig = loadGeneratedYaml(result.tempDirPath, 'organization-config.yaml');
 
         expect(orgConfig['enable']).toBe(false);
 
         const orgUnits = orgConfig['organizationalUnits'] as Array<{ name: string }>;
         const ouNames = orgUnits.map(ou => ou.name);
         expect(ouNames).toContain('Security');
-        expect(ouNames).toContain('LogArchive');
+
+        // The declared organizational units must be exactly the non-Root organizational units
+        // referenced by the generated accounts: no missing entry (the accounts config validator
+        // rejects those) and no unreferenced entry (dead names that are free to drift).
+        expect([...ouNames].sort()).toEqual(referencedOrganizationalUnits(result.tempDirPath));
+
+        // The Management account targets Root, which is implicit and must never be declared
+        expect(ouNames).not.toContain('Root');
       }),
       { numRuns: 100 },
     );
+  });
+
+  /**
+   * **Feature: s3-config-initializer, Property 5a: Single Account Mode LZA Deployment Organizational Unit**
+   * *For any* valid input where singleAccountMode is true and `LZA_DEPLOYMENT_ACCOUNT_EMAIL` is set,
+   * the generated organization-config.yaml SHALL declare the `LzaDeployment` organizational unit that
+   * the generated LzaDeploymentAccount references in accounts-config.yaml.
+   * **Validates: Requirements 3.1**
+   */
+  it('Property 5a: Single Account Mode declares the LZA deployment organizational unit', () => {
+    process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL'] = 'lza-deployment@example.com';
+
+    const result = generateConfigFiles({
+      managementAccountEmail: 'lza-management@example.com',
+      logArchiveAccountEmail: 'lza-log-archive@example.com',
+      auditAccountEmail: 'lza-audit@example.com',
+      homeRegion: 'us-east-1',
+      controlTowerEnabled: false,
+      enableSingleAccountMode: true,
+    });
+    tempDirs.push(result.tempDirPath);
+
+    const accountsConfig = loadGeneratedYaml(result.tempDirPath, 'accounts-config.yaml');
+    const workloadAccounts = accountsConfig['workloadAccounts'] as Array<{
+      name: string;
+      organizationalUnit: string;
+    }>;
+    expect(workloadAccounts.find(account => account.name === 'LzaDeploymentAccount')?.organizationalUnit).toBe(
+      'LzaDeployment',
+    );
+
+    const orgConfig = loadGeneratedYaml(result.tempDirPath, 'organization-config.yaml');
+    const ouNames = (orgConfig['organizationalUnits'] as Array<{ name: string }>).map(ou => ou.name);
+    expect(ouNames).toContain('LzaDeployment');
+    expect([...ouNames].sort()).toEqual(referencedOrganizationalUnits(result.tempDirPath));
+  });
+
+  /**
+   * **Feature: s3-config-initializer, Property 5b: Single Account Mode Passes Account Organizational Unit Validation**
+   * *For any* single account mode generation, running the real `AccountsConfigValidator` over the
+   * generated accounts-config.yaml and organization-config.yaml pair SHALL NOT raise validation errors.
+   * This reproduces the deployment time Validate stage failure.
+   * **Validates: Requirements 3.1**
+   */
+  it.each([
+    ['without an LZA deployment account', undefined],
+    ['with an LZA deployment account', 'lza-deployment@example.com'],
+  ])('Property 5b: Single Account Mode passes accounts config validation %s', (_name, lzaDeploymentAccountEmail) => {
+    if (lzaDeploymentAccountEmail) {
+      process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL'] = lzaDeploymentAccountEmail;
+    }
+
+    const result = generateConfigFiles({
+      managementAccountEmail: 'lza-management@example.com',
+      logArchiveAccountEmail: 'lza-log-archive@example.com',
+      auditAccountEmail: 'lza-audit@example.com',
+      homeRegion: 'us-east-1',
+      controlTowerEnabled: false,
+      enableSingleAccountMode: true,
+    });
+    tempDirs.push(result.tempDirPath);
+
+    const organizationConfig = OrganizationConfig.loadFromString(
+      fs.readFileSync(path.join(result.tempDirPath, 'organization-config.yaml'), 'utf8'),
+    );
+
+    expect(() =>
+      new AccountsConfigValidator(AccountsConfig.load(result.tempDirPath), organizationConfig).validate(),
+    ).not.toThrow();
   });
 
   /**
@@ -280,14 +406,41 @@ describe('generateConfigFiles Property Tests', () => {
         const result = generateConfigFiles(props);
         tempDirs.push(result.tempDirPath);
 
-        const orgConfigPath = `${result.tempDirPath}/organization-config.yaml`;
-        const orgConfig = yaml.load(fs.readFileSync(orgConfigPath, 'utf8')) as Record<string, unknown>;
+        const orgConfig = loadGeneratedYaml(result.tempDirPath, 'organization-config.yaml');
 
         // Default OrganizationConfig has enable: true
         expect(orgConfig['enable']).toBe(true);
+
+        // The multi-account branch keeps the default OrganizationConfig organizational units
+        const ouNames = (orgConfig['organizationalUnits'] as Array<{ name: string }>).map(ou => ou.name);
+        expect(ouNames).toEqual(new OrganizationConfig().organizationalUnits.map(ou => ou.name));
       }),
       { numRuns: 100 },
     );
+  });
+
+  /**
+   * **Feature: s3-config-initializer, Property 6a: Multi-Account Mode LZA Deployment Organizational Unit**
+   * *For any* multi-account generation where `LZA_DEPLOYMENT_ACCOUNT_EMAIL` is set, the generated
+   * organization-config.yaml SHALL append the `LzaDeployment` organizational unit to the defaults.
+   * **Validates: Requirements 3.2**
+   */
+  it('Property 6a: Multi-Account Mode appends the LZA deployment organizational unit', () => {
+    process.env['LZA_DEPLOYMENT_ACCOUNT_EMAIL'] = 'lza-deployment@example.com';
+
+    const result = generateConfigFiles({
+      managementAccountEmail: 'lza-management@example.com',
+      logArchiveAccountEmail: 'lza-log-archive@example.com',
+      auditAccountEmail: 'lza-audit@example.com',
+      homeRegion: 'us-east-1',
+      controlTowerEnabled: false,
+      enableSingleAccountMode: false,
+    });
+    tempDirs.push(result.tempDirPath);
+
+    const orgConfig = loadGeneratedYaml(result.tempDirPath, 'organization-config.yaml');
+    const ouNames = (orgConfig['organizationalUnits'] as Array<{ name: string }>).map(ou => ou.name);
+    expect(ouNames).toEqual([...new OrganizationConfig().organizationalUnits.map(ou => ou.name), 'LzaDeployment']);
   });
 
   /**

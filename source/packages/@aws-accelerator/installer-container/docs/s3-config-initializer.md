@@ -178,7 +178,20 @@ When `SINGLE_ACCOUNT_MODE=true`:
 enable: false
 organizationalUnits:
   - name: Security
-  - name: LogArchive
+```
+
+The organizational units are derived from the organizational units referenced by the generated
+`accounts-config.yaml` accounts, so the two files always stay consistent. The implicit `Root`
+organizational unit targeted by the Management account is never declared. When
+`LZA_DEPLOYMENT_ACCOUNT_EMAIL` is supplied, the generated `LzaDeploymentAccount` adds a
+`LzaDeployment` organizational unit:
+
+```yaml
+# organization-config.yaml
+enable: false
+organizationalUnits:
+  - name: Security
+  - name: LzaDeployment
 ```
 
 ## Integration with Container Installer
