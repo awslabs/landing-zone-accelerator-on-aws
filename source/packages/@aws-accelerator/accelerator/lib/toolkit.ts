@@ -403,7 +403,12 @@ export class AcceleratorToolkit {
     ];
     const deploymentRole = props.customDeploymentRoleName ?? `${props.stackPrefix}-Deployment-Role`;
     const managementDeploymentRole = `${props.stackPrefix}-Management-Deployment-Role`;
-    if (managementAcceleratorStages.includes(props.stage as AcceleratorStage)) {
+    // The management deployment role is only created in the management account by the bootstrap stack,
+    // so an external pipeline account must fall back to its own deployment role.
+    if (
+      props.accountId === props.managementAccountId &&
+      managementAcceleratorStages.includes(props.stage as AcceleratorStage)
+    ) {
       return managementDeploymentRole;
     }
     return deploymentRole;

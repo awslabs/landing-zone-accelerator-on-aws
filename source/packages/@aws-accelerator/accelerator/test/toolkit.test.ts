@@ -252,4 +252,92 @@ describe('AcceleratorToolkit', () => {
       expect(Toolkit).toHaveBeenCalled();
     });
   });
+
+  describe('getDeploymentRole', () => {
+    const getDeploymentRole = (props: {
+      stackPrefix: string;
+      customDeploymentRoleName?: string;
+      accountId: string;
+      managementAccountId: string;
+      stage: string;
+    }): string => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (AcceleratorToolkit as any).getDeploymentRole(props);
+    };
+
+    it.each(['accounts', 'prepare', 'diagnostics-pack', 'pipeline'])(
+      'should return the management deployment role for the %s stage in the management account',
+      stage => {
+        expect(
+          getDeploymentRole({
+            stackPrefix: 'AWSAccelerator',
+            accountId: '111111111111',
+            managementAccountId: '111111111111',
+            stage,
+          }),
+        ).toEqual('AWSAccelerator-Management-Deployment-Role');
+      },
+    );
+
+    it.each(['accounts', 'prepare', 'diagnostics-pack', 'pipeline'])(
+      'should return the account deployment role for the %s stage when the deployment account is not the management account',
+      stage => {
+        expect(
+          getDeploymentRole({
+            stackPrefix: 'AWSAccelerator',
+            accountId: '222222222222',
+            managementAccountId: '111111111111',
+            stage,
+          }),
+        ).toEqual('AWSAccelerator-Deployment-Role');
+      },
+    );
+
+    it('should return the account deployment role for the tester-pipeline stage in the management account', () => {
+      expect(
+        getDeploymentRole({
+          stackPrefix: 'AWSAccelerator',
+          accountId: '111111111111',
+          managementAccountId: '111111111111',
+          stage: 'tester-pipeline',
+        }),
+      ).toEqual('AWSAccelerator-Deployment-Role');
+    });
+
+    it('should return the custom deployment role for a non-management stage', () => {
+      expect(
+        getDeploymentRole({
+          stackPrefix: 'AWSAccelerator',
+          customDeploymentRoleName: 'MyCustomRole',
+          accountId: '111111111111',
+          managementAccountId: '111111111111',
+          stage: 'network-vpc',
+        }),
+      ).toEqual('MyCustomRole');
+    });
+
+    it('should prefer the management deployment role over the custom deployment role in the management account', () => {
+      expect(
+        getDeploymentRole({
+          stackPrefix: 'AWSAccelerator',
+          customDeploymentRoleName: 'MyCustomRole',
+          accountId: '111111111111',
+          managementAccountId: '111111111111',
+          stage: 'diagnostics-pack',
+        }),
+      ).toEqual('AWSAccelerator-Management-Deployment-Role');
+    });
+
+    it('should use the custom deployment role for a management stage outside the management account', () => {
+      expect(
+        getDeploymentRole({
+          stackPrefix: 'AWSAccelerator',
+          customDeploymentRoleName: 'MyCustomRole',
+          accountId: '222222222222',
+          managementAccountId: '111111111111',
+          stage: 'diagnostics-pack',
+        }),
+      ).toEqual('MyCustomRole');
+    });
+  });
 });

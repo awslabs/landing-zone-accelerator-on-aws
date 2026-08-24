@@ -14,7 +14,7 @@ The Bootstrap stack sets up the CDK infrastructure required for deploying all su
 
 ### CDK Deployment Roles
 - **Deployment Role** (`<prefix>-Deployment-Role`) — Used by CDK to deploy stacks. Configurable via `cdkOptions.customDeploymentRole`.
-- **Management Deployment Role** (`<prefix>-Management-Deployment-Role`) — Additional role for management account operations.
+- **Management Deployment Role** (`<prefix>-Management-Deployment-Role`) — Additional role for management account operations. It is only created in the management account, so the installer stages (`pipeline`, `tester-pipeline`, `diagnostics-pack`) fall back to `<prefix>-Deployment-Role` when the pipeline account is an external pipeline account. Combining an external pipeline account with `cdkOptions.customDeploymentRole` is not supported, because the installer stages are deployed before the accelerator configuration is available.
 
 ### S3 Asset Bucket
 - `cdk-accel-assets-<accountId>-<region>` — Stores CDK synthesized assets (Lambda code, CloudFormation templates)

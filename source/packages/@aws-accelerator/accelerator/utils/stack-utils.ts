@@ -100,10 +100,27 @@ function getStackSynthesizer(
  * @param accountId - AWS account ID where the stack will be deployed
  * @param prefix - Prefix used for naming the deployment role
  * @param region - AWS region where the stack will be deployed
+ * @param managementAccountId - AWS account ID of the management account, only set for external pipeline account deployments
+ * @param managementAccountRoleName - Name of the management account cross-account role, only set for external pipeline account deployments
  * @returns A configured DefaultStackSynthesizer instance for stacks in installer
  */
-function getInstallerSynthesizer(partition: string, accountId: string, prefix: string, region: string) {
-  const deploymentRoleArn = `arn:${partition}:iam::${accountId}:role/${prefix}-Management-Deployment-Role`;
+function getInstallerSynthesizer(
+  partition: string,
+  accountId: string,
+  prefix: string,
+  region: string,
+  managementAccountId?: string,
+  managementAccountRoleName?: string,
+) {
+  // Both values are required for an external pipeline account deployment, matching the check performed when the
+  // management account credentials are set up. The management deployment role is only created in the management
+  // account by the bootstrap stack, so an external pipeline account must fall back to its own deployment role.
+  const isExternalPipelineAccount =
+    !!managementAccountId && !!managementAccountRoleName && managementAccountId !== accountId;
+  const deploymentRoleName = isExternalPipelineAccount
+    ? `${prefix}-Deployment-Role`
+    : `${prefix}-Management-Deployment-Role`;
+  const deploymentRoleArn = `arn:${partition}:iam::${accountId}:role/${deploymentRoleName}`;
   return new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
     fileAssetsBucketName: `cdk-accel-assets-${accountId}-${region}`,
@@ -198,6 +215,8 @@ export async function createPipelineStack(
         context.account!,
         resourcePrefixes.accelerator,
         context.region!,
+        acceleratorEnv.managementAccountId,
+        acceleratorEnv.managementAccountRoleName,
       ),
     });
     addAcceleratorTags(pipelineStack, context.partition, [], resourcePrefixes.accelerator);
@@ -253,6 +272,8 @@ export function createTesterStack(
           context.account!,
           resourcePrefixes.accelerator,
           context.region!,
+          acceleratorEnv.managementAccountId,
+          acceleratorEnv.managementAccountRoleName,
         ),
         ...acceleratorEnv,
       });
@@ -315,6 +336,8 @@ export function createDiagnosticsPackStack(
         context.account!,
         resourcePrefixes.accelerator,
         context.region!,
+        acceleratorEnv.managementAccountId,
+        acceleratorEnv.managementAccountRoleName,
       ),
     });
     addAcceleratorTags(diagnosticsPackStack, context.partition, [], resourcePrefixes.accelerator);

@@ -12,8 +12,16 @@ if [ "$force_bootstrap" = "true" ]; then
     export BOOTSTRAP_HOME_REGION="true"
     export BOOTSTRAP_GLOBAL_REGION="true"
 else
+    # The ManagementDeploymentRoleArn output is only emitted for the management account, because the accelerator
+    # bootstrap stack only creates the management deployment role there. In an external pipeline account setup the
+    # accelerator owns the pipeline account CDK toolkit stack, so only check for stack existence in that account.
+    HOME_STACK_QUERY='Stacks[0].Outputs[?OutputKey==`ManagementDeploymentRoleArn`]'
+    if [ -n "$MANAGEMENT_ACCOUNT_ID" ] && [ -n "$MANAGEMENT_ACCOUNT_ROLE_NAME" ] && [ "$accountId" != "$MANAGEMENT_ACCOUNT_ID" ]; then
+        HOME_STACK_QUERY='Stacks[0].StackName'
+    fi
+
     # Check if CDK toolkit stack exists in home region and has ManagementDeploymentRoleArn output
-    MANAGEMENT_STACK_OUTPUT=$(aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region $homeRegion --query 'Stacks[0].Outputs[?OutputKey==`ManagementDeploymentRoleArn`]' --output text 2>/dev/null)
+    MANAGEMENT_STACK_OUTPUT=$(aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region $homeRegion --query "$HOME_STACK_QUERY" --output text 2>/dev/null)
 
     # Set bootstrap flag based on stack existence and output presence
     if [ $? -ne 0 ]; then
