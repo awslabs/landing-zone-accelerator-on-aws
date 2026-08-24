@@ -20,6 +20,7 @@ import {
   processAccountBatch,
   processDisableOperations,
   processEnableOperations,
+  processWithWorkerPool,
   ServiceOperationHandler,
 } from '../../../lib/common/batch-processor';
 import { IRequiredBatchOperationSettings } from '../../../lib/common/interfaces';
@@ -85,6 +86,58 @@ describe('batch-processor', () => {
 
   afterEach(() => {
     vi.clearAllTimers();
+  });
+
+  describe('processWithWorkerPool', () => {
+    test('should preserve input order when tasks complete out of order', async () => {
+      const taskFactories = [
+        () => new Promise<string>(resolve => setTimeout(() => resolve('first'), 30)),
+        () => new Promise<string>(resolve => setTimeout(() => resolve('second'), 5)),
+        () => new Promise<string>(resolve => setTimeout(() => resolve('third'), 15)),
+      ];
+
+      await expect(processWithWorkerPool(taskFactories, 3)).resolves.toEqual(['first', 'second', 'third']);
+    });
+
+    test('should not exceed max concurrency', async () => {
+      let activeTasks = 0;
+      let maxActiveTasks = 0;
+      const taskFactories = Array.from({ length: 6 }, (_, index) => async () => {
+        activeTasks++;
+        maxActiveTasks = Math.max(maxActiveTasks, activeTasks);
+        await new Promise(resolve => setTimeout(resolve, 10));
+        activeTasks--;
+        return index;
+      });
+
+      await expect(processWithWorkerPool(taskFactories, 2)).resolves.toEqual([0, 1, 2, 3, 4, 5]);
+      expect(maxActiveTasks).toBe(2);
+    });
+
+    test('should return an empty result for no tasks', async () => {
+      await expect(processWithWorkerPool([], 1)).resolves.toEqual([]);
+    });
+
+    test.each([0, -1])('should reject invalid max concurrency %s', async maxConcurrency => {
+      await expect(processWithWorkerPool([async () => 'unused'], maxConcurrency)).rejects.toThrow(
+        'maxConcurrency must be greater than 0',
+      );
+    });
+
+    test('should propagate task rejection', async () => {
+      const operationError = new Error('operation failed');
+
+      await expect(
+        processWithWorkerPool(
+          [
+            async () => {
+              throw operationError;
+            },
+          ],
+          1,
+        ),
+      ).rejects.toBe(operationError);
+    });
   });
 
   describe('processAccountBatch', () => {

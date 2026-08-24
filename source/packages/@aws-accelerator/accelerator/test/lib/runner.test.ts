@@ -331,6 +331,7 @@ describe('ModuleRunner', () => {
     delete process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'];
     delete process.env['SKIP_TEST_MODULE'];
     delete process.env['SKIP_MACIE_MODULE'];
+    delete process.env['SKIP_CONFIG_RULE_TAGGING_MODULE'];
     delete process.env['SKIP_TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS_MODULE'];
 
     // Get fresh references to mocked modules
@@ -400,6 +401,7 @@ describe('ModuleRunner', () => {
     // Clean up test environment variable
     delete process.env['NODE_ENV'];
     delete process.env['SKIP_MACIE_MODULE'];
+    delete process.env['SKIP_CONFIG_RULE_TAGGING_MODULE'];
     delete process.env['SKIP_TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS_MODULE'];
   });
 
@@ -685,6 +687,10 @@ describe('ModuleRunner', () => {
       {
         moduleName: AcceleratorModules.MACIE,
         environmentVariable: 'SKIP_MACIE_MODULE',
+      },
+      {
+        moduleName: AcceleratorModules.CONFIG_RULE_TAGGING,
+        environmentVariable: 'SKIP_CONFIG_RULE_TAGGING_MODULE',
       },
       {
         moduleName: AcceleratorModules.TAG_AND_BACKUP_POLICY_ACCOUNT_ATTACHMENTS,

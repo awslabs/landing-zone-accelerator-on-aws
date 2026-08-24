@@ -21,7 +21,8 @@ The Security Resources stack deploys AWS Config rules (managed and custom) with 
 - **Managed rules** — AWS-managed Config rules from `security-config.yaml → awsConfig.ruleSets`
 - **Custom rules** — Lambda-backed custom Config rules
 - Rules are scoped by deployment targets (accounts, OUs, regions)
-- Supports tagging of Config rules and associated resources
+- **Rule tags** — a `ConfigServiceTags` custom resource applies `rule.tags` when the rule declares them; the FINALIZE-stage `config-rule-tagging` module applies `globalConfig.tags` and the default `Accelerator` tag
+- **Dynamic references in tags** — only plaintext `{{resolve:ssm:...}}` (`String` or `StringList`) is resolved, matching what CloudFormation expands before invoking a custom resource; `ssm-secure` and `secretsmanager` are not, and the module skips those tags rather than writing an unresolved template
 
 ### Config Rule Remediation
 - Auto-remediation via SSM Automation documents

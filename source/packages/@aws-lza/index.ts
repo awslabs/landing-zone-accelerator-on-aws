@@ -144,6 +144,25 @@ export {
 export { configureAccounts } from './lib/aws-organizations/accounts';
 
 //
+// AWS Config Module resources
+//
+export {
+  ConfigRuleTaggingStatus,
+  IConfigRuleDynamicTag,
+  IConfigRuleSkippedTagKey,
+  IConfigRuleTag,
+  IConfigRuleStaticTag,
+  IConfigRuleTaggingConfiguration,
+  IConfigRuleTaggingModuleRequest,
+  IConfigRuleTaggingModuleResponse,
+  IConfigRuleTaggingRule,
+  IConfigRuleTaggingRuleResult,
+  IConfigRuleTaggingTarget,
+  IConfigRuleTaggingTargetResult,
+} from './lib/aws-config/interfaces';
+export { tagConfigRules } from './lib/aws-config/config-rule-tagging';
+
+//
 // Amazon EC2 Module resources
 //
 export { manageEbsDefaultEncryption } from './executors/accelerator-amazon-ec2';

@@ -13,6 +13,7 @@
 
 export * from './lib/accounts-config';
 export * from './lib/common';
+export * from './lib/config-rule-tagging';
 export * from './lib/customizations-config';
 export * from './lib/global-config';
 export * from './lib/iam-config';

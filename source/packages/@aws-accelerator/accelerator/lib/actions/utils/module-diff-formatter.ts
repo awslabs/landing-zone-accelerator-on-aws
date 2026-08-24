@@ -16,7 +16,10 @@ import path from 'node:path';
 
 import { IModuleResponse, MODULE_STATE_CODE } from 'aws-lza';
 
-const SEPARATOR = '='.repeat(70);
+/**
+ * Horizontal rule used to delimit module diff output.
+ */
+export const SEPARATOR = '='.repeat(70);
 
 /**
  * Custom formatter function type for module-specific diff output.

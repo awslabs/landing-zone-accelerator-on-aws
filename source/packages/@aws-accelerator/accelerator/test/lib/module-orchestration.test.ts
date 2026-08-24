@@ -78,6 +78,9 @@ vi.mock('../../../modules/lib/actions/aws-cloudformation/get-cloudformation-temp
 vi.mock('../../lib/actions/security/amazon-macie', () => ({
   AmazonMacie: { configure: vi.fn() },
 }));
+vi.mock('../../lib/actions/security/config-rule-tagging', () => ({
+  ConfigRuleTagging: { configure: vi.fn() },
+}));
 vi.mock('../../lib/actions/resource-retention/stack-resources', () => ({
   StackResources: {
     retain: vi.fn().mockResolvedValue({
@@ -292,6 +295,14 @@ describe('module-orchestration', () => {
     it('should have modules registered in FINALIZE stage', () => {
       const finalize = AcceleratorModuleStageDetails.find(d => d.stage.name === MODULE_SUPPORTED_STAGES.FINALIZE);
       expect(finalize?.modules.length).toBeGreaterThan(0);
+    });
+
+    it('should register Config rule tagging in the FINALIZE deploy phase', () => {
+      const finalize = AcceleratorModuleStageDetails.find(d => d.stage.name === MODULE_SUPPORTED_STAGES.FINALIZE);
+      const module = finalize?.modules.find(item => item.name === AcceleratorModules.CONFIG_RULE_TAGGING);
+
+      expect(module).toBeDefined();
+      expect(module?.executionPhase).toBe(ModuleExecutionPhase.DEPLOY);
     });
 
     it('should have GET_CLOUDFORMATION_TEMPLATES in SYNTH phase', () => {

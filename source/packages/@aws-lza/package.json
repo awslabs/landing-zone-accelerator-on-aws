@@ -30,6 +30,7 @@
   "dependencies": {
     "@aws-sdk/client-cloudformation": "3.1041.0",
     "@aws-sdk/client-cloudwatch-logs": "3.1041.0",
+    "@aws-sdk/client-config-service": "3.1041.0",
     "@aws-sdk/client-controltower": "3.1041.0",
     "@aws-sdk/client-detective": "3.1041.0",
     "@aws-sdk/client-dynamodb": "3.1041.0",

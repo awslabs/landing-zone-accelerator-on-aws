@@ -16,10 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): add support for AWS Config Custom Policy (Guard-based) rules via `awsConfig.ruleSets[].rules[].type: CustomPolicy`
 - feat(diff-viewer): render module runner dry-run output as a Modules section in the HTML diff viewer
 - feat(guardduty): migrate GuardDuty from CloudFormation custom resources to SDK-based module with `disabledRegions` and `overrideExisting` config options
+- feat(config): manage global tags for AWS Config rules
 
 ### Fixed
-
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
+- fix(config): preserve Config rule tag ownership and exclude ignored OU accounts from tag validation
 - fix(config): preserve commas in String remediation parameters
 - fix(organizations): preserve external policy attachments, use create-only reconciliation after failed executions, and reseed ownership after success
 - fix(lambda): remove unused rolePolicyFile from targetDocumentLambda remediation config

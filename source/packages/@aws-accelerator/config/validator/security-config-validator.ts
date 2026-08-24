@@ -17,6 +17,7 @@ import * as yaml from 'js-yaml';
 import path from 'path';
 import { AccountsConfig } from '../lib/accounts-config';
 import { DeploymentTargets, getConfigValidationMode } from '../lib/common';
+import { getConfigRuleTagValidationErrors } from '../lib/config-rule-tagging';
 import { GlobalConfig } from '../lib/global-config';
 import {
   IAlarmSetConfig,
@@ -161,6 +162,7 @@ export class SecurityConfigValidator {
       this.validateConfigRuleRemediationParameterValues(ruleSet, errors);
     }
     this.validateConfigRuleNames(securityConfig.awsConfig, accountsConfig, globalConfig, errors);
+    this.validateConfigRuleTags(securityConfig.awsConfig.ruleSets, accountsConfig, organizationConfig, errors);
 
     // Validate SNS Topics for CloudWatch Alarms
     const snsTopicNames = this.getSnsTopicNames(globalConfig);
@@ -1639,6 +1641,74 @@ export class SecurityConfigValidator {
         `Delegated admin account '${values.awsConfig.aggregation?.delegatedAdminAccount}' provided for config aggregation does not exist in the accounts-config.yaml file.`,
       );
     }
+  }
+
+  /**
+   * Validate the rule-specific tags of every AWS Config rule that will be deployed.
+   *
+   * @param ruleSets Config rule sets declared in security configuration
+   * @param accountsConfig Accounts configuration
+   * @param organizationConfig Organization configuration containing ignored OUs
+   * @param errors Mutable validation error collection
+   */
+  private validateConfigRuleTags(
+    ruleSets: AwsConfigRuleSet[],
+    accountsConfig: AccountsConfig,
+    organizationConfig: OrganizationConfig,
+    errors: string[],
+  ): void {
+    for (const ruleSet of ruleSets) {
+      // Rule sets without a resolved target account are never synthesized, so their tags are never applied.
+      if (
+        this.getDeploymentTargetAccountNames(accountsConfig, organizationConfig, ruleSet.deploymentTargets).length === 0
+      ) {
+        continue;
+      }
+      for (const rule of ruleSet.rules) {
+        errors.push(...getConfigRuleTagValidationErrors(rule.name, rule.tags).map(error => error.message));
+      }
+    }
+  }
+
+  /**
+   * Resolve the account names a deployment target expands to without requiring loaded account ids.
+   *
+   * @param accountsConfig Accounts configuration
+   * @param organizationConfig Organization configuration containing ignored OUs
+   * @param deploymentTargets Deployment targets to resolve
+   * @returns Names of the accounts the deployment target expands to
+   */
+  private getDeploymentTargetAccountNames(
+    accountsConfig: AccountsConfig,
+    organizationConfig: OrganizationConfig,
+    deploymentTargets: DeploymentTargets,
+  ): string[] {
+    const singleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true';
+    const ignoredOuNames = new Set(
+      singleAccountMode ? [] : organizationConfig.getIgnoredOus().map(organizationalUnit => organizationalUnit.name),
+    );
+    const accounts = accountsConfig
+      .getAccounts(singleAccountMode)
+      .filter(account => !ignoredOuNames.has(account.organizationalUnit));
+    const accountNames = new Set<string>();
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      accounts
+        .filter(account => ou === 'Root' || ou === account.organizationalUnit)
+        .forEach(account => accountNames.add(account.name));
+    }
+
+    for (const accountName of deploymentTargets.accounts ?? []) {
+      if (accounts.some(account => account.name === accountName)) {
+        accountNames.add(accountName);
+      }
+    }
+
+    for (const excludedAccount of deploymentTargets.excludedAccounts ?? []) {
+      accountNames.delete(excludedAccount);
+    }
+
+    return [...accountNames];
   }
 
   private validateResourcePolicyEnforcementConfig(

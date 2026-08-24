@@ -97,6 +97,7 @@ import { TgwAssociationsAndPropagations } from './actions/network/tgw-associatio
 import { StackResources } from './actions/resource-retention/stack-resources';
 import { AmazonGuardDuty } from './actions/security/amazon-guardduty';
 import { AmazonMacie } from './actions/security/amazon-macie';
+import { ConfigRuleTagging } from './actions/security/config-rule-tagging';
 import {
   AcceleratorModules,
   AcceleratorModuleStageDetailsType,
@@ -673,6 +674,15 @@ export const AcceleratorModuleStageDetails: AcceleratorModuleStageDetailsType[] 
       runOrder: AcceleratorModuleStageOrders[MODULE_SUPPORTED_STAGES.FINALIZE].runOrder,
     },
     modules: [
+      {
+        name: AcceleratorModules.CONFIG_RULE_TAGGING,
+        description: 'Reconcile tags on LZA-created AWS Config rules',
+        runOrder: 1,
+        handler: async (params: ModuleParams) => {
+          return await ConfigRuleTagging.configure(params);
+        },
+        executionPhase: ModuleExecutionPhase.DEPLOY,
+      },
       {
         name: AcceleratorModules.CREATE_STACK_POLICY,
         description: 'Setup Stack Policy in accounts',

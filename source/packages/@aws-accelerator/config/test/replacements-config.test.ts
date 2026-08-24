@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { GlobalConfig } from '../lib/global-config';
 import { AccountsConfig } from '../lib/accounts-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
-import { SNAPSHOT_CONFIG } from './config-test-helper';
+import { REPLACEMENT_CONFIG, SNAPSHOT_CONFIG } from './config-test-helper';
 import * as path from 'path';
 
 const accountsConfigObject = {
@@ -120,6 +120,12 @@ describe('Replacement config', () => {
     const replacementsConfig = ReplacementsConfig.load(SNAPSHOT_CONFIG, accountConfig);
     it('has loaded successfully', () => {
       expect(replacementsConfig.globalReplacements).toHaveLength(4);
+    });
+
+    it('loads StringList replacements as arrays', () => {
+      const replacementsConfig = ReplacementsConfig.load(REPLACEMENT_CONFIG, accountConfig);
+
+      expect(replacementsConfig.placeholders['AllEnabledRegions']).toEqual(['us-east-1', 'us-west-2', 'ca-central-1']);
     });
   });
   describe('YAML include functionality', () => {

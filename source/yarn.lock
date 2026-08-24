@@ -11513,6 +11513,7 @@ __metadata:
   dependencies:
     "@aws-sdk/client-cloudformation": "npm:3.1041.0"
     "@aws-sdk/client-cloudwatch-logs": "npm:3.1041.0"
+    "@aws-sdk/client-config-service": "npm:3.1041.0"
     "@aws-sdk/client-controltower": "npm:3.1041.0"
     "@aws-sdk/client-detective": "npm:3.1041.0"
     "@aws-sdk/client-dynamodb": "npm:3.1041.0"

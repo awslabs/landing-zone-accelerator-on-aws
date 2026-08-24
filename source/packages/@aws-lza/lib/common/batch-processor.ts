@@ -368,13 +368,18 @@ export async function processDisableOperations<TProps, TResult = void>(
 }
 
 /**
- * Processes tasks using a worker pool with controlled concurrency
+ * Processes task factories using a worker pool with controlled concurrency.
+ *
  * @template T - Type of task results
  * @param taskFactories - Array of functions that create tasks
  * @param maxConcurrency - Maximum number of concurrent tasks
  * @returns Promise resolving to array of task results in original order
+ * @throws Error when maxConcurrency is not greater than zero or a task rejects
  */
-async function processWithWorkerPool<T>(taskFactories: (() => Promise<T>)[], maxConcurrency: number): Promise<T[]> {
+export async function processWithWorkerPool<T>(
+  taskFactories: (() => Promise<T>)[],
+  maxConcurrency: number,
+): Promise<T[]> {
   if (maxConcurrency <= 0) {
     throw new Error('maxConcurrency must be greater than 0');
   }

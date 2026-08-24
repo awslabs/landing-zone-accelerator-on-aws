@@ -183,6 +183,14 @@ const GUARDDUTY = createModulePolicy('guardduty', [
   'iam:GetRole',
 ]);
 
+const CONFIG_RULE_TAGGING = createModulePolicy('config-rule-tagging', [
+  'config:DescribeConfigRules',
+  'config:ListTagsForResource',
+  'config:TagResource',
+  'config:UntagResource',
+  'ssm:GetParameters',
+]);
+
 const GET_CLOUDFORMATION_TEMPLATES = createModulePolicy('get-cloudformation-templates', [
   // Validated: source/packages/@aws-lza/lib/aws-cloudformation/get-cloudformation-templates/
   'cloudformation:GetTemplate',
@@ -239,6 +247,7 @@ export const MODULE_SESSION_POLICIES: Record<string, IModuleSessionPolicy> = {
   'create-stack-policy': CREATE_STACK_POLICY,
   macie: MACIE,
   guardduty: GUARDDUTY,
+  'config-rule-tagging': CONFIG_RULE_TAGGING,
   'get-cloudformation-templates': GET_CLOUDFORMATION_TEMPLATES,
   'tgw-associations-and-propagations': TGW_ASSOCIATIONS_AND_PROPAGATIONS,
   accounts: ACCOUNTS,

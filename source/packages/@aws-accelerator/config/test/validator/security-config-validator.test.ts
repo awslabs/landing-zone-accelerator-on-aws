@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs';
 
 // The validator reports advisory findings through a module level logger. Capture them so the
@@ -42,6 +42,9 @@ import {
   ISecurityConfig,
 } from '../../lib/models/security-config';
 import { DeploymentTargets, ILifecycleRule, setConfigValidationMode } from '../../lib/common';
+import { AccountsConfig } from '../../lib/accounts-config';
+import { OrganizationConfig } from '../../lib/organization-config';
+import { AwsConfigRuleSet } from '../../lib/security-config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const validateConfigRuleAssets = (SecurityConfigValidator.prototype as any)['validateConfigRuleAssets'].bind({});
@@ -50,6 +53,16 @@ const validateConfigRuleAssets = (SecurityConfigValidator.prototype as any)['val
 const validateSecurityHubStandardDeploymentTargets = (SecurityConfigValidator.prototype as any)[
   'validateSecurityHubStandardDeploymentTargetsInSecurityHubDeploymentTargets'
 ].bind({});
+
+// validateConfigRuleTags delegates to another private method, so it is invoked through the prototype.
+const configRuleTagValidator = SecurityConfigValidator.prototype as unknown as {
+  validateConfigRuleTags(
+    ruleSets: AwsConfigRuleSet[],
+    accountsConfig: AccountsConfig,
+    organizationConfig: OrganizationConfig,
+    errors: string[],
+  ): void;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildSecurityHubValues(securityHub: any) {
@@ -134,7 +147,286 @@ function createRemediationRule(
   } as any;
 }
 
+const configRuleTagAccountsConfig = {
+  getAccounts: () => [
+    { name: 'Audit', organizationalUnit: 'Security' },
+    { name: 'Workload01', organizationalUnit: 'Workloads' },
+  ],
+} as unknown as AccountsConfig;
+
+function createTagRuleSet(
+  rules: { name: string; tags?: { key: string; value: string }[] }[],
+  deploymentTargets: Partial<DeploymentTargets> = { organizationalUnits: ['Root'] },
+): AwsConfigRuleSet {
+  return { deploymentTargets, rules } as unknown as AwsConfigRuleSet;
+}
+
+/**
+ * Create organization config for Config rule tag target-resolution tests.
+ *
+ * @param ignoredOuNames OU names excluded from accelerator deployment
+ * @returns Organization configuration with deterministic Security and Workloads OUs
+ */
+function createConfigRuleTagOrganizationConfig(ignoredOuNames: readonly string[] = []): OrganizationConfig {
+  const organizationConfig = new OrganizationConfig();
+  Object.assign(organizationConfig, {
+    organizationalUnits: ['Security', 'Workloads'].map(name => ({
+      name,
+      ignore: ignoredOuNames.includes(name) || undefined,
+    })),
+  });
+  return organizationConfig;
+}
+
+function validateConfigRuleTags(ruleSets: AwsConfigRuleSet[], ignoredOuNames: readonly string[] = []): string[] {
+  const errors: string[] = [];
+  configRuleTagValidator.validateConfigRuleTags(
+    ruleSets,
+    configRuleTagAccountsConfig,
+    createConfigRuleTagOrganizationConfig(ignoredOuNames),
+    errors,
+  );
+  return errors;
+}
+
+function validateRuleTags(ruleTags: { key: string; value: string }[]): string[] {
+  return validateConfigRuleTags([createTagRuleSet([{ name: 'test-rule', tags: ruleTags }])]);
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe('SecurityConfigValidator', () => {
+  describe('AWS Config rule tag validation', () => {
+    it('returns no errors when no rule sets are configured', () => {
+      expect(validateConfigRuleTags([])).toEqual([]);
+    });
+
+    it('validates every rule of a deployed rule set', () => {
+      const errors = validateConfigRuleTags([
+        createTagRuleSet([
+          { name: 'first-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] },
+          { name: 'second-rule', tags: [{ key: 'Owner', value: 'v'.repeat(257) }] },
+        ]),
+      ]);
+
+      expect(errors).toEqual([
+        'AWS Config rule "first-rule" tag key "aws:Reserved" uses the reserved aws: prefix',
+        'AWS Config rule "second-rule" tag value for "Owner" exceeds 256 characters',
+      ]);
+    });
+
+    it.each([
+      ['an organizational unit without member accounts', { organizationalUnits: ['EmptyOu'] }],
+      ['an account that is not declared in accounts config', { accounts: ['Unknown'] }],
+      [
+        'fully excluded deployment targets',
+        { organizationalUnits: ['Root'], excludedAccounts: ['Audit', 'Workload01'] },
+      ],
+      ['empty deployment targets', {}],
+    ])('skips a rule set targeting %s', (_description, deploymentTargets) => {
+      expect(
+        validateConfigRuleTags([
+          createTagRuleSet([{ name: 'skipped-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+            ...deploymentTargets,
+          }),
+        ]),
+      ).toEqual([]);
+    });
+
+    it('skips a rule set that targets only an ignored OU', () => {
+      expect(
+        validateConfigRuleTags(
+          [
+            createTagRuleSet([{ name: 'ignored-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+              organizationalUnits: ['Security'],
+            }),
+          ],
+          ['Security'],
+        ),
+      ).toEqual([]);
+    });
+
+    it('validates a rule set that targets both ignored and active OUs', () => {
+      expect(
+        validateConfigRuleTags(
+          [
+            createTagRuleSet([{ name: 'mixed-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+              organizationalUnits: ['Security', 'Workloads'],
+            }),
+          ],
+          ['Security'],
+        ),
+      ).toEqual(['AWS Config rule "mixed-rule" tag key "aws:Reserved" uses the reserved aws: prefix']);
+    });
+
+    it('validates Root targets when at least one account is outside ignored OUs', () => {
+      expect(
+        validateConfigRuleTags(
+          [
+            createTagRuleSet([{ name: 'root-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+              organizationalUnits: ['Root'],
+            }),
+          ],
+          ['Security'],
+        ),
+      ).toEqual(['AWS Config rule "root-rule" tag key "aws:Reserved" uses the reserved aws: prefix']);
+    });
+
+    it('still validates a deployed rule set alongside a rule set that resolves to no accounts', () => {
+      const errors = validateConfigRuleTags([
+        createTagRuleSet([{ name: 'skipped-rule', tags: [{ key: 'aws:Skipped', value: 'value' }] }], {
+          organizationalUnits: ['EmptyOu'],
+        }),
+        createTagRuleSet([{ name: 'deployed-rule', tags: [{ key: 'aws:Deployed', value: 'value' }] }], {
+          organizationalUnits: ['Security'],
+        }),
+      ]);
+
+      expect(errors).toEqual(['AWS Config rule "deployed-rule" tag key "aws:Deployed" uses the reserved aws: prefix']);
+    });
+
+    it('validates a rule set targeting a single declared account', () => {
+      expect(
+        validateConfigRuleTags([
+          createTagRuleSet([{ name: 'deployed-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+            accounts: ['Workload01'],
+          }),
+        ]),
+      ).toEqual(['AWS Config rule "deployed-rule" tag key "aws:Reserved" uses the reserved aws: prefix']);
+    });
+
+    it('resolves deployment targets from the single account pool when single account mode is enabled', () => {
+      vi.stubEnv('ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE', 'true');
+      const singleAccountConfig = {
+        getAccounts: (enableSingleAccountMode?: boolean) =>
+          enableSingleAccountMode
+            ? [{ name: 'Management', organizationalUnit: 'Root' }]
+            : [
+                { name: 'Management', organizationalUnit: 'Root' },
+                { name: 'Workload01', organizationalUnit: 'Workloads' },
+              ],
+      } as unknown as AccountsConfig;
+      const errors: string[] = [];
+      const organizationConfig = createConfigRuleTagOrganizationConfig(['Workloads']);
+
+      configRuleTagValidator.validateConfigRuleTags(
+        [
+          createTagRuleSet([{ name: 'workload-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+            organizationalUnits: ['Workloads'],
+          }),
+        ],
+        singleAccountConfig,
+        organizationConfig,
+        errors,
+      );
+
+      expect(errors).toEqual([]);
+
+      const rootErrors: string[] = [];
+      configRuleTagValidator.validateConfigRuleTags(
+        [
+          createTagRuleSet([{ name: 'management-rule', tags: [{ key: 'aws:Reserved', value: 'value' }] }], {
+            organizationalUnits: ['Root'],
+          }),
+        ],
+        singleAccountConfig,
+        organizationConfig,
+        rootErrors,
+      );
+
+      expect(rootErrors).toEqual([
+        'AWS Config rule "management-rule" tag key "aws:Reserved" uses the reserved aws: prefix',
+      ]);
+    });
+
+    it.each([
+      ['an empty key', { key: '', value: 'value' }, 'must contain between 1 and 128 characters'],
+      ['a 129-character key', { key: 'k'.repeat(129), value: 'value' }, 'must contain between 1 and 128 characters'],
+      ['a 257-character value', { key: 'Key', value: 'v'.repeat(257) }, 'exceeds 256 characters'],
+      ['a case-insensitive reserved prefix', { key: 'AWS:Reserved', value: 'value' }, 'reserved aws: prefix'],
+    ])('rejects %s', (_description, tag, expectedError) => {
+      expect(validateRuleTags([tag]).some(error => error.includes(expectedError))).toBe(true);
+    });
+
+    it.each([
+      ['an unsupported value character', { key: 'Key', value: 'invalid!' }],
+      ['an unsupported key character', { key: 'Key!', value: 'value' }],
+      ['a case-insensitive reserved value prefix', { key: 'Owner', value: 'AWS:Reserved' }],
+    ])('keeps %s outside the config-time compatibility-safe subset', (_description, tag) => {
+      expect(validateRuleTags([tag])).toEqual([]);
+    });
+
+    it('rejects more than 50 rule-specific tag keys', () => {
+      const ruleTags = Array.from({ length: 51 }, (_, index) => ({ key: `Rule${index}`, value: 'value' }));
+
+      expect(validateRuleTags(ruleTags)).toEqual([
+        'AWS Config rule "test-rule" has 51 rule-specific tag keys, exceeding the limit of 50',
+      ]);
+    });
+
+    it('accepts 50 rule-specific tag keys', () => {
+      const ruleTags = Array.from({ length: 50 }, (_, index) => ({ key: `Rule${index}`, value: 'value' }));
+
+      expect(validateRuleTags(ruleTags)).toEqual([]);
+    });
+
+    it.each([
+      ['a plaintext SSM reference', '{{resolve:ssm:/p}}'],
+      ['a versioned plaintext SSM reference', '{{resolve:ssm:/p:42}}'],
+      ['a secure SSM reference', '{{resolve:ssm-secure:/accelerator/secret}}'],
+      ['a Secrets Manager reference', '{{resolve:secretsmanager:x}}'],
+      ['an embedded reference', 'prefix-{{resolve:ssm:/accelerator/tag}}'],
+      ['a reference with otherwise unsupported characters', '{{resolve:ssm:/path with space}}'],
+      ['an unterminated reference', '{{resolve:ssm:/accelerator/tag'],
+    ])('keeps %s outside config-time compatibility-safe validation', (_description, value) => {
+      expect(validateRuleTags([{ key: 'Owner', value }])).toEqual([]);
+    });
+
+    it('keeps dynamic rule tag keys outside config-time compatibility-safe validation', () => {
+      expect(validateRuleTags([{ key: 'aws:{{resolve:ssm:/path}}', value: 'invalid!' }])).toEqual([]);
+    });
+
+    it('uses last-key-wins for duplicate rule tags before validation', () => {
+      expect(
+        validateRuleTags([
+          { key: 'Duplicate', value: 'v'.repeat(257) },
+          { key: 'Duplicate', value: 'valid' },
+        ]),
+      ).toEqual([]);
+      expect(
+        validateRuleTags([
+          { key: 'Duplicate', value: 'valid' },
+          { key: 'Duplicate', value: 'v'.repeat(257) },
+        ]),
+      ).toEqual(['AWS Config rule "test-rule" tag value for "Duplicate" exceeds 256 characters']);
+    });
+
+    it('counts astral Unicode letters as single code points for key and value limits', () => {
+      const astralLetter = '\u{10400}';
+
+      expect(validateRuleTags([{ key: astralLetter.repeat(128), value: astralLetter.repeat(256) }])).toEqual([]);
+      expect(
+        validateRuleTags([{ key: astralLetter.repeat(129), value: 'value' }]).some(error =>
+          error.includes('must contain between 1 and 128 characters'),
+        ),
+      ).toBe(true);
+      expect(
+        validateRuleTags([{ key: 'Owner', value: astralLetter.repeat(257) }]).some(error =>
+          error.includes('exceeds 256 characters'),
+        ),
+      ).toBe(true);
+    });
+
+    it('does not repeat rule tag values in validation messages', () => {
+      const errors = validateRuleTags([{ key: 'Owner', value: `super-secret-${'v'.repeat(257)}` }]);
+
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).not.toContain('super-secret');
+    });
+  });
+
   describe('lifecycle rule validation', () => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const proto = SecurityConfigValidator.prototype as any;

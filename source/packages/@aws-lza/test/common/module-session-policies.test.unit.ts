@@ -23,6 +23,7 @@ describe('ModuleSessionPolicies', () => {
         'create-stack-policy',
         'macie',
         'guardduty',
+        'config-rule-tagging',
         'get-cloudformation-templates',
         'tgw-associations-and-propagations',
         'accounts',
@@ -58,12 +59,13 @@ describe('ModuleSessionPolicies', () => {
       }
     });
 
-    it('every policy should contain base state management statements', () => {
+    it('every policy should contain only the module and base state management statements', () => {
+      const expectedSids = ['ModuleSpecificActions', 'LzaModuleStateTable', 'LzaModuleSsmParameters'];
+
       for (const [name, policy] of Object.entries(MODULE_SESSION_POLICIES)) {
         const parsed = JSON.parse(policy.policy);
         const sids = parsed.Statement.map((s: { Sid?: string }) => s.Sid);
-        expect(sids, `Missing LzaModuleStateTable in ${name}`).toContain('LzaModuleStateTable');
-        expect(sids, `Missing LzaModuleSsmParameters in ${name}`).toContain('LzaModuleSsmParameters');
+        expect(sids, `Unexpected statements in ${name}`).toEqual(expectedSids);
       }
     });
 
@@ -91,6 +93,7 @@ describe('ModuleSessionPolicies', () => {
         const moduleStatement = parsed.Statement.find((s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions');
         expect(moduleStatement, `Missing ModuleSpecificActions in ${name}`).toBeDefined();
         expect(moduleStatement.Action.length, `No actions declared for ${name}`).toBeGreaterThan(0);
+        expect(moduleStatement.Resource, `Module actions should use wildcard resource in ${name}`).toBe('*');
       }
     });
   });
@@ -172,6 +175,35 @@ describe('ModuleSessionPolicies', () => {
       ).Action;
       expect(actions).toContain('iam:GetRole');
       expect(actions).toContain('iam:CreateServiceLinkedRole');
+    });
+
+    it('Config rule tagging should use least-privilege Config actions', () => {
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['config-rule-tagging'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions).toEqual([
+        'config:DescribeConfigRules',
+        'config:ListTagsForResource',
+        'config:TagResource',
+        'config:UntagResource',
+        'ssm:GetParameters',
+      ]);
+    });
+
+    it('only Config rule tagging should include read-only batched SSM parameter access', () => {
+      for (const [name, policy] of Object.entries(MODULE_SESSION_POLICIES)) {
+        const parsed = JSON.parse(policy.policy);
+        const actions: string[] = parsed.Statement.find(
+          (item: { Sid?: string }) => item.Sid === 'ModuleSpecificActions',
+        ).Action;
+
+        if (name === 'config-rule-tagging') {
+          expect(actions).toContain('ssm:GetParameters');
+        } else {
+          expect(actions, `Unexpected ssm:GetParameters in ${name}`).not.toContain('ssm:GetParameters');
+        }
+      }
     });
   });
 });

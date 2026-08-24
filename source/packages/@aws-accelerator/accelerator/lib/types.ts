@@ -122,6 +122,11 @@ export enum AcceleratorModules {
   GUARDDUTY = 'guardduty',
 
   /**
+   * Reconcile tags on LZA-created AWS Config rules.
+   */
+  CONFIG_RULE_TAGGING = 'config-rule-tagging',
+
+  /**
    * AWS Control Tower Landing Zone module setup module.
    *
    * @description
