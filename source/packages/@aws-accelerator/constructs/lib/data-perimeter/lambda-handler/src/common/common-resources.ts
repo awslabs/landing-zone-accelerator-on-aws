@@ -1,5 +1,7 @@
 import { PolicyStatementType } from '@aws-accelerator/utils';
 
+export type { PolicyStatementType };
+
 /**
  * Supported Resource Type for AWS Config Rule
  */

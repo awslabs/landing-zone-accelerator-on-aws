@@ -2398,9 +2398,26 @@ export interface IResourcePolicySetConfig {
    *
    * @remarks
    * Special reserved parameters:
-   * - `SourceAccount`: For Lambda functions and Certificate Authority resources, specifies which external accounts
-   *   are allowed access. Format: "123456789012,987654321098" (comma-separated account IDs).
-   *   Only these specified accounts will be granted access; all other external accounts will be denied.
+   * - `SourceAccount`: Comma-separated account IDs (e.g. `"123456789012,987654321098"`) or the
+   *   literal string `"ALL"` for unrestricted access. When set, the resource-policy compliance
+   *   check performs a statement-level validation on every statement in the live policy:
+   *   - For Lambda functions and Certificate Authority resources this is the primary check
+   *     (those resources have no mandated Deny baseline).
+   *   - For the other supported resource types (S3, KMS, IAM roles, SNS, SQS, EFS, ECR,
+   *     OpenSearch, EventBridge, Backup vault, CodeArtifact, API Gateway, Secrets Manager)
+   *     this runs in addition to the mandated-baseline check: any non-mandated `Allow`
+   *     statement that references a principal / account outside the allowlist is flagged
+   *     NON_COMPLIANT. A statement is not flagged when it is scoped to this organization by
+   *     `aws:PrincipalOrgID`, `aws:PrincipalOrgPaths`, `aws:SourceOrgID` or
+   *     `aws:SourceOrgPaths`, when a wildcard principal is narrowed to allowlisted accounts
+   *     by `aws:SourceArn`, `aws:SourceAccount` or `aws:SourceOwner`, when it names only a
+   *     service principal, or when it references only the resource's own account. `Deny`
+   *     statements are never flagged, since they restrict access rather than grant it.
+   *     Note that a negated condition operator (for example `StringNotEquals`) does not
+   *     count as scoping, because it grants access outside the value it names.
+   *
+   *   When `SourceAccount` is unset for a policy set, the statement-level check is skipped
+   *   for the subset-check resource types (baseline-only detection remains in effect).
    *
    * @example
    * ```

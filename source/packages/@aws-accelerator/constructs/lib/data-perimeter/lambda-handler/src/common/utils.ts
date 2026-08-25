@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { PolicyDocument, ResourceType } from './common-resources';
+import {
+  checkStatementCompliance,
+  isSourceAccountAllowlistConfigured,
+  SUBSET_CHECK_OPTIONS,
+} from './statement-compliance';
 
 export const RESOURCE_TYPE_WITH_ALLOW_ONLY_POLICY = [ResourceType.CERTIFICATE_AUTHORITY, ResourceType.LAMBDA_FUNCTION];
 const RESOURCE_POLICY_FILE_DIR = 'policies';
@@ -109,11 +114,29 @@ export function stringToEnumValue<T extends Record<string, string>>(
 }
 
 /**
- * Compare if each statement in {mandatoryPolicy} exists in current {resourcePolicy}.
+ * Compare the current resource policy against the mandated baseline.
  *
- * @param {*} currPolicy
- * @param {*} expectedPolicy
- * @returns
+ * The mandated baseline is a subset of Deny statements merged into the live policy.
+ * The extras must not flip the resource to NON_COMPLIANT on their own.
+ *
+ * A resource is NON_COMPLIANT when:
+ *   1. A mandated statement is missing from the current policy.
+ *   2. A mandated statement is present but has been mutated (byte-inequality).
+ *   3. A mandated Sid appears more than once in the current policy — catches the
+ *      shadow-statement bypass where an attacker adds a duplicate carrying the same
+ *      Sid as a mandated Deny alongside the byte-equal original.
+ *   4. Only when the `SourceAccount` allowlist is configured on the policy set: a
+ *      non-mandated `Allow` references an account outside the allowlist, or names a
+ *      wildcard principal that no condition narrows, or expresses its reach with
+ *      `NotPrincipal`. It is not flagged when scoped to this org by `aws:PrincipalOrgID`,
+ *      `aws:SourceOrgID`, `aws:PrincipalOrgPaths` or `aws:SourceOrgPaths`, nor when a
+ *      wildcard is narrowed by `aws:SourceArn`, `aws:SourceAccount` or `aws:SourceOwner`.
+ *      Non-mandated `Deny` statements are exempt — they restrict access rather than grant
+ *      it. Without the allowlist declared, this fourth check is skipped so existing
+ *      deployments that never opted in do not flip legitimate resources to NON_COMPLIANT.
+ *
+ * @param currPolicy
+ * @param expectedPolicy
  */
 export const compareResourcePolicies = async (
   currPolicy: PolicyDocument | undefined,
@@ -135,19 +158,44 @@ export const compareResourcePolicies = async (
   }
 
   const currStatements = currPolicy.Statement || [];
-  for (const policy of expectedPolicy.Statement || []) {
-    const target = currStatements.find(s => s.Sid === policy.Sid);
-    if (!target)
+  const expectedStatements = expectedPolicy.Statement || [];
+
+  for (const policy of expectedStatements) {
+    const matches = currStatements.filter(s => s.Sid === policy.Sid);
+    if (matches.length === 0) {
       return {
         complianceType: 'NON_COMPLIANT',
         annotation: `Policy statement ${policy.Sid} is not found`,
       };
-
-    if (!deepEqual(target, policy)) {
+    }
+    if (matches.length > 1) {
+      return {
+        complianceType: 'NON_COMPLIANT',
+        annotation: `Policy statement ${policy.Sid} appears more than once in resource policy`,
+      };
+    }
+    if (!deepEqual(matches[0], policy)) {
       return {
         complianceType: 'NON_COMPLIANT',
         annotation: `Policy statement ${policy.Sid} is not identical to mandatory resource policy`,
       };
+    }
+  }
+
+  if (isSourceAccountAllowlistConfigured()) {
+    const mandatedSids = new Set(expectedStatements.map(s => s.Sid).filter((sid): sid is string => sid !== undefined));
+    for (const statement of currStatements) {
+      if (statement.Sid !== undefined && mandatedSids.has(statement.Sid)) continue;
+      // A customer's own Deny restricts access rather than granting it, so an account it
+      // names being outside the allowlist is not a finding. Tampering with a mandated Deny
+      // is still caught by the byte-equality loop above, which runs independently of this.
+      if (statement.Effect === 'Deny') continue;
+      if (!checkStatementCompliance(statement, SUBSET_CHECK_OPTIONS)) {
+        return {
+          complianceType: 'NON_COMPLIANT',
+          annotation: `Policy statement ${statement.Sid ?? '(no Sid)'} references a principal or account outside the configured SourceAccount allowlist`,
+        };
+      }
     }
   }
 
