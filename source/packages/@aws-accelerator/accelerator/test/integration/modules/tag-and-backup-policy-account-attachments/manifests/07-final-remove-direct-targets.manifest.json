@@ -1,0 +1,50 @@
+{
+  "name": "final-remove-direct-targets",
+  "description": "Remove all module-owned direct account attachments from both fixture policies",
+  "order": 7,
+  "moduleConfig": {
+    "taggingPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "accounts": []
+      }
+    ],
+    "backupPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "accounts": []
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "policyResults": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "reconciled",
+        "accountResults": [{ "account": "Audit", "operation": "detach", "status": "detached" }]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "status": "reconciled",
+        "accountResults": [{ "account": "Shared Services", "operation": "detach", "status": "detached" }]
+      }
+    ],
+    "policyTargets": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": []
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": []
+      }
+    ],
+    "stateOwnedAttachments": [],
+    "stateTableEntry": { "status": "success" }
+  }
+}

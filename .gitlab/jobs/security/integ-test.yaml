@@ -232,6 +232,109 @@ integ:tgw:aws:us-east-1:
       changes:
         - source/packages/@aws-lza/lib/transit-gateway/**/*
         - source/packages/@aws-accelerator/accelerator/lib/actions/network/tgw-associations-and-propagations*
+        - source/packages/@aws-accelerator/accelerator/test/integration/framework/module-state-reset.ts
         - source/packages/@aws-accelerator/accelerator/test/integration/modules/tgw/**/*
+      when: always
+    - when: never
+
+# ============================================================
+# Shared module integration test template
+# ============================================================
+.module-integration-test:
+  stage: pipeline
+  resource_group: integ-destructive-module-fixtures-us-east-1
+  needs:
+    - job: accelerator:build
+      artifacts: true
+    - job: integ:prereq:aws:us-east-1
+      artifacts: true
+  variables:
+    ENV_NAME: sampleConfig
+    ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    PARTITION: aws
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: "arn:${PARTITION}:iam::${ACCOUNT_ID}:role/${LZA_GITLAB_ROLE_NAME}"
+    VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
+    PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
+    RUNNER_AFTER_SCRIPT_TIMEOUT: 1200
+  tags:
+    - arch:amd64
+  script:
+    - wget --progress=dot:mega -O /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    - unzip -q /tmp/awscliv2.zip -d /tmp
+    - /tmp/aws/install
+    - |
+      export ACCELERATOR_STAGE="integ-${MODULE_INTEG_SLUG}"
+      bash "${CI_PROJECT_DIR}/source/packages/@aws-accelerator/accelerator/test/integration/framework/run-module-integration.sh" \
+        run "${MODULE_INTEG_SLUG}" "${DISPLAY_NAME}"
+  after_script:
+    - |
+      set +e
+      bash "${CI_PROJECT_DIR}/source/packages/@aws-accelerator/accelerator/test/integration/framework/run-module-integration.sh" \
+        cleanup "${MODULE_INTEG_SLUG}"
+      echo "fallback_cleanup_exit_code=$?" | tee -a "${CI_PROJECT_DIR}/integ-${MODULE_INTEG_SLUG}-job-status.txt"
+  artifacts:
+    when: always
+    reports:
+      junit: "source/packages/@aws-accelerator/accelerator/test-reports/integration-results.xml"
+    paths:
+      - "integ-manifest-${MODULE_INTEG_SLUG}.json"
+      - "integ-${MODULE_INTEG_SLUG}-fixtures.env"
+      - "integ-${MODULE_INTEG_SLUG}-fixture-setup.log"
+      - "integ-${MODULE_INTEG_SLUG}-fixture-reset.log"
+      - "integ-${MODULE_INTEG_SLUG}-job-status.txt"
+    expire_in: 7 days
+
+# ============================================================
+# Config Rule Tagging module integration test
+# ============================================================
+integ:config-rule-tagging:aws:us-east-1:
+  extends: .module-integration-test
+  variables:
+    MODULE_INTEG_SLUG: config-rule-tagging
+    DISPLAY_NAME: AWS Config Rule Tagging
+  timeout: 30m
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "No"
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
+      changes:
+        - source/packages/@aws-lza/lib/aws-config/**/*
+        - source/packages/@aws-accelerator/config/lib/config-rule-tagging*
+        - source/packages/@aws-accelerator/accelerator/lib/actions/security/config-rule-tagging*
+        - source/packages/@aws-accelerator/accelerator/test/integration/framework/module-state-reset.ts
+        - source/packages/@aws-accelerator/accelerator/test/integration/framework/run-module-integration.sh
+        - source/packages/@aws-accelerator/accelerator/test/integration/modules/config-rule-tagging/**/*
+      when: always
+    - when: never
+
+# ============================================================
+# Tag and Backup Policy account attachments integration test
+# ============================================================
+integ:tag-and-backup-policy-account-attachments:aws:us-east-1:
+  extends: .module-integration-test
+  variables:
+    MODULE_INTEG_SLUG: tag-and-backup-policy-account-attachments
+    DISPLAY_NAME: Tag and Backup Policy Account Attachments
+  timeout: 45m
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "No"
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+      when: always
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
+      changes:
+        - source/packages/@aws-lza/lib/aws-organizations/tag-and-backup-policy-account-attachments*
+        - source/packages/@aws-lza/lib/aws-organizations/interfaces.ts
+        - source/packages/@aws-accelerator/accelerator/lib/actions/aws-organizations/tag-and-backup-policy-account-attachments*
+        - source/packages/@aws-accelerator/accelerator/test/integration/framework/module-state-reset.ts
+        - source/packages/@aws-accelerator/accelerator/test/integration/framework/run-module-integration.sh
+        - source/packages/@aws-accelerator/accelerator/test/integration/modules/tag-and-backup-policy-account-attachments/**/*
       when: always
     - when: never

@@ -1,0 +1,62 @@
+{
+  "name": "attach-direct-account-targets",
+  "description": "Attach the Tag Policy to Shared Services and the Backup Policy to Audit",
+  "order": 1,
+  "moduleConfig": {
+    "taggingPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "accounts": ["Shared Services"]
+      }
+    ],
+    "backupPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "accounts": ["Audit"]
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "policyResults": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "reconciled",
+        "accountResults": [{ "account": "Shared Services", "operation": "attach", "status": "attached" }]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "status": "reconciled",
+        "accountResults": [{ "account": "Audit", "operation": "attach", "status": "attached" }]
+      }
+    ],
+    "policyTargets": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Shared Services"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Audit"]
+      }
+    ],
+    "stateOwnedAttachments": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Shared Services"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Audit"]
+      }
+    ],
+    "stateTableEntry": { "status": "success" }
+  },
+  "skipCleanup": true
+}

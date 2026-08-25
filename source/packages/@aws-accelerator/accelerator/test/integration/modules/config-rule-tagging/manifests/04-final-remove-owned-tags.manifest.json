@@ -1,0 +1,45 @@
+{
+  "name": "final-remove-owned-tags",
+  "description": "Remove every module-owned tag and restore the Config rule fixture to its external-tag baseline",
+  "order": 4,
+  "moduleConfig": {
+    "account": "Shared Services",
+    "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+    "globalTags": [],
+    "rules": []
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "configRuleResults": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "status": "tagged",
+        "removedTagKeys": ["Accelerator", "StaticTag", "UpdatedTag"],
+        "unmanagedTagKeys": ["ExternalSentinel", "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_KEY}"]
+      }
+    ],
+    "configRuleTags": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "tags": {
+          "ExternalSentinel": "preserved",
+          "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_KEY}": "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_VALUE}"
+        },
+        "absentTagKeys": ["Accelerator", "DynamicTag", "StaticTag", "UpdatedTag"]
+      }
+    ],
+    "stateOwnedTagKeys": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "tagKeys": []
+      }
+    ],
+    "stateTableEntry": { "status": "success" }
+  }
+}

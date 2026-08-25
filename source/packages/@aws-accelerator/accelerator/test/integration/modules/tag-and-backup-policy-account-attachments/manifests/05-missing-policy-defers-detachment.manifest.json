@@ -1,0 +1,66 @@
+{
+  "name": "missing-policy-defers-detachment",
+  "description": "Fail preflight for a missing policy and defer an otherwise valid owned detachment",
+  "order": 5,
+  "moduleConfig": {
+    "taggingPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "accounts": []
+      },
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_MISSING_POLICY_NAME}",
+        "accounts": ["Shared Services"]
+      }
+    ],
+    "backupPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "accounts": ["Shared Services"]
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "failed",
+    "policyResults": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "deferred",
+        "accountResults": [{ "account": "Audit", "operation": "detach", "status": "deferred" }]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_MISSING_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "failed",
+        "accountResults": [{ "account": "Shared Services", "operation": "attach", "status": "deferred" }]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "status": "no-change"
+      }
+    ],
+    "policyTargets": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Audit"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Shared Services"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_MISSING_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": [],
+        "exists": false
+      }
+    ],
+    "stateOwnedAttachments": [],
+    "stateTableEntry": { "status": "failed" }
+  },
+  "skipCleanup": true
+}

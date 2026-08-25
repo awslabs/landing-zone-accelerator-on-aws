@@ -20,7 +20,6 @@
  * All generic plumbing (accounts, org accounts, base params) comes from the framework.
  */
 import { createLogger, getCredentials, IModuleResponse } from 'aws-lza';
-import { DynamoDBClient, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import {
   DeleteDirectConnectGatewayAssociationCommand,
   DescribeDirectConnectGatewayAssociationsCommand,
@@ -34,12 +33,12 @@ import {
   GetTransitGatewayRouteTablePropagationsCommand,
 } from '@aws-sdk/client-ec2';
 import { GetParameterCommand, SSMClient } from '@aws-sdk/client-ssm';
-import { marshall } from '@aws-sdk/util-dynamodb';
 import path from 'node:path';
 import { TgwAssociationsAndPropagations } from '../../../../lib/actions/network/tgw-associations-and-propagations';
 import { AcceleratorModules, ModuleParams } from '../../../../lib/types';
 import { buildBaseModuleParams } from '../../framework/base-params-builder';
 import { getModuleTestRoleName } from '../../framework/permissions-boundary';
+import { resetModuleLatestState } from '../../framework/module-state-reset';
 import { AssertionResult, ModuleTestPlugin, ResolvedEnvironment, TestManifest } from '../../framework/types';
 import { runTgwAssertions, capturePreExecutionTimestamp } from './assertions';
 
@@ -158,36 +157,7 @@ export const tgwPlugin: ModuleTestPlugin = {
       logger.info('  Preserving: main-tgw, core-rt, segregated-rt, VPC/VPN attachments, network-dxgw, shared-dxgw,');
       logger.info('              Customer Gateway, VPCs/subnets, RAM share, SSM parameters');
 
-      // --- Reset DynamoDB state table entry ---
-      const tableName = environment.moduleInfrastructure.stateTableName;
-      logger.info(`Resetting state table entry for ${SERVICE_NAME} in ${tableName}`);
-
-      const ddbClient = new DynamoDBClient({
-        region: environment.region,
-        credentials: environment.managementAccountCredentials
-          ? {
-              accessKeyId: environment.managementAccountCredentials.accessKeyId,
-              secretAccessKey: environment.managementAccountCredentials.secretAccessKey,
-              sessionToken: environment.managementAccountCredentials.sessionToken,
-            }
-          : undefined,
-      });
-
-      try {
-        await ddbClient.send(
-          new DeleteItemCommand({
-            TableName: tableName,
-            Key: marshall({
-              PK: `MODULE#${SERVICE_NAME}`,
-              SK: 'EXECUTION#latest',
-            }),
-          }),
-        );
-        logger.info(`State table entry deleted for ${SERVICE_NAME} — clean slate for test suite`);
-      } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error);
-        logger.warn(`Failed to delete state table entry (non-fatal, may not exist): ${msg}`);
-      }
+      await resetModuleLatestState(environment, SERVICE_NAME);
 
       // --- Clean DX Gateway associations (must happen before RT cleanup) ---
       await cleanDxGatewayAssociationsInAws(environment);

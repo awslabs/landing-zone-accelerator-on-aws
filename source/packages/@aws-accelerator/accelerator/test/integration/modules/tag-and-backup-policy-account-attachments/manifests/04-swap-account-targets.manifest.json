@@ -1,0 +1,69 @@
+{
+  "name": "swap-account-targets",
+  "description": "Attach replacement account targets before removing the previously owned targets",
+  "order": 4,
+  "moduleConfig": {
+    "taggingPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "accounts": ["Audit"]
+      }
+    ],
+    "backupPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "accounts": ["Shared Services"]
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "policyResults": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "reconciled",
+        "accountResults": [
+          { "account": "Audit", "operation": "attach", "status": "attached" },
+          { "account": "Shared Services", "operation": "detach", "status": "detached" }
+        ]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "status": "reconciled",
+        "accountResults": [
+          { "account": "Shared Services", "operation": "attach", "status": "attached" },
+          { "account": "Audit", "operation": "detach", "status": "detached" }
+        ]
+      }
+    ],
+    "attachOperationsBeforeDetach": true,
+    "policyTargets": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Audit"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Shared Services"]
+      }
+    ],
+    "stateOwnedAttachments": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Audit"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Shared Services"]
+      }
+    ],
+    "stateTableEntry": { "status": "success" }
+  },
+  "skipCleanup": true
+}

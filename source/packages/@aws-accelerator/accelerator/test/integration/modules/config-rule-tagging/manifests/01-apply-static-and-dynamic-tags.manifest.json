@@ -1,0 +1,56 @@
+{
+  "name": "apply-static-and-dynamic-tags",
+  "description": "Apply static and plaintext SSM-resolved global tags while preserving an external tag",
+  "order": 1,
+  "moduleConfig": {
+    "account": "Shared Services",
+    "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+    "globalTags": [
+      { "key": "StaticTag", "value": "initial-static" },
+      { "key": "DynamicTag", "value": "{{resolve:ssm:${ENV:CONFIG_RULE_TAGGING_INTEG_SSM_PARAMETER}}}" }
+    ],
+    "rules": [{ "name": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}", "tags": [] }]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "configRuleResults": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "status": "tagged",
+        "changedTagKeys": ["Accelerator", "DynamicTag", "StaticTag"],
+        "unmanagedTagKeys": ["ExternalSentinel", "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_KEY}"]
+      }
+    ],
+    "configRuleTags": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "tags": {
+          "Accelerator": "${ENV:ACCELERATOR_PREFIX}",
+          "DynamicTag": "${ENV:CONFIG_RULE_TAGGING_INTEG_DYNAMIC_VALUE}",
+          "ExternalSentinel": "preserved",
+          "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_KEY}": "${ENV:CONFIG_RULE_TAGGING_INTEG_OWNERSHIP_TAG_VALUE}",
+          "StaticTag": "initial-static"
+        }
+      }
+    ],
+    "stateOwnedTagKeys": [
+      {
+        "account": "Shared Services",
+        "region": "${ENV:CONFIG_RULE_TAGGING_INTEG_REGION}",
+        "ruleName": "${ENV:CONFIG_RULE_TAGGING_INTEG_RULE_NAME}",
+        "tagKeys": ["Accelerator", "DynamicTag", "StaticTag"]
+      }
+    ],
+    "stateConfigRedacted": [
+      "initial-static",
+      "${ENV:CONFIG_RULE_TAGGING_INTEG_DYNAMIC_VALUE}",
+      "${ENV:CONFIG_RULE_TAGGING_INTEG_SSM_PARAMETER}"
+    ],
+    "stateTableEntry": { "status": "success" }
+  },
+  "skipCleanup": true
+}

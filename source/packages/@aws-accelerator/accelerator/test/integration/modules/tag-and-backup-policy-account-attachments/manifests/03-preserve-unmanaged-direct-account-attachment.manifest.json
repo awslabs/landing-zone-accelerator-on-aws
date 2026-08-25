@@ -1,0 +1,60 @@
+{
+  "name": "preserve-unmanaged-direct-account-attachment",
+  "description": "Preserve a live Network account Tag Policy attachment that is outside LZA configuration and ownership",
+  "order": 3,
+  "moduleConfig": {
+    "taggingPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "accounts": ["Shared Services"]
+      }
+    ],
+    "backupPolicies": [
+      {
+        "name": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "accounts": ["Audit"]
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "success",
+    "policyResults": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "status": "no-change",
+        "unmanagedAccounts": ["Network"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "status": "no-change"
+      }
+    ],
+    "policyTargets": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Shared Services", "Network"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Audit"]
+      }
+    ],
+    "stateOwnedAttachments": [
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_TAG_POLICY_NAME}",
+        "policyType": "TAG_POLICY",
+        "accounts": ["Shared Services"]
+      },
+      {
+        "policyName": "${ENV:POLICY_ATTACHMENTS_INTEG_BACKUP_POLICY_NAME}",
+        "policyType": "BACKUP_POLICY",
+        "accounts": ["Audit"]
+      }
+    ],
+    "stateTableEntry": { "status": "success" }
+  }
+}
