@@ -77,7 +77,7 @@ export class GatewayLoadBalancer extends cdk.Resource implements IGatewayLoadBal
         },
         {
           key: 'load_balancing.cross_zone.enabled',
-          value: props.crossZoneLoadBalancing ? props.crossZoneLoadBalancing.toString() : 'true',
+          value: (props.crossZoneLoadBalancing ?? true).toString(),
         },
       ],
       subnets: props.subnets,

@@ -12,9 +12,10 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import { NetworkLoadBalancer } from '../../lib/aws-elasticloadbalancingv2/network-load-balancer';
 import { snapShotTest } from '../snapshot-test';
-import { describe } from 'vitest';
+import { describe, test } from 'vitest';
 
 const testNamePrefix = 'Construct(NetworkLoadBalancer): ';
 
@@ -58,4 +59,43 @@ new NetworkLoadBalancer(stack, 'Test', {
  */
 describe('NetworkLoadBalancer', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+/**
+ * Pins the rendered `load_balancing.cross_zone.enabled` load balancer attribute so an
+ * explicit `crossZoneLoadBalancing: false` is not silently discarded by a truthiness
+ * ternary. See work item #4920.
+ */
+describe('NetworkLoadBalancer cross-zone load balancing', () => {
+  function crossZoneTemplate(crossZoneLoadBalancing?: boolean): Template {
+    const assertStack = new cdk.Stack();
+    new NetworkLoadBalancer(assertStack, 'Test', {
+      name: 'Test',
+      ssmPrefix: '/accelerator',
+      appName: 'appA',
+      vpcName: 'vpcA',
+      subnets: ['subnet-test123', 'subnet-test456'],
+      accessLogsBucket: 'test-bucket',
+      crossZoneLoadBalancing,
+    });
+    return Template.fromStack(assertStack);
+  }
+
+  test('explicit false renders false', () => {
+    crossZoneTemplate(false).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'false' }]),
+    });
+  });
+
+  test('explicit true renders true', () => {
+    crossZoneTemplate(true).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'true' }]),
+    });
+  });
+
+  test('omitted renders the documented default of true', () => {
+    crossZoneTemplate(undefined).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'true' }]),
+    });
+  });
 });

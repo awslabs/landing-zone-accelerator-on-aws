@@ -12,7 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { describe } from 'vitest';
+import { Match, Template } from 'aws-cdk-lib/assertions';
+import { describe, test } from 'vitest';
 import { GatewayLoadBalancer } from '../../lib/aws-elasticloadbalancingv2/gateway-load-balancer';
 import { snapShotTest } from '../snapshot-test';
 
@@ -33,4 +34,40 @@ new GatewayLoadBalancer(stack, 'Test', {
  */
 describe('GatewayLoadBalancer', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+/**
+ * Pins the rendered `load_balancing.cross_zone.enabled` load balancer attribute so an
+ * explicit `crossZoneLoadBalancing: false` is not silently discarded by a truthiness
+ * ternary. See work item #4920.
+ */
+describe('GatewayLoadBalancer cross-zone load balancing', () => {
+  function crossZoneTemplate(crossZoneLoadBalancing?: boolean): Template {
+    const assertStack = new cdk.Stack();
+    new GatewayLoadBalancer(assertStack, 'Test', {
+      name: 'Test',
+      allowedPrincipals: ['333333333333'],
+      subnets: ['subnet-test123'],
+      crossZoneLoadBalancing,
+    });
+    return Template.fromStack(assertStack);
+  }
+
+  test('explicit false renders false', () => {
+    crossZoneTemplate(false).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'false' }]),
+    });
+  });
+
+  test('explicit true renders true', () => {
+    crossZoneTemplate(true).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'true' }]),
+    });
+  });
+
+  test('omitted renders the documented default of true', () => {
+    crossZoneTemplate(undefined).hasResourceProperties('AWS::ElasticLoadBalancingV2::LoadBalancer', {
+      LoadBalancerAttributes: Match.arrayWith([{ Key: 'load_balancing.cross_zone.enabled', Value: 'true' }]),
+    });
+  });
 });

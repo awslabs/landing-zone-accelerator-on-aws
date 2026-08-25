@@ -115,7 +115,7 @@ export class NetworkLoadBalancer extends cdk.Resource implements INetworkLoadBal
         },
         {
           key: 'load_balancing.cross_zone.enabled',
-          value: props.crossZoneLoadBalancing ? props.crossZoneLoadBalancing.toString() : 'true',
+          value: (props.crossZoneLoadBalancing ?? true).toString(),
         },
         {
           key: 'access_logs.s3.enabled',
