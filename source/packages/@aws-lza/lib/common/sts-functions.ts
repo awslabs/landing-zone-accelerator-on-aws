@@ -48,7 +48,12 @@
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import path from 'node:path';
 import { credentialCache } from './credential-cache';
-import { AssumeRoleCredentialType, IAssumeRoleCredential, ISessionContext } from './interfaces';
+import {
+  AssumeRoleCredentialType,
+  IAssumeRoleCredential,
+  ICreateStsClientOptions,
+  ISessionContext,
+} from './interfaces';
 import { createLogger } from './logger';
 import { MODULE_EXCEPTIONS } from './types';
 import { executeApi, setRetryStrategy } from './utility';
@@ -58,6 +63,29 @@ import { executeApi, setRetryStrategy } from './utility';
  * Provides consistent logging for all STS operations and credential management.
  */
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
+
+/**
+ * Creates an {@link STSClient} configured with the accelerator retry strategy.
+ *
+ * Centralizes STS client construction so every caller resolves endpoints the
+ * same way. No explicit `endpoint` is set: the AWS SDK resolves the regional STS
+ * endpoint from the region (including isolated and sovereign partitions), which
+ * also lets the standard `AWS_ENDPOINT_URL[_STS]` / `AWS_USE_FIPS_ENDPOINT`
+ * environment overrides take effect.
+ *
+ * @param options.region - AWS region used to resolve the STS endpoint
+ * @param options.solutionId - Value for the client `customUserAgent`
+ * @param options.credentials - Optional credentials or credential provider
+ * @returns A configured {@link STSClient}
+ */
+export function createStsClient(options: ICreateStsClientOptions): STSClient {
+  return new STSClient({
+    region: options.region,
+    customUserAgent: options.solutionId,
+    retryStrategy: setRetryStrategy(),
+    credentials: options.credentials,
+  });
+}
 
 /**
  * Retrieves cross-account assume role credentials for multi-account operations.
@@ -204,15 +232,9 @@ export async function getCredentials(options: {
   return await credentialCache.getOrFetch(
     cacheKey,
     async () => {
-      // Derive partition from the role ARN (arn:<partition>:...) so the STS
-      // client targets the correct regional endpoint. Isolated and sovereign
-      // partitions (e.g. aws-eusc) reject tokens sent to the commercial endpoint.
-      const partition = options.partition ?? roleArn.split(':')[1];
-      const client: STSClient = new STSClient({
+      const client: STSClient = createStsClient({
         region: options.region,
-        endpoint: getStsEndpoint(partition, options.region),
-        customUserAgent: options.solutionId,
-        retryStrategy: setRetryStrategy(),
+        solutionId: options.solutionId,
         credentials: options.credentials,
       });
 
@@ -315,38 +337,6 @@ export function getGlobalRegion(partition: string): string {
 }
 
 /**
- * Returns the regional STS endpoint URL for the given partition and region.
- *
- * Isolated and sovereign partitions do not use the standard
- * `sts.<region>.amazonaws.com` endpoint, so credentials minted there are
- * rejected when sent to the commercial endpoint. This function maps each
- * partition to its correct STS endpoint host.
- *
- * @param partition - AWS partition identifier
- * @param region - AWS region
- * @returns Fully qualified STS endpoint URL
- */
-export function getStsEndpoint(partition: string, region: string): string {
-  switch (partition) {
-    case 'aws-iso':
-      return `https://sts.${region}.c2s.ic.gov`;
-    case 'aws-iso-b':
-      return `https://sts.${region}.sc2s.sgov.gov`;
-    case 'aws-iso-f':
-      return `https://sts.${region}.csp.hci.ic.gov`;
-    case 'aws-iso-e':
-      return `https://sts.${region}.cloud.adc-e.uk`;
-    case 'aws-cn':
-      return `https://sts.${region}.amazonaws.com.cn`;
-    case 'aws-eusc':
-      return `https://sts.${region}.amazonaws.eu`;
-    default:
-      // both commercial and GovCloud use this pattern
-      return `https://sts.${region}.amazonaws.com`;
-  }
-}
-
-/**
  * Returns the regional S3 virtual-hosted endpoint URL for the given partition,
  * region, and bucket.
  *
@@ -432,10 +422,9 @@ export async function getCurrentSessionDetails(props: {
   solutionId?: string;
   credentials?: AssumeRoleCredentialType;
 }): Promise<ISessionContext> {
-  const client: STSClient = new STSClient({
+  const client: STSClient = createStsClient({
     region: props.region,
-    customUserAgent: props.solutionId,
-    retryStrategy: setRetryStrategy(),
+    solutionId: props.solutionId,
     credentials: props.credentials,
   });
   const configRegion = await client.config.region();

@@ -28,14 +28,13 @@ import {
 } from '../../../interfaces/aws-cloudformation/create-stack-policy';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
 import {
+  createStsClient,
   generateDryRunResponse,
   getCredentials,
   getCurrentAccountId,
-  getStsEndpoint,
   setRetryStrategy,
 } from '../../../common/functions';
 import { AssumeRoleCredentialType } from '../../../common/resources';
-import { STSClient } from '@aws-sdk/client-sts';
 import { throttlingBackOff } from '../../common/throttle';
 
 const STATUS_STACK_FILTER: StackStatus[] = [
@@ -71,11 +70,9 @@ export class StackPolicyModule implements IStackPolicyModule {
     const policy = props.enabled ? this.createDenyStackPolicy(props.protectedTypes) : this.createAllowStackPolicy();
 
     const currentAccountId = await getCurrentAccountId(
-      new STSClient({
+      createStsClient({
         region: props.region,
-        endpoint: getStsEndpoint(props.partition, props.region),
-        customUserAgent: props.solutionId,
-        retryStrategy: setRetryStrategy(),
+        solutionId: props.solutionId,
         credentials: props.credentials,
       }),
     );

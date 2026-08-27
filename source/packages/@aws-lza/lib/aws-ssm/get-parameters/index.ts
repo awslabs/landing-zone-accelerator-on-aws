@@ -12,7 +12,6 @@
  */
 
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
-import { STSClient } from '@aws-sdk/client-sts';
 import {
   IGetSsmParametersValueHandlerParameter,
   IGetSsmParametersValueConfiguration,
@@ -21,7 +20,7 @@ import {
 } from '../../../interfaces/aws-ssm/get-parameters';
 import { createLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
-import { setRetryStrategy, getCredentials, getCurrentAccountDetails, getStsEndpoint } from '../../../common/functions';
+import { setRetryStrategy, getCredentials, getCurrentAccountDetails, createStsClient } from '../../../common/functions';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
 import { AssumeRoleCredentialType } from '../../../common/resources';
 
@@ -63,11 +62,9 @@ export class GetSsmParametersValueModule implements IGetSsmParametersValueModule
 
     // Only make API calls if we have valid parameters to process
     if (validParameters.length > 0) {
-      const stsClient = new STSClient({
+      const stsClient = createStsClient({
         region: props.region,
-        endpoint: getStsEndpoint(props.partition, props.region),
-        customUserAgent: props.solutionId,
-        retryStrategy: setRetryStrategy(),
+        solutionId: props.solutionId,
         credentials: props.credentials,
       });
 

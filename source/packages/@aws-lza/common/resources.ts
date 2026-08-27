@@ -83,6 +83,18 @@ export interface IAssumeRoleCredential {
 export type AssumeRoleCredentialType = IAssumeRoleCredential | AwsCredentialIdentityProvider;
 
 /**
+ * Options for constructing an STS client via `createStsClient`.
+ */
+export interface ICreateStsClientOptions {
+  /** AWS region used to resolve the STS endpoint */
+  region?: string;
+  /** Value for the client `customUserAgent` */
+  solutionId?: string;
+  /** Optional credentials or credential provider */
+  credentials?: AssumeRoleCredentialType;
+}
+
+/**
  * Accelerator module common parameter
  *
  * @description

@@ -15,7 +15,6 @@ import {
   getNodeVersion,
   getNodeRuntimeActivationCommand,
   chunkArray,
-  getStsEndpoint,
   getVpcEndpointServicePrefix,
   wildcardMatch,
   getCrossAccountCredentials,
@@ -209,68 +208,6 @@ describe('chunkArray', () => {
       [1, 'a'],
       [true, null],
     ]);
-  });
-});
-
-describe('getStsEndpoint', () => {
-  const testRegion = 'us-east-1';
-
-  it('should return correct endpoint for aws-iso partition', () => {
-    const endpoint = getStsEndpoint('aws-iso', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.c2s.ic.gov`);
-  });
-
-  it('should return correct endpoint for aws-iso-b partition', () => {
-    const endpoint = getStsEndpoint('aws-iso-b', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.sc2s.sgov.gov`);
-  });
-
-  it('should return correct endpoint for aws-cn partition', () => {
-    const endpoint = getStsEndpoint('aws-cn', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.com.cn`);
-  });
-
-  it('should return correct endpoint for aws-iso-f partition', () => {
-    const endpoint = getStsEndpoint('aws-iso-f', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.csp.hci.ic.gov`);
-  });
-
-  it('should return correct endpoint for aws-iso-e partition', () => {
-    const endpoint = getStsEndpoint('aws-iso-e', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.cloud.adc-e.uk`);
-  });
-  it('should return correct endpoint for aws-eusc partition', () => {
-    const endpoint = getStsEndpoint('aws-eusc', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.eu`);
-  });
-
-  it('should return default endpoint for commercial AWS partition', () => {
-    const endpoint = getStsEndpoint('aws', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.com`);
-  });
-
-  it('should return default endpoint for AWS GovCloud partition', () => {
-    const endpoint = getStsEndpoint('aws-us-gov', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.com`);
-  });
-
-  it('should handle different regions correctly', () => {
-    const differentRegions = ['us-west-1', 'eu-central-1', 'ap-southeast-2'];
-
-    differentRegions.forEach(region => {
-      const endpoint = getStsEndpoint('aws', region);
-      expect(endpoint).toBe(`https://sts.${region}.amazonaws.com`);
-    });
-  });
-
-  it('should handle unknown partitions with default endpoint', () => {
-    const endpoint = getStsEndpoint('unknown-partition', testRegion);
-    expect(endpoint).toBe(`https://sts.${testRegion}.amazonaws.com`);
-  });
-
-  it('should handle empty strings correctly', () => {
-    const endpoint = getStsEndpoint('', '');
-    expect(endpoint).toBe('https://sts..amazonaws.com');
   });
 });
 

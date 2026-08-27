@@ -33,6 +33,7 @@ import {
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 
 import {
+  createStsClient,
   delay,
   generateDryRunResponse,
   getAccountDetailsFromOrganizationsByEmail,
@@ -51,7 +52,6 @@ import {
   getOrganizationId,
   getOrganizationRootId,
   getParentOuId,
-  getStsEndpoint,
   isOrganizationsConfigured,
   processModulePromises,
   setRetryStrategy,
@@ -146,23 +146,103 @@ describe('functions', () => {
     });
   });
 
-  describe('getStsEndpoint', () => {
-    test('should return the EUSC STS endpoint for aws-eusc partition', () => {
-      expect(getStsEndpoint('aws-eusc', 'eusc-de-east-1')).toBe('https://sts.eusc-de-east-1.amazonaws.eu');
+  describe('createStsClient', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
     });
 
-    test('should return correct endpoints for isolated and sovereign partitions', () => {
-      expect(getStsEndpoint('aws-iso', 'us-iso-east-1')).toBe('https://sts.us-iso-east-1.c2s.ic.gov');
-      expect(getStsEndpoint('aws-iso-b', 'us-isob-east-1')).toBe('https://sts.us-isob-east-1.sc2s.sgov.gov');
-      expect(getStsEndpoint('aws-iso-f', 'us-isof-south-1')).toBe('https://sts.us-isof-south-1.csp.hci.ic.gov');
-      expect(getStsEndpoint('aws-iso-e', 'eu-isoe-west-1')).toBe('https://sts.eu-isoe-west-1.cloud.adc-e.uk');
-      expect(getStsEndpoint('aws-cn', 'cn-northwest-1')).toBe('https://sts.cn-northwest-1.amazonaws.com.cn');
+    test('should construct an STSClient with region, solutionId and credentials, and the retry strategy', () => {
+      const credentials = { accessKeyId: 'AKIA', secretAccessKey: 'secret', sessionToken: 'token' };
+
+      createStsClient({ region: 'us-east-1', solutionId: 'SO0199', credentials });
+
+      expect(STSClient).toHaveBeenCalledTimes(1);
+      expect(STSClient).toHaveBeenCalledWith({
+        region: 'us-east-1',
+        customUserAgent: 'SO0199',
+        retryStrategy: expect.anything(),
+        credentials,
+      });
     });
 
-    test('should return the commercial STS endpoint for aws, GovCloud, and unknown partitions', () => {
-      expect(getStsEndpoint('aws', 'us-east-1')).toBe('https://sts.us-east-1.amazonaws.com');
-      expect(getStsEndpoint('aws-us-gov', 'us-gov-west-1')).toBe('https://sts.us-gov-west-1.amazonaws.com');
-      expect(getStsEndpoint('unknown', 'us-east-1')).toBe('https://sts.us-east-1.amazonaws.com');
+    test('should NOT pass an explicit endpoint so the SDK resolves it natively (honors AWS_ENDPOINT_URL / FIPS)', () => {
+      createStsClient({ region: 'eusc-de-east-1', solutionId: 'SO0199' });
+
+      expect(STSClient).toHaveBeenCalledTimes(1);
+      const config = (STSClient as unknown as vi.Mock).mock.calls[0][0];
+      expect(config).not.toHaveProperty('endpoint');
+      expect(config.endpoint).toBeUndefined();
+    });
+
+    test('should omit customUserAgent and credentials when not provided, and never set an endpoint', () => {
+      createStsClient({ region: 'us-gov-west-1' });
+
+      const config = (STSClient as unknown as vi.Mock).mock.calls[0][0];
+      expect(config.region).toBe('us-gov-west-1');
+      expect(config.customUserAgent).toBeUndefined();
+      expect(config.credentials).toBeUndefined();
+      expect(config).not.toHaveProperty('endpoint');
+    });
+
+    /**
+     * Endpoint-resolution coverage.
+     *
+     * STSClient is mocked in this file, so the mock captures the config `createStsClient`
+     * builds but cannot resolve a host. To verify that "no explicit endpoint + this region"
+     * actually resolves to the correct partition STS URL, feed the captured region into a
+     * REAL STSClient (via `vi.importActual`) and resolve through its own endpoint provider.
+     * This proves, for every partition including the isolated/sovereign ones, that removing
+     * the hardcoded endpoint still targets the right host.
+     */
+    describe('resolves the correct STS endpoint URL per partition (no hardcoded endpoint)', () => {
+      const PARTITION_STS_URLS: ReadonlyArray<{ partition: string; region: string; url: string }> = [
+        { partition: 'aws', region: 'us-east-1', url: 'https://sts.us-east-1.amazonaws.com/' },
+        { partition: 'aws', region: 'eu-west-1', url: 'https://sts.eu-west-1.amazonaws.com/' },
+        { partition: 'aws-us-gov', region: 'us-gov-west-1', url: 'https://sts.us-gov-west-1.amazonaws.com/' },
+        { partition: 'aws-us-gov', region: 'us-gov-east-1', url: 'https://sts.us-gov-east-1.amazonaws.com/' },
+        { partition: 'aws-cn', region: 'cn-north-1', url: 'https://sts.cn-north-1.amazonaws.com.cn/' },
+        { partition: 'aws-cn', region: 'cn-northwest-1', url: 'https://sts.cn-northwest-1.amazonaws.com.cn/' },
+        { partition: 'aws-iso', region: 'us-iso-east-1', url: 'https://sts.us-iso-east-1.c2s.ic.gov/' },
+        { partition: 'aws-iso-b', region: 'us-isob-east-1', url: 'https://sts.us-isob-east-1.sc2s.sgov.gov/' },
+        { partition: 'aws-iso-e', region: 'eu-isoe-west-1', url: 'https://sts.eu-isoe-west-1.cloud.adc-e.uk/' },
+        { partition: 'aws-iso-f', region: 'us-isof-south-1', url: 'https://sts.us-isof-south-1.csp.hci.ic.gov/' },
+        { partition: 'aws-eusc', region: 'eusc-de-east-1', url: 'https://sts.eusc-de-east-1.amazonaws.eu/' },
+      ];
+
+      test.each(PARTITION_STS_URLS)('$partition ($region) -> $url', async ({ region, url }) => {
+        // createStsClient (under test) builds the config; the mock captures it.
+        createStsClient({ region, solutionId: 'SO0199' });
+        const config = (STSClient as unknown as vi.Mock).mock.calls[0][0];
+        expect(config.region).toBe(region);
+        expect(config).not.toHaveProperty('endpoint');
+
+        // Resolve the captured region through the REAL SDK client to get the actual URL.
+        const actual = await vi.importActual<typeof import('@aws-sdk/client-sts')>('@aws-sdk/client-sts');
+        const realClient = new actual.STSClient({ region: config.region });
+        const resolved = (
+          realClient.config as unknown as {
+            endpointProvider: (p: { Region: string; UseFIPS: boolean; UseDualStack: boolean }) => { url: URL };
+          }
+        ).endpointProvider({ Region: config.region, UseFIPS: false, UseDualStack: false }).url.href;
+
+        expect(resolved).toBe(url);
+      });
+
+      test('covers every partition LZA supports, including the isolated/secret partitions', () => {
+        const covered = new Set(PARTITION_STS_URLS.map(p => p.partition));
+        for (const required of [
+          'aws',
+          'aws-us-gov',
+          'aws-cn',
+          'aws-iso',
+          'aws-iso-b',
+          'aws-iso-e',
+          'aws-iso-f',
+          'aws-eusc',
+        ]) {
+          expect(covered.has(required)).toBe(true);
+        }
+      });
     });
   });
 

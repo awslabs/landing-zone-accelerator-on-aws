@@ -150,6 +150,43 @@ describe('StackPolicy', () => {
       expect(result).toEqual(`StackPolicy has been succesfully changed to ${props.enabled}`);
     });
 
+    it('builds the STS client from props via createStsClient (region/solutionId/credentials, no endpoint) and passes it to getCurrentAccountId', async () => {
+      const sentinelStsClient = { marker: 'sts-client' } as unknown as ReturnType<
+        typeof commonFunctions.createStsClient
+      >;
+      const createStsClientSpy = vi.spyOn(commonFunctions, 'createStsClient').mockReturnValue(sentinelStsClient);
+      const getCurrentAccountIdSpy = vi.spyOn(commonFunctions, 'getCurrentAccountId').mockResolvedValue('123456789012');
+
+      const props: IStackPolicyHandlerParameter = {
+        accountIds: ['123456789012'],
+        regions: ['eu-west-1'],
+        managementAccountAccessRole: 'MockRole',
+        enabled: true,
+        acceleratorPrefix: 'AWSAccelerator',
+        protectedTypes: [],
+        operation: 'test',
+        partition: 'aws',
+        region: 'eusc-de-east-1',
+        solutionId: 'SO0199',
+        credentials: {
+          accessKeyId: 'AKIA',
+          secretAccessKey: 'secret',
+          sessionToken: 'token',
+        },
+      };
+
+      await stackPolicy.handler(props);
+
+      expect(createStsClientSpy).toHaveBeenCalledTimes(1);
+      expect(createStsClientSpy).toHaveBeenCalledWith({
+        region: props.region,
+        solutionId: props.solutionId,
+        credentials: props.credentials,
+      });
+      expect(createStsClientSpy.mock.calls[0][0]).not.toHaveProperty('endpoint');
+      expect(getCurrentAccountIdSpy).toHaveBeenCalledWith(sentinelStsClient);
+    });
+
     it('handler returns disabled on success', async () => {
       const props: IStackPolicyHandlerParameter = {
         accountIds: ['123456789012'],

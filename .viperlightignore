@@ -272,10 +272,10 @@ source/packages/@aws-accelerator/config/lib/organization-config.ts:209
 source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:280
 source/packages/@aws-accelerator/utils/lib/test-util/common/integration-test.ts:281
 
-source/packages/@aws-accelerator/utils/lib/common-functions.ts:131
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:120
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:121
 source/packages/@aws-accelerator/utils/lib/common-functions.ts:132
-source/packages/@aws-accelerator/utils/lib/common-functions.ts:143
-source/packages/@aws-accelerator/utils/lib/common-functions.ts:144
+source/packages/@aws-accelerator/utils/lib/common-functions.ts:133
 
 ### aws-lza Unit Test Files
 source/packages/@aws-lza/test/lib/amazon-macie/functions.test.unit.ts:154

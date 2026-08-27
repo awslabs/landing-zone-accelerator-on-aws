@@ -68,6 +68,7 @@ vi.mock('../../../../common/functions', async () => {
     getLandingZoneDetails: vi.fn(),
     getOrganizationalUnitArn: vi.fn(),
     getOrganizationalUnitIdByPath: vi.fn(),
+    createStsClient: vi.fn(),
   };
 });
 
@@ -77,6 +78,7 @@ describe('RegisterOrganizationalUnitModule', () => {
   let getLandingZoneDetailsSpy: vi.SpyInstance;
   let getOrganizationalUnitArnSpy: vi.SpyInstance;
   let getOrganizationalUnitIdByPathSpy: vi.SpyInstance;
+  let createStsClientSpy: vi.SpyInstance;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -133,6 +135,8 @@ describe('RegisterOrganizationalUnitModule', () => {
     getOrganizationalUnitIdByPathSpy.mockResolvedValue(
       MOCK_CONSTANTS.RegisterOrganizationalUnitModule.organizationalUnitId,
     );
+
+    createStsClientSpy = vi.mocked(commonFunctions.createStsClient);
 
     (paginateListEnabledBaselines as vi.Mock).mockImplementation(() => [
       {
@@ -211,6 +215,36 @@ describe('RegisterOrganizationalUnitModule', () => {
       expect(GetBaselineOperationCommand).toHaveBeenCalledTimes(1);
       expect(response).toEqual(
         `Registration of AWS Organizations organizational unit (OU) "${input.configuration.name}" with AWS Control Tower is successful.`,
+      );
+    });
+
+    test('should build the STS client from props via createStsClient and pass it to getOrganizationalUnitArn', async () => {
+      // Setup
+      const sentinelStsClient = { marker: 'sts-client' } as unknown as ReturnType<typeof createStsClientSpy>;
+      createStsClientSpy.mockReturnValue(sentinelStsClient);
+      getOrganizationalUnitArnSpy.mockResolvedValue(
+        MOCK_CONSTANTS.RegisterOrganizationalUnitModule.enabledBaselines.mockTarget1.arn,
+      );
+
+      // Execute
+      await new RegisterOrganizationalUnitModule().handler(input);
+
+      // Verify: constructed with this site's props (region/solutionId/credentials), no endpoint override
+      expect(createStsClientSpy).toHaveBeenCalledTimes(1);
+      expect(createStsClientSpy).toHaveBeenCalledWith({
+        region: input.region,
+        solutionId: input.solutionId,
+        credentials: input.credentials,
+      });
+      const passedArgs = createStsClientSpy.mock.calls[0][0];
+      expect(passedArgs).not.toHaveProperty('endpoint');
+
+      // Verify: the created client is forwarded to getOrganizationalUnitArn
+      expect(getOrganizationalUnitArnSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        sentinelStsClient,
+        expect.anything(),
+        input.partition,
       );
     });
 

@@ -380,6 +380,23 @@ describe('CachingCredentialProvider', () => {
     });
   });
 
+  describe('STS client endpoint resolution', () => {
+    it('should construct STS clients without an explicit endpoint so the SDK resolves it natively', () => {
+      // Guards the removal of the hardcoded per-partition STS endpoint. This provider
+      // builds its STS clients directly (not via AwsClientFactory), so it needs its own
+      // assertion that no endpoint override is set — letting the SDK resolve the regional
+      // endpoint and honor AWS_ENDPOINT_URL[_STS] / AWS_USE_FIPS_ENDPOINT. If an explicit
+      // endpoint leaked back in, config.endpoint would be a resolver function, not undefined.
+      CachingCredentialProvider.init({
+        partition: 'aws-eusc',
+        regions: ['eusc-de-east-1'],
+      });
+
+      const client = CachingCredentialProvider.get().getStsClient('eusc-de-east-1');
+      expect(client.config.endpoint).toBeUndefined();
+    });
+  });
+
   describe('shutdown', () => {
     it('should clear the singleton so get() throws', () => {
       CachingCredentialProvider.init({

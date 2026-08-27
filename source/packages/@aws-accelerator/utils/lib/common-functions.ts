@@ -7,12 +7,18 @@ import {
   Credentials,
 } from '@aws-sdk/client-sts';
 import { throttlingBackOff } from './throttle';
-import { ConfiguredRetryStrategy } from '@aws-sdk/util-retry';
+import { AwsClientFactory } from './aws-client-factory';
 import { createLogger } from './logger';
 import { glob } from 'glob';
 import { dirname } from 'path';
 import * as fs from 'fs';
 import { config } from '../../../../package.json';
+
+// Re-exported so existing deep imports (`@aws-accelerator/utils/lib/common-functions`)
+// keep resolving `setRetryStrategy`. The definition lives in `./retry-strategy`, a
+// dependency-free module, so `aws-client-factory` can import it without creating an
+// import cycle with this module.
+export { setRetryStrategy } from './retry-strategy';
 
 const logger = createLogger(['utils-common-functions']);
 
@@ -39,11 +45,7 @@ export async function getCrossAccountCredentials(
     logger.debug(`Region was undefined, defaulting to creating STS client in the global region`);
     region = getGlobalRegion(partition);
   }
-  const stsClient = new STSClient({
-    region: region,
-    retryStrategy: setRetryStrategy(),
-    endpoint: getStsEndpoint(partition, region),
-  });
+  const stsClient = AwsClientFactory.create(STSClient, { region });
   const stsParams: AssumeRoleCommandInput = {
     RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
     RoleSessionName: sessionName ?? 'acceleratorBootstrapCheck',
@@ -66,14 +68,8 @@ export async function getCrossAccountCredentials(
 
 export async function getCurrentAccountId(partition: string, region: string, stsClient?: STSClient): Promise<string> {
   if (!stsClient) {
-    logger.debug(
-      `Sts endpoint for partition ${partition} and region ${region} is : ${getStsEndpoint(partition, region)}`,
-    );
-    stsClient = new STSClient({
-      region,
-      retryStrategy: setRetryStrategy(),
-      endpoint: getStsEndpoint(partition, region),
-    });
+    logger.debug(`Resolving current account id in partition ${partition} region ${region}`);
+    stsClient = AwsClientFactory.create(STSClient, { region });
   }
   try {
     const response = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
@@ -107,11 +103,7 @@ export async function getManagementAccountCredentials(partition: string): Promis
     logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
     const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
-    const stsClient = new STSClient({
-      region: process.env['AWS_REGION'],
-      retryStrategy: setRetryStrategy(),
-      customUserAgent: process.env['SOLUTION_ID'] ?? '',
-    });
+    const stsClient = AwsClientFactory.create(STSClient, {});
     const callerIdentity = await throttlingBackOff(() => stsClient.send(new GetCallerIdentityCommand({})));
     if (callerIdentity.Account && callerIdentity.Account === process.env['MANAGEMENT_ACCOUNT_ID']) {
       logger.info(`Currently using management account credentials with role ${callerIdentity.Arn}`);
@@ -123,10 +115,7 @@ export async function getManagementAccountCredentials(partition: string): Promis
     const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
     const lzaManagementRoleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${acceleratorPrefix}-Management-Deployment-Role`;
     logger.info(`management account role name => ${acceleratorPrefix}-Management-Deployment-Role`);
-    const managementStsClient = new STSClient({
-      region: process.env['AWS_REGION'],
-      retryStrategy: setRetryStrategy(),
-      customUserAgent: process.env['SOLUTION_ID'] ?? '',
+    const managementStsClient = AwsClientFactory.create(STSClient, {
       credentials: {
         accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
         secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
@@ -178,29 +167,6 @@ export async function setExternalManagementAccountCredentials(
   }
 
   return undefined;
-}
-
-export function setRetryStrategy() {
-  const numberOfRetries = Number(process.env['ACCELERATOR_SDK_MAX_ATTEMPTS'] ?? 800);
-  return new ConfiguredRetryStrategy(numberOfRetries, (attempt: number) => 100 + attempt * 1000);
-}
-
-export function getStsEndpoint(partition: string, region: string): string {
-  if (partition === 'aws-iso') {
-    return `https://sts.${region}.c2s.ic.gov`;
-  } else if (partition === 'aws-iso-b') {
-    return `https://sts.${region}.sc2s.sgov.gov`;
-  } else if (partition === 'aws-cn') {
-    return `https://sts.${region}.amazonaws.com.cn`;
-  } else if (partition === 'aws-iso-f') {
-    return `https://sts.${region}.csp.hci.ic.gov`;
-  } else if (partition === 'aws-iso-e') {
-    return `https://sts.${region}.cloud.adc-e.uk`;
-  } else if (partition === 'aws-eusc') {
-    return `https://sts.${region}.amazonaws.eu`;
-  }
-  // both commercial and govCloud return this pattern
-  return `https://sts.${region}.amazonaws.com`;
 }
 
 /**

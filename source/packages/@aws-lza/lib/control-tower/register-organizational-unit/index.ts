@@ -20,6 +20,7 @@ import { createLogger, createStatusLogger } from '../../../common/logger';
 import { throttlingBackOff } from '../../../common/throttle';
 import path from 'path';
 import {
+  createStsClient,
   delay,
   generateDryRunResponse,
   getLandingZoneDetails,
@@ -27,7 +28,6 @@ import {
   getModuleDefaultParameters,
   getOrganizationalUnitArn,
   getOrganizationalUnitIdByPath,
-  getStsEndpoint,
   setRetryStrategy,
 } from '../../../common/functions';
 
@@ -48,7 +48,6 @@ import {
 import { AcceleratorModuleName } from '../../../common/resources';
 import { OrganizationsClient } from '@aws-sdk/client-organizations';
 import { MODULE_EXCEPTIONS } from '../../../common/enums';
-import { STSClient } from '@aws-sdk/client-sts';
 
 export class RegisterOrganizationalUnitModule implements IRegisterOrganizationalUnitModule {
   private readonly logger = createLogger([path.parse(path.basename(__filename)).name]);
@@ -114,11 +113,9 @@ export class RegisterOrganizationalUnitModule implements IRegisterOrganizational
     if (ouId) {
       ouArn = await getOrganizationalUnitArn(
         organizationClient,
-        new STSClient({
+        createStsClient({
           region: props.region,
-          endpoint: getStsEndpoint(props.partition, props.region),
-          customUserAgent: props.solutionId,
-          retryStrategy: setRetryStrategy(),
+          solutionId: props.solutionId,
           credentials: props.credentials,
         }),
         ouId,

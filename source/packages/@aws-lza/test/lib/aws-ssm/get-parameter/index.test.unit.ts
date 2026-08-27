@@ -124,6 +124,42 @@ describe('SsmGetParameterModule', () => {
     configuration,
   });
 
+  describe('STS client construction', () => {
+    test('builds the STS client from props via createStsClient (region/solutionId/credentials, no endpoint) and forwards it to getCurrentAccountDetails', async () => {
+      const sentinelStsClient = { marker: 'sts-client' } as unknown as ReturnType<typeof functions.createStsClient>;
+      const createStsClientSpy = vi.spyOn(functions, 'createStsClient').mockReturnValue(sentinelStsClient);
+      const getCurrentAccountDetailsSpy = vi
+        .mocked(functions.getCurrentAccountDetails)
+        .mockResolvedValue({ accountId: '111111111111', roleArn: 'mock-role-arn' });
+
+      mockSend.mockResolvedValue({ Parameter: { Name: '/test/param1', Value: 'value1' } });
+
+      const input: IGetSsmParametersValueHandlerParameter = {
+        ...MOCK_CONSTANTS.runnerParameters,
+        region: 'eusc-de-east-1',
+        solutionId: 'SO0199',
+        credentials: { accessKeyId: 'AKIA', secretAccessKey: 'secret', sessionToken: 'token' },
+        configuration: [{ name: '/test/param1' }],
+      };
+
+      await new GetSsmParametersValueModule().handler(input);
+
+      // Constructed from this site's props, with no endpoint override so the SDK resolves it.
+      expect(createStsClientSpy).toHaveBeenCalledTimes(1);
+      expect(createStsClientSpy).toHaveBeenCalledWith({
+        region: input.region,
+        solutionId: input.solutionId,
+        credentials: input.credentials,
+      });
+      expect(createStsClientSpy.mock.calls[0][0]).not.toHaveProperty('endpoint');
+
+      // The created client is forwarded to getCurrentAccountDetails.
+      expect(getCurrentAccountDetailsSpy).toHaveBeenCalledWith(sentinelStsClient);
+
+      createStsClientSpy.mockRestore();
+    });
+  });
+
   describe('Parameter Retrieval', () => {
     test('should successfully retrieve multiple parameters', async () => {
       mockSend

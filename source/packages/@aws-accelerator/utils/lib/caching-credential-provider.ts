@@ -3,7 +3,7 @@ import { STSClient, AssumeRoleCommand } from '@aws-sdk/client-sts';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { monitorEventLoopDelay } from 'perf_hooks';
 import { createLogger } from './logger';
-import { getStsEndpoint, setRetryStrategy } from './common-functions';
+import { setRetryStrategy } from './retry-strategy';
 
 const logger = createLogger(['caching-credential-provider']);
 
@@ -113,7 +113,6 @@ export class CachingCredentialProvider {
   private createStsClient(region: string, baseCredentials?: AwsCredentialIdentityProvider): STSClient {
     return new STSClient({
       region,
-      endpoint: getStsEndpoint(this.partition, region),
       customUserAgent: process.env['SOLUTION_ID'] ?? '',
       retryStrategy: setRetryStrategy(),
       requestHandler: new NodeHttpHandler({

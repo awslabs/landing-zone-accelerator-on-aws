@@ -14,9 +14,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AwsClientFactory } from '../lib/aws-client-factory';
 
-// Mock setRetryStrategy
+// Mock setRetryStrategy (imported by the factory from ./retry-strategy)
 const mockRetryStrategy = { maxAttempts: 800 };
-vi.mock('../lib/common-functions', () => ({
+vi.mock('../lib/retry-strategy', () => ({
   setRetryStrategy: vi.fn(() => mockRetryStrategy),
 }));
 
@@ -124,6 +124,16 @@ describe('AwsClientFactory', () => {
       });
 
       expect(client.config.endpoint).toBe('https://sts.us-iso-east-1.c2s.ic.gov');
+    });
+
+    it('should NOT set an endpoint when none is provided, so the SDK resolves it natively', () => {
+      // Guards the removal of the hardcoded STS endpoint: callers that omit
+      // `endpoint` must let the SDK resolve it (which honors AWS_ENDPOINT_URL[_STS]
+      // and AWS_USE_FIPS_ENDPOINT). If an endpoint key leaked back in, these break.
+      const client = AwsClientFactory.create(FakeClient, { region: 'us-east-1' });
+
+      expect(client.config).not.toHaveProperty('endpoint');
+      expect(client.config.endpoint).toBeUndefined();
     });
 
     it('should not set retryStrategy when useRetryStrategy is false', () => {

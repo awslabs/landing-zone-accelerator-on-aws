@@ -12,7 +12,7 @@
  */
 
 import { ASEAMapping, AseaResourceMapping } from '@aws-accelerator/config';
-import { createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
+import { AwsClientFactory, createLogger, setRetryStrategy, throttlingBackOff } from '@aws-accelerator/utils';
 import { CachingCredentialProvider } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
@@ -1596,10 +1596,9 @@ async function getCredentials(options: {
     options.assumeRoleArn ?? `arn:${options.partition}:iam::${options.accountId}:role/${options.assumeRoleName}`;
 
   // Check if already in the target role
-  const client: STSClient = new STSClient({
+  const client: STSClient = AwsClientFactory.create(STSClient, {
     region: options.region,
     customUserAgent: options.solutionId,
-    retryStrategy: setRetryStrategy(),
     credentials: options.credentials,
   });
 

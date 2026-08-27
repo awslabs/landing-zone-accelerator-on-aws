@@ -13,7 +13,7 @@
 
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from '@smithy/types';
 import * as winston from 'winston';
-import { setRetryStrategy } from './common-functions';
+import { setRetryStrategy } from './retry-strategy';
 import { createLogger } from './logger';
 import { isThrottlingError } from './throttle';
 
@@ -84,7 +84,6 @@ export type AwsClientConstructor<T> = new (config: any) => T;
  * // Static credentials
  * const sts = AwsClientFactory.create(STSClient, {
  *   region: 'us-east-1',
- *   endpoint: getStsEndpoint(partition, region),
  *   credentials: { accessKeyId: '...', secretAccessKey: '...', sessionToken: '...' },
  *   logLabels: ['my-module'],
  *   loggingContext: ['123456789012', 'us-east-1'],

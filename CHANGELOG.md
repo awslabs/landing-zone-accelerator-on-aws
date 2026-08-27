@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(installer): deploy the installer stages with the account deployment role and stop the redundant home region re-bootstrap when the pipeline account is not the management account
 - fix(customizations): stop injecting the SOLUTION_ID environment variable into Lambda functions defined in customization CloudFormation templates.
 - fix(networking): honor an explicit crossZoneLoadBalancing: false for Gateway and Network Load Balancers. This attribute was previously always rendered as true, so any existing GWLB/NLB configured with crossZoneLoadBalancing: false is currently running with cross-zone load balancing enabled; upgrading renders false and turns it off in place on the next deploy (mutable attribute, no resource replacement). Before upgrading, confirm targets/appliances are registered in every enabled Availability Zone so an AZ node with no healthy local target does not black-hole traffic.
+- fix(sts): stop hardcoding the STS endpoint in the accelerator pipeline/CLI execution environment and the `@aws-lza` modules, so the AWS SDK resolves the regional endpoint natively and honors the standard `AWS_ENDPOINT_URL_STS` / `AWS_ENDPOINT_URL` and `AWS_USE_FIPS_ENDPOINT` overrides where those variables are present. This does not cover STS clients invoked inside Lambda custom resources, which do not receive these environment variables at runtime (issue #1183)
 
 ## [1.16.0] - 2026-07-24
 
