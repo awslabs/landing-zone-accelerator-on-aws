@@ -1202,12 +1202,13 @@ export class GlobalConfigValidator {
       );
     }
 
-    if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.useManagementAccessRole) {
-      errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.useManagementAccessRole`);
-    }
-
-    if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.customDeploymentRole) {
-      errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.customDeploymentRole`);
+    // Setting cdkOptions.centralizeBuckets to false deletes the CDK deployment roles during bootstrap, which
+    // leaves the Prepare stage unable to assume them. This is unsupported in version 1.14.0 and later, so require
+    // centralizeBuckets to be true whenever cdkOptions is provided. See issue #4188.
+    if (values?.cdkOptions && !values.cdkOptions.centralizeBuckets) {
+      errors.push(
+        `cdkOptions.centralizeBuckets must be set to true. Setting it to false is not supported in version 1.14.0 and later and causes the pipeline to fail during the Prepare stage.`,
+      );
     }
   }
 

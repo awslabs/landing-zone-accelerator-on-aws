@@ -25,6 +25,7 @@ These errors occur during the Prepare stage when the `validate-environment` Lamb
 | `NoAvailableConfigurationRecorder` | Security Resources | Ensure AWS Config is enabled; for Control Tower, update accounts first |
 | `Export with name already exists` | Any | Check for stack name collisions from previous deployments |
 | `The Route Table Id 'rtb-...' does not exist` | Network VPC Endpoints | Removed a route table used by an S3/DynamoDB gateway endpoint in one run. Remove the gateway endpoint routes first, then delete the route table on a second run (see below) |
+| `Role arn:aws:iam::<account>:role/<prefix>-Management-Deployment-Role is invalid or cannot be assumed` | Prepare (bootstrap) | `cdkOptions.centralizeBuckets` was set to `false`, so the accelerator bootstraps with the default CDK template instead of its custom template and never creates the deployment roles the Prepare stage assumes. This is not supported in version 1.14.0 and later. Set `cdkOptions.centralizeBuckets: true` in `global-config.yaml` |
 
 ### Removing a route table used by a gateway endpoint
 

@@ -1368,6 +1368,11 @@ export interface ICdkOptionsConfig {
    *
    * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
    * located within the deployment target account. Enabling this feature will utilize an S3 bucket within the management account instead.
+   *
+   * This value must be set to `true`. Setting it to `false` is not supported in version 1.14.0 and later: the accelerator then bootstraps
+   * with the default CDK template instead of its custom template, so the deployment roles that every stage assumes
+   * (`<prefix>-Deployment-Role` and `<prefix>-Management-Deployment-Role`) are not created. The pipeline fails during the Prepare stage
+   * because it cannot assume `<prefix>-Management-Deployment-Role`.
    */
   readonly centralizeBuckets: boolean;
   /**

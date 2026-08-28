@@ -298,7 +298,7 @@
       "description": "## CDK Options\n\nManage the behavior of CDK within LZA.\n\n### Key Features\n- **Centralize Buckets**: Determines whether CDK will use a single, centralized S3 bucket per region\n- **Deployment Role Management**: Determines whether CDK will use a custom execution role for CDK operations\n\n### Example ```yaml cdkOptions:   centralizeBuckets: true   useManagementAccessRole: true   deploymentMethod: 'direct' ```",
       "properties": {
         "centralizeBuckets": {
-          "description": "**Centralize Buckets** *(Required)*\n\nWhen the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is located within the deployment target account. Enabling this feature will utilize an S3 bucket within the management account instead.",
+          "description": "**Centralize Buckets** *(Required)*\n\nWhen the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is located within the deployment target account. Enabling this feature will utilize an S3 bucket within the management account instead.\n\nThis value must be set to `true`. Setting it to `false` is not supported in version 1.14.0 and later: the accelerator then bootstraps with the default CDK template instead of its custom template, so the deployment roles that every stage assumes (`<prefix>-Deployment-Role` and `<prefix>-Management-Deployment-Role`) are not created. The pipeline fails during the Prepare stage because it cannot assume `<prefix>-Management-Deployment-Role`.",
           "type": "boolean"
         },
         "customDeploymentRole": {

@@ -602,6 +602,71 @@ describe('SecurityConfigValidator', () => {
       ).toBeDefined();
     });
   });
+
+  describe('validateCdkOptions', () => {
+    // validateCdkOptions is private, so bind it to the prototype to exercise it directly.
+    const proto = GlobalConfigValidator.prototype as any;
+    const validateCdkOptions = proto['validateCdkOptions'].bind(proto);
+
+    const CENTRALIZE_BUCKETS_ERROR =
+      'cdkOptions.centralizeBuckets must be set to true. Setting it to false is not supported in version 1.14.0 and later and causes the pipeline to fail during the Prepare stage.';
+    const MUTUALLY_EXCLUSIVE_ERROR =
+      'Cannot specify values for both cdkOptions and centralizeCdkBuckets. Please delete centralizeCdkBuckets and use cdkOptions';
+
+    const makeConfig = (cdkOptions: unknown, centralizeCdkBuckets?: unknown) =>
+      ({ cdkOptions, centralizeCdkBuckets }) as unknown as GlobalConfig;
+
+    it('passes when centralizeBuckets is true', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: true, useManagementAccessRole: true }), errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('passes when centralizeBuckets is true with a customDeploymentRole', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: true, customDeploymentRole: 'MyRole' }), errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('fails when centralizeBuckets and useManagementAccessRole are both false (issue #4188)', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: false, useManagementAccessRole: false }), errors);
+      expect(errors).toContain(CENTRALIZE_BUCKETS_ERROR);
+    });
+
+    it('fails when centralizeBuckets is false while useManagementAccessRole is true', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: false, useManagementAccessRole: true }), errors);
+      expect(errors).toContain(CENTRALIZE_BUCKETS_ERROR);
+    });
+
+    it('fails when centralizeBuckets is false while a customDeploymentRole is set', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: false, customDeploymentRole: 'MyRole' }), errors);
+      expect(errors).toContain(CENTRALIZE_BUCKETS_ERROR);
+    });
+
+    it('fails when centralizeBuckets is false on its own', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig({ centralizeBuckets: false }), errors);
+      expect(errors).toContain(CENTRALIZE_BUCKETS_ERROR);
+    });
+
+    it('does not raise the centralizeBuckets error when cdkOptions is undefined', () => {
+      const errors: string[] = [];
+      validateCdkOptions(makeConfig(undefined), errors);
+      expect(errors).not.toContain(CENTRALIZE_BUCKETS_ERROR);
+    });
+
+    it('fails when both cdkOptions and the deprecated centralizeCdkBuckets are specified', () => {
+      const errors: string[] = [];
+      validateCdkOptions(
+        makeConfig({ centralizeBuckets: true, useManagementAccessRole: true }, { enable: true }),
+        errors,
+      );
+      expect(errors).toContain(MUTUALLY_EXCLUSIVE_ERROR);
+    });
+  });
 });
 
 function createSecurityConfig(delegatedAdminAccount = 'Audit'): Partial<SecurityConfig> {
