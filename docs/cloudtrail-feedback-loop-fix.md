@@ -1,8 +1,8 @@
-# Problema de Loop de Retroalimentación en CloudTrail con S3 Data Events
+# CloudTrail S3 Data Events Feedback Loop
 
-## Descripción del Problema
+## Problem description
 
-Cuando Landing Zone Accelerator (LZA) despliega un Organization Trail con `s3DataEvents: true`, se configura un Event Selector que captura **todos** los eventos de datos S3 en **todos** los buckets:
+When Landing Zone Accelerator (LZA) deploys a trail with `s3DataEvents: true`, it previously configured a basic Event Selector that captured **all** S3 data events on **all** buckets:
 
 ```yaml
 # global-config.yaml
@@ -11,178 +11,61 @@ logging:
     enable: true
     organizationTrail: true
     organizationTrailSettings:
-      s3DataEvents: true  # ← Causa del problema
+      s3DataEvents: true
 ```
 
-Esto genera un **loop de retroalimentación infinito**:
+Because the trail's own log-delivery bucket (the central logs bucket) is an S3 bucket, this created an **infinite feedback loop**:
 
-1. CloudTrail escribe un archivo de log en el bucket central de logs (`aws-accelerator-central-logs-<account>-<region>`)
-2. Esa escritura (PutObject) genera un evento de datos S3
-3. CloudTrail captura ese evento y escribe otro archivo de log en el mismo bucket
-4. El ciclo se repite indefinidamente
+1. CloudTrail writes a log file to the central logs bucket.
+2. That write (`PutObject`) generates an S3 data event.
+3. CloudTrail captures that event and writes another log file to the same bucket.
+4. The cycle repeats indefinitely.
 
-### Impacto
+### Impact
 
-- Crecimiento exponencial de objetos en el bucket de logs
-- Aumento continuo de costos de CloudTrail y S3
-- Degradación de la relación señal/ruido en los logs de auditoría
+- Exponential growth of objects in the central logs bucket.
+- Continuously increasing CloudTrail and S3 costs.
+- Degraded signal-to-noise ratio in audit logs.
 
-### Causa Raíz en el Código
+### Root cause
 
-El código de LZA en `organizations-stack.ts` configura el Event Selector para **todos** los buckets S3 sin exclusión:
+A basic `EventSelector` (the CloudFormation `EventSelectors` property) cannot exclude a bucket — it can only include resource ARNs. Excluding the destination bucket requires `AdvancedEventSelectors`, which support the `NotStartsWith` condition.
 
-```typescript
-// source/packages/@aws-accelerator/accelerator/lib/stacks/organizations-stack.ts (línea ~914)
-if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
-  organizationsTrail.addEventSelector(
-    cdk.aws_cloudtrail.DataResourceType.S3_OBJECT,
-    [`arn:${cdk.Stack.of(this).partition}:s3:::`],  // TODOS los buckets, sin exclusión
-    {
-      includeManagementEvents: false,
-    },
-  );
-}
-```
+## Solution
 
-El recurso resultante en CloudFormation usa `EventSelectors` (selectores básicos), que **no soportan exclusiones de buckets**. Para excluir un bucket se requieren `AdvancedEventSelectors`.
+LZA now configures data-event trails with **Advanced Event Selectors** and excludes the central logs bucket from S3 data events automatically. This applies to both:
 
----
+- the organization trail — `source/packages/@aws-accelerator/accelerator/lib/stacks/organizations-stack.ts`
+- account trails — `source/packages/@aws-accelerator/accelerator/lib/stacks/security-resources-stack.ts`
 
-## Solución Implementada
+Each trail's selectors are built from its configured settings:
 
-La solución consiste en tres pasos:
+- **Management events** — emitted as an advanced selector (`eventCategory = Management`) when `managementEvents` is enabled.
+- **S3 data events** — emitted when `s3DataEvents` is enabled, with a `resources.ARN` `NotStartsWith` condition that excludes the central logs bucket:
+  `arn:<partition>:s3:::<central-logs-bucket>/`
+- **Lambda data events** — emitted when `lambdaDataEvents` is enabled (`resources.type = AWS::Lambda::Function`).
 
-### Paso 1: Deshabilitar los Data Events en la configuración de LZA
+The central logs bucket name is derived at synth time (it is not hardcoded), and the partition is resolved from the stack so the exclusion works across all partitions, including GovCloud.
 
-Editar `global-config.yaml` en el repositorio `aws-accelerator-config`:
+The resulting trail records S3 data events for every bucket **except** the central logs bucket, breaking the feedback loop while preserving data-event coverage everywhere else. No manual post-deployment steps or stack policies are required.
 
-```yaml
-logging:
-  cloudtrail:
-    enable: true
-    organizationTrail: true
-    organizationTrailSettings:
-      multiRegionTrail: true
-      globalServiceEvents: true
-      managementEvents: true
-      s3DataEvents: false      # ← Deshabilitado - se gestiona manualmente con exclusiones
-      lambdaDataEvents: false  # ← Deshabilitado - se gestiona manualmente via Advanced Event Selectors
-      sendToCloudWatchLogs: true
-      apiErrorRateInsight: false
-      apiCallRateInsight: false
-```
+> **Note:** `EventSelectors` and `AdvancedEventSelectors` are mutually exclusive in CloudFormation. When a trail uses advanced selectors, management events must be expressed through an `eventCategory` field selector rather than the basic `IncludeManagementEvents` flag.
 
-Ejecutar el pipeline de LZA para que CloudFormation elimine los Event Selectors de datos del template.
+## Verification
 
-### Paso 2: Aplicar Stack Policy para proteger el recurso del Trail
-
-Esto evita que futuras ejecuciones del pipeline de LZA sobrescriban la configuración manual del trail:
-
-```bash
-aws cloudformation set-stack-policy \
-  --stack-name AWSAccelerator-OrganizationsStack-<ACCOUNT_ID>-<REGION> \
-  --stack-policy-body '{
-    "Statement": [
-      {
-        "Effect": "Deny",
-        "Action": "Update:*",
-        "Principal": "*",
-        "Resource": "LogicalResourceId/OrganizationsCloudTrailBED259DC"
-      },
-      {
-        "Effect": "Allow",
-        "Action": "Update:*",
-        "Principal": "*",
-        "Resource": "*"
-      }
-    ]
-  }' \
-  --region <REGION>
-```
-
-> **Nota:** Si en el futuro necesitas actualizar otras propiedades del trail via LZA, deberás usar `--stack-policy-during-update-body` para permitir temporalmente la actualización.
-
-### Paso 3: Aplicar Advanced Event Selectors con la exclusión del bucket
-
-Los Advanced Event Selectors soportan la condición `NotStartsWith`, que permite excluir el bucket destino del trail:
-
-```bash
-aws cloudtrail put-event-selectors \
-  --trail-name AWSAccelerator-Organizations-CloudTrail \
-  --advanced-event-selectors '[
-    {
-      "Name": "Management events",
-      "FieldSelectors": [
-        {"Field": "eventCategory", "Equals": ["Management"]}
-      ]
-    },
-    {
-      "Name": "S3 data events excluding central logs bucket",
-      "FieldSelectors": [
-        {"Field": "eventCategory", "Equals": ["Data"]},
-        {"Field": "resources.type", "Equals": ["AWS::S3::Object"]},
-        {"Field": "resources.ARN", "NotStartsWith": ["arn:aws:s3:::aws-accelerator-central-logs-<ACCOUNT_ID>-<REGION>/"]}
-      ]
-    },
-    {
-      "Name": "Lambda data events",
-      "FieldSelectors": [
-        {"Field": "eventCategory", "Equals": ["Data"]},
-        {"Field": "resources.type", "Equals": ["AWS::Lambda::Function"]}
-      ]
-    }
-  ]' \
-  --region <REGION>
-```
-
-Reemplazar `<ACCOUNT_ID>` con el ID de la cuenta del Log Archive y `<REGION>` con la región correspondiente.
-
----
-
-## Verificación
-
-### Confirmar que los Advanced Event Selectors están activos
+Confirm the deployed trail uses advanced selectors and excludes the central logs bucket:
 
 ```bash
 aws cloudtrail get-event-selectors \
-  --trail-name AWSAccelerator-Organizations-CloudTrail \
+  --trail-name <ACCELERATOR_PREFIX>-Organizations-CloudTrail \
   --region <REGION>
 ```
 
-La respuesta debe mostrar `AdvancedEventSelectors` (no `EventSelectors`) con la exclusión del bucket.
+The response should show `AdvancedEventSelectors` (not `EventSelectors`), including a selector whose `resources.ARN` field uses `NotStartsWith` with the central logs bucket ARN.
 
-### Confirmar que la Stack Policy protege el trail
+## Remediating an already-deployed environment
 
-```bash
-aws cloudformation get-stack-policy \
-  --stack-name AWSAccelerator-OrganizationsStack-<ACCOUNT_ID>-<REGION> \
-  --region <REGION>
-```
+Environments deployed on an LZA version **prior** to this fix keep the basic Event Selector until the trail is redeployed. To resolve the feedback loop:
 
-### Confirmar que el pipeline no revierte los cambios
-
-Ejecutar el pipeline manualmente y verificar que los Advanced Event Selectors persisten:
-
-```bash
-# Ejecutar pipeline
-aws codepipeline start-pipeline-execution \
-  --name AWSAccelerator-Pipeline \
-  --region <REGION>
-
-# Después de que complete, verificar
-aws cloudtrail get-event-selectors \
-  --trail-name AWSAccelerator-Organizations-CloudTrail \
-  --region <REGION>
-```
-
----
-
-## Consideraciones
-
-1. **Stack Policy:** La política de stack impide **cualquier** actualización al recurso del trail desde CloudFormation. Si necesitas modificar el trail (por ejemplo, habilitar Insights), debes temporalmente sobrescribir la política durante el update.
-
-2. **Actualizaciones de LZA:** Al actualizar la versión de LZA, verificar si la nueva versión soporta Advanced Event Selectors o exclusiones de buckets de forma nativa. De ser así, se puede remover la stack policy y migrar a la configuración declarativa.
-
-3. **Múltiples regiones:** Si el trail es multi-región, la configuración de event selectors se aplica globalmente desde la región home (us-east-1 en este caso).
-
-4. **Solución definitiva:** Lo ideal es contribuir un fix al código de LZA que use Advanced Event Selectors con exclusión automática del bucket destino cuando `s3DataEvents: true`.
+1. Upgrade to an LZA version that includes this fix and run the pipeline. CloudFormation replaces the basic `EventSelectors` with the excluding `AdvancedEventSelectors`.
+2. (Optional) Delete the log objects generated by the loop from the central logs bucket to stop the ongoing cost, keeping any that must be retained for compliance.
