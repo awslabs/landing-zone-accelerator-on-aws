@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(s3): allow expired object delete marker only lifecycle rules
 - chore: upgrade to node24
 - fix(cloudwatch): skip metric filters referencing the organization CloudTrail log group when the organization trail is not enabled, preventing `The specified log group does not exist` failures (issue #327)
+- fix(logging): default the account-level CloudWatch Logs subscription selectionCriteria to exclude LZA's own Firehose records-processor log group in the Log Archive account, preventing a log-delivery recursion when `subscription.type` is `ACCOUNT` and `selectionCriteria` is omitted. Operator-supplied selectionCriteria is unchanged (issue #1193)
+- docs(logging): call out on the `cloudwatchLogs.subscription` `type` and `selectionCriteria` properties that ACCOUNT mode auto-excludes the Firehose records-processor log group only when `selectionCriteria` is omitted, so an operator-supplied `selectionCriteria` must include that exclusion itself to avoid the recursion (issue #1193)
 - fix(identity-center): enable Identity Center delegated admin registration in the aws-eusc partition (issue #1160)
 - fix(config): reject Identity Center assignment principalId values that are not identity store ids
 - fix(pipeline): derive generated organization-config organizational units from the generated accounts instead of hard-coded names

@@ -2902,6 +2902,8 @@ export interface ICloudWatchSubscriptionConfig {
    *
    * Determines whether an account-wide subscription is applied, or if a Lambda function will be invoked to apply each log group.
    *
+   * When set to `ACCOUNT`, LZA creates a single account-level subscription filter policy with `scope: ALL` in every account. In the Log Archive account that scope includes LZA's own central-logging delivery Lambda log group (`/aws/lambda/<prefix>-FirehoseRecordsProcessor`, `AWSAccelerator-FirehoseRecordsProcessor` by default). Subscribing that log group forwards its events back through the same Firehose to S3 and re-invokes the Lambda, an infinite log-delivery recursion that increases CloudWatch Logs, Firehose, and S3 cost. To prevent this, when `type` is `ACCOUNT` and no {@link ICloudWatchSubscriptionConfig.selectionCriteria} is supplied, LZA automatically excludes that delivery log group in the Log Archive account. If you supply your own `selectionCriteria`, LZA applies it verbatim and does NOT add this exclusion for you, so your criteria must include it (see {@link ICloudWatchSubscriptionConfig.selectionCriteria}). `LOG_GROUP` mode already excludes the delivery log group and is unaffected.
+   *
    * **Example**
    * ```
    * type: ACCOUNT
@@ -2915,6 +2917,8 @@ export interface ICloudWatchSubscriptionConfig {
    * **Selection Criteria** *(Optional)*
    *
    * Selection criteria for the account-wide subscription. Only used when {@link ICloudWatchSubscriptionConfig.type} is 'ACCOUNT'. This should be used to {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions-recursion-prevention.html | Prevent log recursion}.
+   *
+   * If omitted, LZA defaults it (in the Log Archive account only) to exclude its own central-logging delivery Lambda log group, `LogGroupName NOT IN ["/aws/lambda/<prefix>-FirehoseRecordsProcessor"]`, which prevents the log-delivery recursion described on {@link ICloudWatchSubscriptionConfig.type}. If you supply a value, LZA applies it verbatim and does NOT merge in that default, so your criteria must itself exclude `/aws/lambda/<prefix>-FirehoseRecordsProcessor` (and any other log group whose events land in a bucket the delivery pipeline writes to) or the recursion loop will form.
    *
    * In the following example, log groups with the names /aws/lambda/AWSAccelerator-FirehoseRecordsProcessor, development, or AppA will not have a subscription filter.
    *

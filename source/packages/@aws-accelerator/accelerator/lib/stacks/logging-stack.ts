@@ -1173,6 +1173,19 @@ export class LoggingStack extends AcceleratorStack {
     const skipBulkUpdate = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.enable;
     const skipBulkUpdateTargets = this.props.globalConfig.logging.cloudwatchLogs?.skipBulkUpdate?.skipBulkUpdateTargets;
     const noOp = skipBulkUpdate && this.isIncluded(skipBulkUpdateTargets!);
+    // if no type is specified then assume that subscription filter has to be applied to each log group
+    const subscriptionType = this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP';
+    // In ACCOUNT mode the scope:ALL account policy would otherwise subscribe LZA's own Firehose
+    // records-processor log group in the Log Archive account, creating a CloudWatch Logs -> Firehose
+    // -> S3 -> Lambda delivery loop (LOG_GROUP mode already excludes it via the exclusion list, but
+    // the account policy only honors selectionCriteria). Default the exclusion so operators who omit
+    // selectionCriteria are not silently opted into the loop. Any operator-supplied value is used as-is.
+    const selectionCriteria =
+      this.props.globalConfig.logging.cloudwatchLogs?.subscription?.selectionCriteria ??
+      (subscriptionType === 'ACCOUNT' &&
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
+        ? `LogGroupName NOT IN ["/aws/lambda/${this.props.prefixes.accelerator}-FirehoseRecordsProcessor"]`
+        : undefined);
     // Run a custom resource to update subscription, KMS and retention for all existing log groups
     const customResourceExistingLogs = new CloudWatchLogsSubscriptionFilter(this, 'LogsSubscriptionFilter', {
       logDestinationArn: logsDestinationArnValue,
@@ -1184,9 +1197,8 @@ export class LoggingStack extends AcceleratorStack {
       replaceLogDestinationArn: this.props.globalConfig.logging.cloudwatchLogs?.replaceLogDestinationArn,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
-      // if no type is specified then assume that subscription filter has to be applied to each log group
-      subscriptionType: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP',
-      selectionCriteria: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.selectionCriteria,
+      subscriptionType,
+      selectionCriteria,
       overrideExisting: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.overrideExisting,
       filterPattern: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.filterPattern,
       noOp,
@@ -1203,8 +1215,7 @@ export class LoggingStack extends AcceleratorStack {
       exclusionSetting: accountRegionExclusion!,
       acceleratorPrefix: this.props.prefixes.accelerator,
       useExistingRoles: this.props.useExistingRoles ?? false,
-      // if no type is specified then assume that subscription filter has to be applied to each log group
-      subscriptionType: this.props.globalConfig.logging.cloudwatchLogs?.subscription?.type ?? 'LOG_GROUP',
+      subscriptionType,
       sqsKey: this.sqsKey,
     });
 

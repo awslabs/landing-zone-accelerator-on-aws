@@ -296,6 +296,65 @@ describe('accelerator metadata read-only access grants', () => {
   });
 });
 
+describe('cloudwatchLogCreatingAccount ACCOUNT subscription recursion guard (issue #4913)', () => {
+  // getLogArchiveAccountId() is mocked to return this id in the props helper
+  const logArchiveAccountId = '345678901';
+  // prefixes.accelerator is 'unit-test' in the props helper
+  const firehoseProcessorExclusion = 'LogGroupName NOT IN ["/aws/lambda/unit-test-FirehoseRecordsProcessor"]';
+
+  function synthSubscriptionFilter(
+    subscription: { type: string; selectionCriteria?: string } | undefined,
+    account: string,
+  ): cdk.assertions.Template {
+    const props = createAcceleratorStackProps();
+    props.env = { region: 'us-east-1', account };
+    // enabledRegions and retention are required by the subscription-filter wiring
+    (props.globalConfig as any).enabledRegions = ['us-east-1'];
+    (props.globalConfig as any).cloudwatchLogRetentionInDays = 3653;
+    // enable:false lets the constructor skip the replication wiring; we invoke the method directly
+    (props.globalConfig.logging.cloudwatchLogs as any) = { enable: false, subscription };
+    const stack = new LoggingStack(new cdk.App(), `sub-${account}-${JSON.stringify(subscription)}`, props);
+    stack['cloudwatchLogCreatingAccount']();
+    return cdk.assertions.Template.fromStack(stack);
+  }
+
+  it('defaults selectionCriteria to exclude the Firehose records-processor log group when ACCOUNT mode omits it in the Log Archive account', () => {
+    const template = synthSubscriptionFilter({ type: 'ACCOUNT' }, logArchiveAccountId);
+    template.hasResourceProperties('Custom::UpdateSubscriptionFilter', {
+      subscriptionType: 'ACCOUNT',
+      selectionCriteria: firehoseProcessorExclusion,
+    });
+  });
+
+  it('passes an operator-provided selectionCriteria through unchanged', () => {
+    const operatorCriteria = 'LogGroupName NOT IN ["/aws/lambda/custom", "AppA"]';
+    const template = synthSubscriptionFilter(
+      { type: 'ACCOUNT', selectionCriteria: operatorCriteria },
+      logArchiveAccountId,
+    );
+    template.hasResourceProperties('Custom::UpdateSubscriptionFilter', {
+      subscriptionType: 'ACCOUNT',
+      selectionCriteria: operatorCriteria,
+    });
+  });
+
+  it('does not inject selectionCriteria for ACCOUNT mode outside the Log Archive account', () => {
+    const template = synthSubscriptionFilter({ type: 'ACCOUNT' }, '00000001');
+    template.hasResourceProperties('Custom::UpdateSubscriptionFilter', {
+      subscriptionType: 'ACCOUNT',
+      selectionCriteria: cdk.assertions.Match.absent(),
+    });
+  });
+
+  it('does not inject selectionCriteria in LOG_GROUP mode', () => {
+    const template = synthSubscriptionFilter({ type: 'LOG_GROUP' }, logArchiveAccountId);
+    template.hasResourceProperties('Custom::UpdateSubscriptionFilter', {
+      subscriptionType: 'LOG_GROUP',
+      selectionCriteria: cdk.assertions.Match.absent(),
+    });
+  });
+});
+
 function createBucketConfig(name: string, bucketType: AcceleratorImportedBucketType): any {
   const importedBucket = {
     name: name,
