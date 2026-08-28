@@ -240,6 +240,12 @@ export class AccountsConfig implements i.IAccountsConfig {
      */
     managementAccountCredentials?: AwsCredentialIdentity,
     loadFromDynamoDbTable?: boolean,
+    /**
+     * When `true`, aborts if the config table's commit marker no longer matches this execution's
+     * config commit id, indicating a newer AWSAccelerator-Pipeline execution has superseded this one.
+     * Only takes effect when account ids are loaded from the DynamoDB config table. Defaults to `false`.
+     */
+    failOnConcurrentExecution = false,
   ): Promise<void> {
     if (enableSingleAccountMode) {
       await this._loadAccountIdsForSingleAccountMode();
@@ -250,7 +256,7 @@ export class AccountsConfig implements i.IAccountsConfig {
 
     if (isOrgsEnabled) {
       if (loadFromDynamoDbTable) {
-        await this._loadAccountIdsFromDynamoDB(accountsConfig, managementAccountCredentials);
+        await this._loadAccountIdsFromDynamoDB(accountsConfig, managementAccountCredentials, failOnConcurrentExecution);
       } else {
         await this._loadAccountIdsFromOrganizationsAPI(partition, managementAccountCredentials);
       }
@@ -468,11 +474,17 @@ export class AccountsConfig implements i.IAccountsConfig {
   private async _loadAccountIdsFromDynamoDB(
     accountsConfig: AccountsConfig,
     credentials?: AwsCredentialIdentity,
+    failOnConcurrentExecution = false,
   ): Promise<void> {
     logger.debug(`Orgs is enabled, solution will query from dynamoDB table instead of AWS Organizations API`);
     const ssmConfigTableNameParameter = `${this.acceleratorSsmParamNamePrefix}/prepare-stack/configTable/name`;
 
     const configTableName = await getSSMParameterValue(ssmConfigTableNameParameter, credentials);
+
+    if (failOnConcurrentExecution) {
+      await this._assertConfigCommitIsCurrent(configTableName, credentials);
+    }
+
     const [mandatoryAccountItems, workloadAccountItems] = await Promise.all([
       queryConfigTable(configTableName, 'mandatoryAccount', 'orgInfo', credentials, this.configCommitId),
       queryConfigTable(configTableName, 'workloadAccount', 'orgInfo', credentials, this.configCommitId),
@@ -494,6 +506,38 @@ export class AccountsConfig implements i.IAccountsConfig {
 
     this.accountIds!.push(...filteredAccounts);
     this.accountIds = removeDuplicates(this.accountIds!, account => account.email);
+  }
+
+  /**
+   * Fails fast when a newer AWSAccelerator-Pipeline execution has superseded this execution's config table snapshot.
+   *
+   * Reads the shared commit marker item (`dataType: 'commitId'`, `acceleratorKey: 'current'`) written by the
+   * load-config-table Lambda and compares its `commitId` attribute with this execution's {@link configCommitId}.
+   * Because config table rows are keyed by data type and email rather than by commit, a concurrent Prepare stage
+   * overwrites the shared rows and this marker with its own commit id; when that happens this execution's
+   * commit-filtered reads return no accounts and account id lookups fail later. When both commit ids are present and
+   * differ, this method aborts so the stale execution stops before resolving incorrect account data. A missing or
+   * empty marker (first run / single execution) is treated as consistent and passes.
+   *
+   * @param configTableName Name of the accelerator config DynamoDB table
+   * @param credentials Management account credentials when deployed from an external account, otherwise undefined
+   */
+  private async _assertConfigCommitIsCurrent(
+    configTableName: string,
+    credentials?: AwsCredentialIdentity,
+  ): Promise<void> {
+    const commitIdItems = await queryConfigTable(configTableName, 'commitId', undefined, credentials);
+    const currentMarker = commitIdItems.find(item => item['acceleratorKey'] === 'current');
+    const markerCommitId = typeof currentMarker?.['commitId'] === 'string' ? currentMarker['commitId'] : undefined;
+
+    if (markerCommitId && this.configCommitId && markerCommitId !== this.configCommitId) {
+      const message =
+        `A newer AWSAccelerator-Pipeline execution (config commit ${markerCommitId}) has superseded this execution ` +
+        `(config commit ${this.configCommitId}). Aborting to avoid a config table race condition (accounts-config ` +
+        `concurrent execution guard). Re-run the pipeline for the latest configuration.`;
+      logger.error(message);
+      throw new Error(message);
+    }
   }
 
   /**

@@ -79,6 +79,8 @@ export abstract class ConfigLoader {
     const accountsConfig = AccountsConfig.load(configDirPath);
     const shouldSkipDynamoDbLookup =
       process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP'] === 'true' || process.env['ACCELERATOR_STAGE'] === 'prepare';
+    const failOnConcurrentExecution =
+      GlobalConfig.loadRawGlobalConfig(configDirPath).acceleratorSettings?.failOnConcurrentExecution ?? false;
 
     const resolvedCredentials = managementAccountCredentials ? await managementAccountCredentials() : undefined;
 
@@ -89,6 +91,7 @@ export abstract class ConfigLoader {
       accountsConfig,
       resolvedCredentials,
       !shouldSkipDynamoDbLookup,
+      failOnConcurrentExecution,
     );
 
     return accountsConfig;

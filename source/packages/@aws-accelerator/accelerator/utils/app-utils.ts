@@ -446,7 +446,8 @@ export async function setAcceleratorStackProps(
       logger.warn(`No configuration directory path provided, skipping accelerator stacks`);
       return;
     }
-    const homeRegion = GlobalConfig.loadRawGlobalConfig(context.configDirPath).homeRegion;
+    const rawGlobalConfig = GlobalConfig.loadRawGlobalConfig(context.configDirPath);
+    const homeRegion = rawGlobalConfig.homeRegion;
     const orgsEnabled = OrganizationConfig.loadRawOrganizationsConfig(context.configDirPath).enable;
 
     // Check to see if lookups for organization entities should be done in DynamoDB or native AWS Organizations API calls
@@ -459,6 +460,7 @@ export async function setAcceleratorStackProps(
       accountsConfig,
       undefined,
       loadFromDynamoDbTable,
+      rawGlobalConfig.acceleratorSettings?.failOnConcurrentExecution ?? false,
     );
 
     const replacementsConfig = ReplacementsConfig.load(context.configDirPath, accountsConfig);

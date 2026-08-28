@@ -555,6 +555,7 @@ export class AcceleratorMetadataConfig implements i.IAcceleratorMetadataConfig {
 
 export class AcceleratorSettingsConfig implements i.IAcceleratorSettingsConfig {
   readonly maxConcurrentStacks: number | undefined = undefined;
+  readonly failOnConcurrentExecution: boolean | undefined = undefined;
 }
 
 export class SsmInventoryConfig implements i.ISsmInventoryConfig {

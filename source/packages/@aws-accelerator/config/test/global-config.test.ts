@@ -142,6 +142,7 @@ describe('GlobalConfig', () => {
       expect(new SsmInventoryConfig().enable).toBeFalsy;
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new AcceleratorSettingsConfig().maxConcurrentStacks).toBeUndefined;
+      expect(new AcceleratorSettingsConfig().failOnConcurrentExecution).toBeUndefined();
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       expect(new AcceleratorMetadataConfig().enable).toBeFalsy;
       expect(new AcceleratorMetadataConfig().readOnlyAccessRoleArns).toEqual([]);

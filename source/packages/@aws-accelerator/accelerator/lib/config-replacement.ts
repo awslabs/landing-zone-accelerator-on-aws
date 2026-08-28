@@ -28,7 +28,8 @@ import { shouldLookupDynamoDb } from './accelerator';
 
 const logger = createLogger(['config-replacement']);
 const configDirPath = process.argv[2];
-const homeRegion = GlobalConfig.loadRawGlobalConfig(configDirPath).homeRegion;
+const rawGlobalConfig = GlobalConfig.loadRawGlobalConfig(configDirPath);
+const homeRegion = rawGlobalConfig.homeRegion;
 
 const fileNameList = [
   CustomizationsConfig.FILENAME,
@@ -82,6 +83,7 @@ async function processReplacements(props: {
       accountsConfig,
       undefined,
       loadFromDynamoDbTable,
+      rawGlobalConfig.acceleratorSettings?.failOnConcurrentExecution ?? false,
     );
   } catch (e) {
     logger.error(`Error loading accounts config: ${e}`);

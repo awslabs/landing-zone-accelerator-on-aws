@@ -521,6 +521,155 @@ describe('accounts-config', () => {
         expect(config.accountIds![0].accountId).toBe(TEST_ACCOUNT_IDS.MANAGEMENT);
       });
 
+      describe('failOnConcurrentExecution guard', () => {
+        const mandatoryAccountItems = [
+          {
+            orgInfo: JSON.stringify({
+              email: TEST_EMAILS.MANAGEMENT_ORIGINAL,
+              accountId: TEST_ACCOUNT_IDS.MANAGEMENT,
+              status: 'ACTIVE',
+            }),
+          },
+          {
+            orgInfo: JSON.stringify({
+              email: TEST_EMAILS.LOG_ARCHIVE_ORIGINAL,
+              accountId: TEST_ACCOUNT_IDS.LOG_ARCHIVE,
+              status: 'ACTIVE',
+            }),
+          },
+          {
+            orgInfo: JSON.stringify({
+              email: TEST_EMAILS.AUDIT_ORIGINAL,
+              accountId: TEST_ACCOUNT_IDS.AUDIT,
+              status: 'ACTIVE',
+            }),
+          },
+        ];
+        const workloadAccountItems = [
+          {
+            orgInfo: JSON.stringify({
+              email: TEST_EMAILS.SHARED_SERVICES,
+              accountId: TEST_ACCOUNT_IDS.SHARED_SERVICES,
+              status: 'ACTIVE',
+            }),
+          },
+          {
+            orgInfo: JSON.stringify({
+              email: TEST_EMAILS.NETWORK,
+              accountId: TEST_ACCOUNT_IDS.NETWORK,
+              status: 'ACTIVE',
+            }),
+          },
+        ];
+
+        it('should not query the commit marker or fail when the flag is off even if the marker mismatches', async () => {
+          process.env['CONFIG_COMMIT_ID'] = TEST_ENV_VALUES.COMMIT_ID;
+          const config = createAccountsConfig({ configObject: accountsConfigObject });
+
+          mockGetSSMParameterValue.mockResolvedValue(TEST_ENV_VALUES.CONFIG_TABLE);
+          // Only the two account queries are expected; the marker query must not run when the flag is off.
+          mockQueryConfigTable.mockResolvedValueOnce(mandatoryAccountItems).mockResolvedValueOnce(workloadAccountItems);
+
+          await config.loadAccountIds('aws', false, true, config, undefined, true, false);
+
+          expect(mockQueryConfigTable).toHaveBeenCalledTimes(2);
+          expect(mockQueryConfigTable).not.toHaveBeenCalledWith(
+            TEST_ENV_VALUES.CONFIG_TABLE,
+            'commitId',
+            undefined,
+            undefined,
+          );
+          expect(config.accountIds).toHaveLength(5);
+        });
+
+        it('should pass when the flag is on and the marker commit matches this execution', async () => {
+          process.env['CONFIG_COMMIT_ID'] = TEST_ENV_VALUES.COMMIT_ID;
+          const config = createAccountsConfig({ configObject: accountsConfigObject });
+
+          mockGetSSMParameterValue.mockResolvedValue(TEST_ENV_VALUES.CONFIG_TABLE);
+          mockQueryConfigTable
+            .mockResolvedValueOnce([
+              { dataType: 'commitId', acceleratorKey: 'current', commitId: TEST_ENV_VALUES.COMMIT_ID },
+            ])
+            .mockResolvedValueOnce(mandatoryAccountItems)
+            .mockResolvedValueOnce(workloadAccountItems);
+
+          await config.loadAccountIds('aws', false, true, config, undefined, true, true);
+
+          expect(mockQueryConfigTable).toHaveBeenNthCalledWith(
+            1,
+            TEST_ENV_VALUES.CONFIG_TABLE,
+            'commitId',
+            undefined,
+            undefined,
+          );
+          expect(mockQueryConfigTable).toHaveBeenCalledTimes(3);
+          expect(config.accountIds).toHaveLength(5);
+        });
+
+        it('should throw when the flag is on and a newer execution has superseded the config table', async () => {
+          process.env['CONFIG_COMMIT_ID'] = TEST_ENV_VALUES.COMMIT_ID;
+          const config = createAccountsConfig({ configObject: accountsConfigObject });
+
+          mockGetSSMParameterValue.mockResolvedValue(TEST_ENV_VALUES.CONFIG_TABLE);
+          mockQueryConfigTable.mockResolvedValueOnce([
+            { dataType: 'commitId', acceleratorKey: 'current', commitId: 'newer-commit-999' },
+          ]);
+
+          await expect(config.loadAccountIds('aws', false, true, config, undefined, true, true)).rejects.toThrow(
+            /newer AWSAccelerator-Pipeline execution \(config commit newer-commit-999\) has superseded this execution \(config commit commit123\)/,
+          );
+          // The guard must fail fast before running the account queries.
+          expect(mockQueryConfigTable).toHaveBeenCalledTimes(1);
+        });
+
+        it('should pass when the flag is on but the commit marker is missing (first run)', async () => {
+          process.env['CONFIG_COMMIT_ID'] = TEST_ENV_VALUES.COMMIT_ID;
+          const config = createAccountsConfig({ configObject: accountsConfigObject });
+
+          mockGetSSMParameterValue.mockResolvedValue(TEST_ENV_VALUES.CONFIG_TABLE);
+          mockQueryConfigTable
+            .mockResolvedValueOnce([])
+            .mockResolvedValueOnce(mandatoryAccountItems)
+            .mockResolvedValueOnce(workloadAccountItems);
+
+          await config.loadAccountIds('aws', false, true, config, undefined, true, true);
+
+          expect(mockQueryConfigTable).toHaveBeenCalledTimes(3);
+          expect(config.accountIds).toHaveLength(5);
+        });
+
+        it('should pass when the flag is on and a differing marker exists but CONFIG_COMMIT_ID is unset', async () => {
+          // Covers the `this.configCommitId &&` arm of the guard: with no commit id for this
+          // execution there is nothing to compare against, so a differing marker must NOT abort.
+          // Without this case, dropping that sub-condition would still leave the suite green while
+          // breaking an opt-in user's first run.
+          delete process.env['CONFIG_COMMIT_ID'];
+          const config = createAccountsConfig({ configObject: accountsConfigObject });
+
+          mockGetSSMParameterValue.mockResolvedValue(TEST_ENV_VALUES.CONFIG_TABLE);
+          mockQueryConfigTable
+            .mockResolvedValueOnce([{ dataType: 'commitId', acceleratorKey: 'current', commitId: 'newer-commit-999' }])
+            .mockResolvedValueOnce(mandatoryAccountItems)
+            .mockResolvedValueOnce(workloadAccountItems);
+
+          await expect(
+            config.loadAccountIds('aws', false, true, config, undefined, true, true),
+          ).resolves.toBeUndefined();
+
+          // The marker was read, and the account queries still ran instead of aborting.
+          expect(mockQueryConfigTable).toHaveBeenNthCalledWith(
+            1,
+            TEST_ENV_VALUES.CONFIG_TABLE,
+            'commitId',
+            undefined,
+            undefined,
+          );
+          expect(mockQueryConfigTable).toHaveBeenCalledTimes(3);
+          expect(config.accountIds).toHaveLength(5);
+        });
+      });
+
       it('should handle organizations enabled with API loading - single page', async () => {
         const config = createAccountsConfig();
 

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(diff-viewer): render module runner dry-run output as a Modules section in the HTML diff viewer
 - feat(guardduty): migrate GuardDuty from CloudFormation custom resources to SDK-based module with `disabledRegions` and `overrideExisting` config options
 - feat(config): manage global tags for AWS Config rules
+- feat(config): add opt-in failOnConcurrentExecution guard that aborts a deployment when a newer pipeline execution supersedes the config table
 
 ### Fixed
 - fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { DescribeVpcEndpointsCommand, DescribeVpcsCommand, EC2Client } from '@aws-sdk/client-ec2';
 import { AssumeRoleCommand, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { mockClient } from 'aws-sdk-client-mock';
@@ -235,5 +235,47 @@ describe('test setAcceleratorStackProps', () => {
 
     expect(networkConfig.accountVpcIds).toEqual(undefined);
     expect(networkConfig.accountVpcEndpointIds).toEqual(undefined);
+  });
+
+  function lastLoadAccountIdsArgs(): unknown[] {
+    return (vi.mocked(AccountsConfig.prototype.loadAccountIds).mock.calls.at(-1) ?? []) as unknown[];
+  }
+
+  test('should pass failOnConcurrentExecution=false to loadAccountIds when acceleratorSettings is absent', async () => {
+    initializeMock();
+    const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
+
+    context.stage = AcceleratorStage.OPERATIONS;
+    await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, 'us-east-1');
+
+    expect(lastLoadAccountIdsArgs()[6]).toBe(false);
+  });
+
+  test('should pass failOnConcurrentExecution=true to loadAccountIds when enabled in raw global config', async () => {
+    initializeMock();
+    const { context, resourcePrefixes, acceleratorEnv } = testAppUtils();
+    const { setAcceleratorStackProps } = await import('../utils/app-utils');
+
+    // This file has no global mock reset, so the spy is restored explicitly below.
+    const actualRawGlobalConfig = GlobalConfig.loadRawGlobalConfig(context.configDirPath);
+    const rawGlobalConfigSpy = vi
+      .spyOn(GlobalConfig, 'loadRawGlobalConfig')
+      .mockReturnValue(
+        Object.assign(
+          Object.create(Object.getPrototypeOf(actualRawGlobalConfig)) as GlobalConfig,
+          actualRawGlobalConfig,
+          { acceleratorSettings: { failOnConcurrentExecution: true } },
+        ),
+      );
+
+    try {
+      context.stage = AcceleratorStage.OPERATIONS;
+      await setAcceleratorStackProps(context, acceleratorEnv, resourcePrefixes, 'us-east-1');
+
+      expect(lastLoadAccountIdsArgs()[6]).toBe(true);
+    } finally {
+      rawGlobalConfigSpy.mockRestore();
+    }
   });
 });

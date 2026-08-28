@@ -295,6 +295,11 @@ export abstract class ConfigLoader {
     // Load the base accounts configuration from the YAML file
     const accountsConfig = AccountsConfig.load(configDirPath);
 
+    // Read the concurrent execution guard flag from the raw global config, which is available
+    // before replacements are resolved
+    const failOnConcurrentExecution =
+      GlobalConfig.loadRawGlobalConfig(configDirPath).acceleratorSettings?.failOnConcurrentExecution ?? false;
+
     // Resolve account IDs through Organizations integration or static configuration
     await accountsConfig.loadAccountIds(
       partition,
@@ -303,6 +308,7 @@ export abstract class ConfigLoader {
       accountsConfig,
       managementAccountCredentials,
       loadOrganizationsFromDynamoDbTable,
+      failOnConcurrentExecution,
     );
 
     return accountsConfig;

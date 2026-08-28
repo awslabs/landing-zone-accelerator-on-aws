@@ -277,6 +277,39 @@ describe('Accelerator.run', () => {
     callHistory.forEach(h => expect(executeSpy).toHaveBeenCalledWith(h));
   });
 
+  const guardProps: AcceleratorProps = {
+    command: 'deploy',
+    configDirPath: '',
+    stage: 'network-prep',
+    region: 'eu-central-1',
+    partition: 'aws',
+    enableSingleAccountMode: false,
+  };
+
+  function lastLoadAccountIdsArgs(): unknown[] {
+    return (vi.mocked(AccountsConfig.prototype.loadAccountIds).mock.calls.at(-1) ?? []) as unknown[];
+  }
+
+  test('should pass failOnConcurrentExecution=false to loadAccountIds when acceleratorSettings is absent', async () => {
+    await Accelerator.run(guardProps);
+
+    expect(lastLoadAccountIdsArgs()[6]).toBe(false);
+  });
+
+  test('should pass failOnConcurrentExecution=true to loadAccountIds when enabled in raw global config', async () => {
+    // Build a copy so the shared fakeGlobalConfig is not mutated for other tests.
+    const enabledGlobalConfig = Object.assign(
+      Object.create(Object.getPrototypeOf(fakeGlobalConfig)) as GlobalConfig,
+      fakeGlobalConfig,
+      { acceleratorSettings: { failOnConcurrentExecution: true } },
+    );
+    vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue(enabledGlobalConfig);
+
+    await Accelerator.run(guardProps);
+
+    expect(lastLoadAccountIdsArgs()[6]).toBe(true);
+  });
+
   it.each(deployStageActions)('%s should only deploy into given region', async stage => {
     const region = 'eu-central-1';
 

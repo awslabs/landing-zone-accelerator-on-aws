@@ -4293,6 +4293,17 @@ export interface IAcceleratorSettingsConfig {
    * @default 100
    */
   readonly maxConcurrentStacks?: number;
+  /**
+   * **Fail On Concurrent Execution** *(Optional)*
+   *
+   * When enabled, a stage aborts early if a newer AWSAccelerator-Pipeline execution has superseded this one's
+   * config table snapshot. The accelerator compares the config table commit marker with the commit id this
+   * execution was started with; if they differ, the execution fails fast instead of resolving stale account data
+   * produced by the concurrent execution's Prepare stage.
+   *
+   * @default false
+   */
+  readonly failOnConcurrentExecution?: boolean;
 }
 
 /**

@@ -205,6 +205,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         mockCredentials,
         true, // loadOrganizationsFromDynamoDbTable
+        false, // failOnConcurrentExecution
       );
       expect(result).toBe(mockAccountsConfig);
     });
@@ -232,6 +233,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         undefined, // no credentials
         false, // loadOrganizationsFromDynamoDbTable
+        false, // failOnConcurrentExecution
       );
       expect(result).toBe(mockAccountsConfig);
     });
@@ -260,6 +262,70 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         mockCredentials,
         true, // loadOrganizationsFromDynamoDbTable
+        false, // failOnConcurrentExecution
+      );
+    });
+
+    it('should propagate failOnConcurrentExecution when enabled in global config', async () => {
+      // Setup
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(AccountsConfig.load).mockReturnValue(mockAccountsConfig as any);
+      vi.mocked(GlobalConfig.loadRawGlobalConfig).mockReturnValue({
+        homeRegion: 'us-east-1',
+        acceleratorSettings: { failOnConcurrentExecution: true },
+      } as any);
+
+      // Execute
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        mockConfigDirPath,
+        mockPartition,
+        true, // orgsEnabled
+        true, // loadOrganizationsFromDynamoDbTable
+        mockCredentials,
+      );
+
+      // Verify the guard flag reaches AccountsConfig on the module runner code path
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        mockPartition,
+        false, // enableSingleAccountMode
+        true, // orgsEnabled
+        mockAccountsConfig,
+        mockCredentials,
+        true, // loadOrganizationsFromDynamoDbTable
+        true, // failOnConcurrentExecution
+      );
+    });
+
+    it('should default failOnConcurrentExecution to false when acceleratorSettings is absent', async () => {
+      // Setup
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(AccountsConfig.load).mockReturnValue(mockAccountsConfig as any);
+      vi.mocked(GlobalConfig.loadRawGlobalConfig).mockReturnValue({
+        homeRegion: 'us-east-1',
+      } as any);
+
+      // Execute
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        mockConfigDirPath,
+        mockPartition,
+        true, // orgsEnabled
+        true, // loadOrganizationsFromDynamoDbTable
+        mockCredentials,
+      );
+
+      // Verify
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        mockPartition,
+        false, // enableSingleAccountMode
+        true, // orgsEnabled
+        mockAccountsConfig,
+        mockCredentials,
+        true, // loadOrganizationsFromDynamoDbTable
+        false, // failOnConcurrentExecution
       );
     });
   });
@@ -586,6 +652,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         mockCredentials,
         true, // loadOrganizationsFromDynamoDbTable
+        false, // failOnConcurrentExecution
       );
     });
 

@@ -109,7 +109,7 @@ vi.mock('@aws-accelerator/config', () => {
     setConfigValidationMode: vi.fn(),
     GlobalConfig: {
       load: vi.fn().mockImplementation(() => getMockGlobalConfig()),
-      loadRawGlobalConfig: vi.fn(),
+      loadRawGlobalConfig: vi.fn().mockReturnValue({}),
       loadLzaResources: vi.fn().mockReturnValue(undefined),
     },
     OrganizationConfig: {
@@ -212,6 +212,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         await MOCK_CONSTANTS.credentials(),
         true,
+        false,
       );
       expect(result).toBe(mockAccountsConfig);
       expect(await mockAccountsConfig.loadAccountIds()).toEqual({
@@ -243,6 +244,42 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
+        true,
+        false,
+      );
+    });
+
+    test('should propagate failOnConcurrentExecution when enabled in global config', async () => {
+      // Setup
+
+      const mockAccountsConfig = {
+        loadAccountIds: vi.fn().mockResolvedValue(undefined),
+      };
+
+      (AccountsConfig.load as any).mockReturnValue(mockAccountsConfig);
+      vi.mocked(GlobalConfig.loadRawGlobalConfig).mockReturnValueOnce({
+        acceleratorSettings: { failOnConcurrentExecution: true },
+      } as any);
+
+      // Execute
+
+      await ConfigLoader.getAccountsConfigWithAccountIds(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.orgEnabled,
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify the enabled arm reaches AccountsConfig rather than the default false.
+      // Without this case, dropping the property read on this path would still leave the suite green.
+
+      expect(mockAccountsConfig.loadAccountIds).toHaveBeenCalledWith(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.enableSingleAccountMode,
+        MOCK_CONSTANTS.orgEnabled,
+        mockAccountsConfig,
+        await MOCK_CONSTANTS.credentials(),
+        true,
         true,
       );
     });
@@ -278,6 +315,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         undefined,
         false,
+        false,
       );
     });
 
@@ -304,6 +342,7 @@ describe('ConfigLoader', () => {
         MOCK_CONSTANTS.orgEnabled,
         mockAccountsConfig,
         undefined,
+        false,
         false,
       );
     });
@@ -333,6 +372,7 @@ describe('ConfigLoader', () => {
         mockAccountsConfig,
         undefined,
         true,
+        false,
       );
     });
   });

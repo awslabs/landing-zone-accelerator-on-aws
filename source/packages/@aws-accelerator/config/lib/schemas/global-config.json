@@ -48,6 +48,11 @@
       "additionalProperties": false,
       "description": "## Accelerator Settings Configuration\n\nContains additional configuration settings for the Accelerator. Allows for the configuration of the maximum concurrent stacks that can be processed at a given time.\n\n### Example ```yaml acceleratorSettings:  maxConcurrentStacks: 100 ```",
       "properties": {
+        "failOnConcurrentExecution": {
+          "default": false,
+          "description": "**Fail On Concurrent Execution** *(Optional)*\n\nWhen enabled, a stage aborts early if a newer AWSAccelerator-Pipeline execution has superseded this one's config table snapshot. The accelerator compares the config table commit marker with the commit id this execution was started with; if they differ, the execution fails fast instead of resolving stale account data produced by the concurrent execution's Prepare stage.",
+          "type": "boolean"
+        },
         "maxConcurrentStacks": {
           "default": 100,
           "description": "**Max Concurrent Stacks** *(Optional)*\n\nSet the maximum number of concurrent stacks that can be processed at a time while transpiling the application.",
