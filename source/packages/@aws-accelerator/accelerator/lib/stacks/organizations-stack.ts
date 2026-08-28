@@ -911,24 +911,43 @@ export class OrganizationsStack extends AcceleratorStack {
       trailName: `${this.props.prefixes.accelerator}-Organizations-CloudTrail`,
     });
 
+    // Use Advanced Event Selectors to support excluding the central logs bucket
+    // from S3 data events, preventing a feedback loop where CloudTrail logs its own
+    // writes to the destination bucket.
+    const advancedSelectors: cdk_extensions.AdvancedEventSelector[] = [];
+
+    // Management events selector
+    if (managementEventType !== cdk.aws_cloudtrail.ReadWriteType.NONE) {
+      advancedSelectors.push({
+        name: 'Management events',
+        fieldSelectors: [{ field: 'eventCategory', equals: ['Management'] }],
+      });
+    }
+
     if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
-      organizationsTrail.addEventSelector(
-        cdk.aws_cloudtrail.DataResourceType.S3_OBJECT,
-        [`arn:${cdk.Stack.of(this).partition}:s3:::`],
-        {
-          includeManagementEvents: false,
-        },
-      );
+      const centralLogsBucketArn = `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/`;
+      advancedSelectors.push({
+        name: 'S3 data events excluding central logs bucket',
+        fieldSelectors: [
+          { field: 'eventCategory', equals: ['Data'] },
+          { field: 'resources.type', equals: ['AWS::S3::Object'] },
+          { field: 'resources.ARN', notStartsWith: [centralLogsBucketArn] },
+        ],
+      });
     }
 
     if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
-      organizationsTrail.addEventSelector(
-        cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION,
-        [`arn:${cdk.Stack.of(this).partition}:lambda`],
-        {
-          includeManagementEvents: false,
-        },
-      );
+      advancedSelectors.push({
+        name: 'Lambda data events',
+        fieldSelectors: [
+          { field: 'eventCategory', equals: ['Data'] },
+          { field: 'resources.type', equals: ['AWS::Lambda::Function'] },
+        ],
+      });
+    }
+
+    if (advancedSelectors.length > 0) {
+      organizationsTrail.setAdvancedEventSelectors(advancedSelectors);
     }
 
     organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
