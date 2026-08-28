@@ -532,11 +532,73 @@ export class AcceleratorToolkit {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      logger.error('Assembly builder error details:');
-      logger.error(err.stack || err.toString());
-      logger.error(`Options were: ${JSON.stringify(options)}`);
+      // Detail logging must never mask the real failure. If building or emitting
+      // the details throws (or JSON.stringify(options) throws on a circular value),
+      // fall back to the minimal previous behavior; the original error is always
+      // rethrown below regardless.
+      try {
+        logger.error('Assembly builder error details:');
+        for (const detail of AcceleratorToolkit.buildSynthErrorDetails(err)) {
+          logger.error(detail);
+        }
+        logger.error(`Options were: ${JSON.stringify(options)}`);
+      } catch {
+        logger.error(err?.stack || (err?.toString ? err.toString() : String(err)));
+      }
       throw err;
     }
+  }
+
+  /**
+   * Builds detailed, human-readable error lines from a CDK synth/assembly failure.
+   *
+   * `toolkit-lib` re-wraps any exception thrown by `app.synth()` that is not already
+   * a `ToolkitError` as a generic `AssemblyError: Assembly builder failed`, stashing
+   * the real error on `.cause` and any per-stack annotation errors on `.stacks`.
+   * Logging only the wrapper's `message`/`stack` (the previous behavior) hides the
+   * actual reason a stage such as `Network_VPCs` failed to synthesize, regardless of
+   * `LOG_LEVEL`. This surfaces the underlying cause and stack-level messages so the
+   * failure is debuggable. See issue #4882.
+   *
+   * @param err The error caught around the assembly-builder synth call
+   * @returns Ordered list of detail lines to log
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static buildSynthErrorDetails(err: any): string[] {
+    const details: string[] = [];
+    details.push(err?.stack || (err?.toString ? err.toString() : String(err)));
+
+    // The real failure reason lives on the wrapper's `.cause` property.
+    if (err?.cause) {
+      const cause = err.cause;
+      const message = cause instanceof Error ? cause.message : String(cause);
+      let causeLine = `Underlying cause: ${message}`;
+      // Append only the stack frames, not the redundant `ErrorName: message`
+      // header line (the message is already on the label line above).
+      if (cause instanceof Error && typeof cause.stack === 'string') {
+        const frames = cause.stack
+          .split('\n')
+          .filter(line => /^\s+at\s/.test(line))
+          .join('\n');
+        if (frames) {
+          causeLine += `\n${frames}`;
+        }
+      }
+      details.push(causeLine);
+    }
+
+    // `AssemblyError` carries per-stack annotation messages on `.stacks`.
+    if (Array.isArray(err?.stacks) && err.stacks.length > 0) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stackMessages = err.stacks.map((stack: any) => stack?.messages ?? stack);
+        details.push(`Stack errors: ${JSON.stringify(stackMessages)}`);
+      } catch {
+        details.push('Stack errors: <unserializable>');
+      }
+    }
+
+    return details;
   }
 
   private static async synthStacks(toolkit: Toolkit, options: AcceleratorToolkitProps) {

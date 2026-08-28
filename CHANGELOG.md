@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): manage global tags for AWS Config rules
 
 ### Fixed
+- fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
 - fix(config): preserve Config rule tag ownership and exclude ignored OU accounts from tag validation
 - fix(config): preserve commas in String remediation parameters

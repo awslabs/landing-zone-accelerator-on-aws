@@ -46,6 +46,25 @@ vi.mock('@aws-sdk/credential-providers', () => ({
   fromTemporaryCredentials: vi.fn().mockReturnValue('mock-temp-credentials'),
 }));
 
+// Capture the module-level logger so the failure-path logging in synthesizeCdkApp
+// can be asserted (the module `const logger = createLogger(['toolkit'])` is bound to
+// this mock at import time).
+const { mockLogger } = vi.hoisted(() => ({
+  mockLogger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+// Preserve every real @aws-accelerator/utils export (toolkit.ts imports many); only
+// replace createLogger so the module logger is our spyable mock.
+vi.mock('@aws-accelerator/utils', async importOriginal => {
+  const actual = await importOriginal<typeof import('@aws-accelerator/utils')>();
+  return { ...actual, createLogger: vi.fn(() => mockLogger) };
+});
+
 describe('AcceleratorToolkit', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockToolkit: any;
@@ -338,6 +357,160 @@ describe('AcceleratorToolkit', () => {
           stage: 'diagnostics-pack',
         }),
       ).toEqual('MyCustomRole');
+    });
+  });
+
+  describe('buildSynthErrorDetails', () => {
+    it('surfaces the underlying cause and stack errors that toolkit-lib hides', () => {
+      // Arrange: mirror how toolkit-lib wraps the real error as AssemblyError
+      const underlying = new Error('Network_VPCs synth failed: some real reason');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.cause = underlying;
+      wrapper.stacks = [{ messages: ['stack annotation error A'] }, { messages: ['stack annotation error B'] }];
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const details: string[] = (AcceleratorToolkit as any).buildSynthErrorDetails(wrapper);
+
+      // Assert
+      expect(details[0]).toBe(wrapper.stack);
+      const causeLine = details.find(d => d.startsWith('Underlying cause:'));
+      expect(causeLine).toBeDefined();
+      // Message on the label line, no redundant `Error:` class prefix
+      expect(causeLine).toContain('Network_VPCs synth failed: some real reason');
+      expect(causeLine!.startsWith('Underlying cause: Network_VPCs synth failed: some real reason')).toBe(true);
+      expect(causeLine).not.toContain('Underlying cause: Error:');
+      // Stack frames are appended on their own lines
+      expect(causeLine).toContain('\n    at ');
+      const stackLine = details.find(d => d.startsWith('Stack errors:'));
+      expect(stackLine).toBeDefined();
+      expect(stackLine).toContain('stack annotation error A');
+      expect(stackLine).toContain('stack annotation error B');
+    });
+
+    it('handles a non-Error cause without throwing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.cause = 'plain string cause';
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const details: string[] = (AcceleratorToolkit as any).buildSynthErrorDetails(wrapper);
+
+      expect(details.some(d => d === 'Underlying cause: plain string cause')).toBe(true);
+      expect(details.some(d => d.startsWith('Stack errors:'))).toBe(false);
+    });
+
+    it('returns only the base line when there is no cause or stacks', () => {
+      const err = new Error('plain error');
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const details: string[] = (AcceleratorToolkit as any).buildSynthErrorDetails(err);
+
+      expect(details).toHaveLength(1);
+      expect(details[0]).toBe(err.stack);
+    });
+
+    it('falls back to <unserializable> when stack messages cannot be JSON-serialized', () => {
+      // BigInt values throw a TypeError in JSON.stringify; the branch must not escape.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.stacks = [{ messages: [1n] }];
+
+      let details: string[] = [];
+      expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        details = (AcceleratorToolkit as any).buildSynthErrorDetails(wrapper);
+      }).not.toThrow();
+
+      expect(details.some(d => d === 'Stack errors: <unserializable>')).toBe(true);
+    });
+
+    it('falls back to <unserializable> on a circular stack payload', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const circular: any = { messages: [] };
+      circular.messages.push(circular);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.stacks = [circular];
+
+      let details: string[] = [];
+      expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        details = (AcceleratorToolkit as any).buildSynthErrorDetails(wrapper);
+      }).not.toThrow();
+
+      expect(details.some(d => d === 'Stack errors: <unserializable>')).toBe(true);
+    });
+  });
+
+  describe('synthesizeCdkApp', () => {
+    it('rethrows the original error when assembly building fails', async () => {
+      // Arrange
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.cause = new Error('the real reason');
+      mockToolkit.fromAssemblyBuilder = vi.fn().mockRejectedValue(wrapper);
+
+      const options = { command: 'deploy', accountId: '123456789012', region: 'us-east-1', stage: 'PREPARE' };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const app = { synth: vi.fn() } as any;
+
+      // Act + Assert: the caller must still receive the original error
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (AcceleratorToolkit as any).synthesizeCdkApp(mockToolkit, app, options),
+      ).rejects.toBe(wrapper);
+    });
+
+    it('still rethrows the original error when detail logging throws (circular options)', async () => {
+      // Arrange: synth fails, and the detail-logging block throws because
+      // JSON.stringify(options) hits a circular reference -> exercises the
+      // outer-catch fallback and its guaranteed rethrow.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.cause = new Error('the real reason');
+      mockToolkit.fromAssemblyBuilder = vi.fn().mockRejectedValue(wrapper);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const circularOptions: any = { command: 'deploy', region: 'us-east-1' };
+      circularOptions.self = circularOptions;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const app = { synth: vi.fn() } as any;
+
+      // Act + Assert: the fallback must not mask the original error
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (AcceleratorToolkit as any).synthesizeCdkApp(mockToolkit, app, circularOptions),
+      ).rejects.toBe(wrapper);
+    });
+
+    it('surfaces the underlying cause to the logger, not just rethrowing the wrapper', async () => {
+      // Arrange: synth fails with a toolkit-lib-style wrapper whose real reason
+      // lives on `.cause`.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wrapper: any = new Error('Assembly builder failed');
+      wrapper.cause = new Error('the real reason');
+      mockToolkit.fromAssemblyBuilder = vi.fn().mockRejectedValue(wrapper);
+
+      const options = { command: 'deploy', accountId: '123456789012', region: 'us-east-1', stage: 'PREPARE' };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const app = { synth: vi.fn() } as any;
+
+      // Act: swallow the expected rethrow so we can assert on the logging.
+      await expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (AcceleratorToolkit as any).synthesizeCdkApp(mockToolkit, app, options),
+      ).rejects.toBe(wrapper);
+
+      // Assert: the catch -> buildSynthErrorDetails wiring actually emitted the
+      // underlying cause. This guards against a refactor that reverts the catch to
+      // logging only the wrapper's message/stack while still rethrowing -- which the
+      // two rethrow-only tests above would not catch (see issue #4882).
+      const loggedCause = mockLogger.error.mock.calls
+        .map((call: unknown[]) => call[0])
+        .find((arg: unknown) => typeof arg === 'string' && arg.startsWith('Underlying cause: the real reason'));
+      expect(loggedCause).toBeDefined();
     });
   });
 });
