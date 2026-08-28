@@ -79,6 +79,15 @@ export class Trail extends cloudtrail.Trail {
     // Clear basic event selectors - they are mutually exclusive with advanced selectors
     this.cfnTrail.eventSelectors = undefined;
 
+    // The base cloudtrail.Trail construct registers a synth-time validation that requires
+    // at least one basic EventSelector whenever managementEvents is ReadWriteType.NONE. When
+    // advanced selectors are used, management events are expressed via an 'eventCategory'
+    // field selector instead of a basic EventSelector, so that validation no longer applies.
+    // Reset the base construct's (private) managementEvents field so the validation - which
+    // only fires while managementEvents === NONE - is not triggered by our advanced selectors.
+    // managementEvents is a private field on the base class with no public setter, hence the cast.
+    (this as unknown as { managementEvents?: cloudtrail.ReadWriteType }).managementEvents = undefined;
+
     // Map to CfnTrail.AdvancedFieldSelectorProperty format
     this.cfnTrail.advancedEventSelectors = selectors.map(selector => ({
       name: selector.name,

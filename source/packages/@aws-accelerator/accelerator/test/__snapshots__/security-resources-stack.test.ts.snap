@@ -412,6 +412,70 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
         "AcceleratorCloudTrailAWSAcceleratorAccountCloudTrailLogsRoleD0DD6F18",
       ],
       "Properties": {
+        "AdvancedEventSelectors": [
+          {
+            "FieldSelectors": [
+              {
+                "Equals": [
+                  "Management",
+                ],
+                "Field": "eventCategory",
+              },
+            ],
+            "Name": "Management events",
+          },
+          {
+            "FieldSelectors": [
+              {
+                "Equals": [
+                  "Data",
+                ],
+                "Field": "eventCategory",
+              },
+              {
+                "Equals": [
+                  "AWS::S3::Object",
+                ],
+                "Field": "resources.type",
+              },
+              {
+                "Field": "resources.ARN",
+                "NotStartsWith": [
+                  {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":s3:::existing-central-log-bucket/",
+                      ],
+                    ],
+                  },
+                ],
+              },
+            ],
+            "Name": "S3 data events excluding central logs bucket",
+          },
+          {
+            "FieldSelectors": [
+              {
+                "Equals": [
+                  "Data",
+                ],
+                "Field": "eventCategory",
+              },
+              {
+                "Equals": [
+                  "AWS::Lambda::Function",
+                ],
+                "Field": "resources.type",
+              },
+            ],
+            "Name": "Lambda data events",
+          },
+        ],
         "CloudWatchLogsLogGroupArn": {
           "Fn::GetAtt": [
             "CloudTrailLogGroupAWSAcceleratorAccountCloudTrail9F5C56EA",
@@ -425,54 +489,6 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
           ],
         },
         "EnableLogFileValidation": true,
-        "EventSelectors": [
-          {
-            "IncludeManagementEvents": true,
-            "ReadWriteType": "All",
-          },
-          {
-            "DataResources": [
-              {
-                "Type": "AWS::S3::Object",
-                "Values": [
-                  {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":s3:::",
-                      ],
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            "DataResources": [
-              {
-                "Type": "AWS::Lambda::Function",
-                "Values": [
-                  {
-                    "Fn::Join": [
-                      "",
-                      [
-                        "arn:",
-                        {
-                          "Ref": "AWS::Partition",
-                        },
-                        ":lambda",
-                      ],
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
         "IncludeGlobalServiceEvents": true,
         "InsightSelectors": [],
         "IsLogging": true,
