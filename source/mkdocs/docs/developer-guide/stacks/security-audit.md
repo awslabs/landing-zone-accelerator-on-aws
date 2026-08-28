@@ -35,6 +35,7 @@ The Security Audit stack runs in the audit (delegated admin) account and configu
 
 ### IAM Access Analyzer
 - Creates organization-level IAM Access Analyzer
+- The organization-level analyzer uses the organization as its zone of trust, so it does not satisfy per-account controls such as AWS Security Hub control IAM.28. Set `accessAnalyzer.accountAnalyzer.enable` to also create an account-level analyzer in every account via the [Security Resources stack](./security-resources.md)
 
 ### SNS Notifications
 - Configures SNS notification channels for security findings

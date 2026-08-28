@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(guardduty): migrate GuardDuty from CloudFormation custom resources to SDK-based module with `disabledRegions` and `overrideExisting` config options
 - feat(config): manage global tags for AWS Config rules
 - feat(config): add opt-in failOnConcurrentExecution guard that aborts a deployment when a newer pipeline execution supersedes the config table
+- feat(iam): add `accessAnalyzer.accountAnalyzer` to create an account level IAM Access Analyzer external access analyzer in every account and enabled region. Optional `accountAnalyzer.deploymentTargets` scopes which accounts and regions receive the analyzer
 
 ### Fixed
 - fix(asea): import ASEA-created Customer Gateways and Site-to-Site VPN connections so their Transit Gateway VPN attachments can be referenced for route table association and propagation in network-config

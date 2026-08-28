@@ -6,6 +6,10 @@
       "additionalProperties": false,
       "description": "Configuration for AWS Identity and Access Management (IAM) Access Analyzer that identifies resources with external access\nand helps implement least privilege by analyzing resource policies for security risks.",
       "properties": {
+        "accountAnalyzer": {
+          "$ref": "#/definitions/IAccountAnalyzerConfig",
+          "description": "(OPTIONAL) Configuration for an account level IAM Access Analyzer created in every account."
+        },
         "enable": {
           "description": "Controls whether AWS IAM Access Analyzer is enabled across your organization.",
           "type": "boolean"
@@ -14,6 +18,22 @@
       "required": [
         "enable"
       ],
+      "type": "object"
+    },
+    "IAccountAnalyzerConfig": {
+      "additionalProperties": false,
+      "description": "Configuration for an account level IAM Access Analyzer external access analyzer, created in every account and every\nenabled region.",
+      "properties": {
+        "deploymentTargets": {
+          "$ref": "#/definitions/IDeploymentTargets",
+          "description": "(OPTIONAL) Specifies which organizational units and accounts should have an account level analyzer created."
+        },
+        "enable": {
+          "default": false,
+          "description": "(OPTIONAL) Controls whether an account level external access analyzer is created in every account and enabled region.",
+          "type": "boolean"
+        }
+      },
       "type": "object"
     },
     "IAlarmConfig": {

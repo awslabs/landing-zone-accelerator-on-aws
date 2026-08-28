@@ -215,6 +215,8 @@ centralSecurityServices:
 
 accessAnalyzer:
   enable: true
+  accountAnalyzer:
+    enable: true
 iamPasswordPolicy:
   allowUsersToChangePassword: true
   hardExpiry: false

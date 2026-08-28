@@ -2777,6 +2777,12 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
       },
       "Type": "AWS::IAM::Policy",
     },
+    "AccountAccessAnalyzer": {
+      "Properties": {
+        "Type": "ACCOUNT",
+      },
+      "Type": "AWS::AccessAnalyzer::Analyzer",
+    },
     "AppTest2CustomCreateLogGroupCustomResourceProviderHandler03798759": {
       "DependsOn": [
         "AppTest2CustomCreateLogGroupCustomResourceProviderRole24FD6060",

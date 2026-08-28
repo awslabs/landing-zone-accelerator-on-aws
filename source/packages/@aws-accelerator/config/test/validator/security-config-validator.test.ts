@@ -676,6 +676,148 @@ describe('SecurityConfigValidator', () => {
     });
   });
 
+  describe('validateAccessAnalyzerConfig', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validateAccessAnalyzerConfig = (SecurityConfigValidator.prototype as any)[
+      'validateAccessAnalyzerConfig'
+    ].bind({});
+
+    it('should emit an error when the account analyzer is enabled but accessAnalyzer is disabled', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig({ enable: false, accountAnalyzer: { enable: true } }, errors);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('accountAnalyzer.enable');
+    });
+
+    it('should not emit errors when both are enabled', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig({ enable: true, accountAnalyzer: { enable: true } }, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit errors when the account analyzer is omitted', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig({ enable: false }, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit errors when the account analyzer is explicitly disabled', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig({ enable: false, accountAnalyzer: { enable: false } }, errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should emit an error when deploymentTargets only excludes and would match nothing', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig(
+        { enable: true, accountAnalyzer: { enable: true, deploymentTargets: { excludedRegions: ['cn-north-1'] } } },
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('no account or organizational unit was specified');
+    });
+
+    it('should emit an error when deploymentTargets has empty account and organizational unit lists', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig(
+        {
+          enable: true,
+          accountAnalyzer: { enable: true, deploymentTargets: { accounts: [], organizationalUnits: [] } },
+        },
+        errors,
+      );
+      expect(errors).toHaveLength(1);
+    });
+
+    it('should not emit errors when deploymentTargets names an organizational unit alongside exclusions', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig(
+        {
+          enable: true,
+          accountAnalyzer: {
+            enable: true,
+            deploymentTargets: { organizationalUnits: ['Root'], excludedRegions: ['cn-north-1'] },
+          },
+        },
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit errors when deploymentTargets names an account', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig(
+        { enable: true, accountAnalyzer: { enable: true, deploymentTargets: { accounts: ['Audit'] } } },
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit deploymentTargets errors when the account analyzer is disabled', () => {
+      const errors: string[] = [];
+      validateAccessAnalyzerConfig(
+        { enable: true, accountAnalyzer: { enable: false, deploymentTargets: { excludedRegions: ['cn-north-1'] } } },
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('validateAccountAnalyzerDeploymentTargets', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validateAccounts = (SecurityConfigValidator.prototype as any)[
+      'validateAccountAnalyzerDeploymentTargetAccounts'
+    ].bind({});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validateOus = (SecurityConfigValidator.prototype as any)['validateAccountAnalyzerDeploymentTargetOUs'].bind(
+      {},
+    );
+
+    const buildValues = (deploymentTargets: unknown) => ({
+      accessAnalyzer: { enable: true, accountAnalyzer: { enable: true, deploymentTargets } },
+    });
+
+    it('should emit an error when a deployment target account does not exist', () => {
+      const errors: string[] = [];
+      validateAccounts(buildValues({ accounts: ['DoesNotExist'] }), ['Management', 'Audit'], errors);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('DoesNotExist');
+    });
+
+    it('should not emit errors when deployment target accounts exist', () => {
+      const errors: string[] = [];
+      validateAccounts(buildValues({ accounts: ['Audit'] }), ['Management', 'Audit'], errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should emit an error when a deployment target OU does not exist', () => {
+      const errors: string[] = [];
+      validateOus(buildValues({ organizationalUnits: ['DoesNotExist'] }), ['Root', 'Infrastructure'], errors);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain('DoesNotExist');
+    });
+
+    it('should not emit errors when deployment target OUs exist', () => {
+      const errors: string[] = [];
+      validateOus(buildValues({ organizationalUnits: ['Infrastructure'] }), ['Root', 'Infrastructure'], errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit errors when deploymentTargets is not defined', () => {
+      const errors: string[] = [];
+      validateAccounts({ accessAnalyzer: { enable: true, accountAnalyzer: { enable: true } } }, ['Audit'], errors);
+      validateOus({ accessAnalyzer: { enable: true, accountAnalyzer: { enable: true } } }, ['Root'], errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('should not emit errors when accountAnalyzer is not defined', () => {
+      const errors: string[] = [];
+      validateAccounts({ accessAnalyzer: { enable: true } }, ['Audit'], errors);
+      validateOus({ accessAnalyzer: { enable: true } }, ['Root'], errors);
+      expect(errors).toHaveLength(0);
+    });
+  });
+
   describe('validateSecurityHubStandardDeploymentTargets', () => {
     it('should return early when securityHub deploymentTargets is not defined', () => {
       const errors: string[] = [];

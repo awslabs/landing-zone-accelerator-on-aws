@@ -312,6 +312,111 @@ describe('SecurityResourcesStack - SecurityHub Events', () => {
   });
 });
 
+describe('SecurityResourcesStack - Account level IAM Access Analyzer', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it('should create exactly 1 ACCOUNT analyzer when accessAnalyzer and accountAnalyzer are enabled', () => {
+    const props = createAccessAnalyzerProps({ enable: true, accountAnalyzer: { enable: true } });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-1', props);
+    const analyzers = template.findResources('AWS::AccessAnalyzer::Analyzer');
+
+    expect(Object.keys(analyzers).length).toBe(1);
+    expect(Object.values(analyzers)[0].Properties.Type).toBe('ACCOUNT');
+  });
+
+  it('should create exactly 0 analyzers when accountAnalyzer is not enabled', () => {
+    const props = createAccessAnalyzerProps({ enable: true, accountAnalyzer: { enable: false } });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-2', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when accountAnalyzer is omitted', () => {
+    const props = createAccessAnalyzerProps({ enable: true });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-3', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when accessAnalyzer is disabled', () => {
+    const props = createAccessAnalyzerProps({ enable: false, accountAnalyzer: { enable: true } });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-4', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when accountAnalyzer is present but empty', () => {
+    const props = createAccessAnalyzerProps({ enable: true, accountAnalyzer: {} });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-5', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create an analyzer when deploymentTargets includes the account', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: { enable: true, deploymentTargets: { accounts: ['TestAccount'], organizationalUnits: [] } },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-6', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(1);
+  });
+
+  it('should create an analyzer when deploymentTargets includes the organizational unit', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: { enable: true, deploymentTargets: { accounts: [], organizationalUnits: ['Root'] } },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-7', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(1);
+  });
+
+  it('should create exactly 0 analyzers when deploymentTargets does not include the account', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: { enable: true, deploymentTargets: { accounts: ['OtherAccount'], organizationalUnits: [] } },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-8', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when deploymentTargets excludes the account', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: {
+        enable: true,
+        deploymentTargets: {
+          accounts: [],
+          organizationalUnits: ['Root'],
+          excludedAccounts: ['TestAccount'],
+        },
+      },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-9', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when deploymentTargets excludes the region', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: {
+        enable: true,
+        deploymentTargets: {
+          accounts: ['TestAccount'],
+          organizationalUnits: [],
+          excludedRegions: ['us-east-1'],
+        },
+      },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-10', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+
+  it('should create exactly 0 analyzers when deploymentTargets is empty', () => {
+    const props = createAccessAnalyzerProps({
+      enable: true,
+      accountAnalyzer: { enable: true, deploymentTargets: { accounts: [], organizationalUnits: [] } },
+    });
+    const { template } = createSecurityResourcesStackWithTemplate('test-analyzer-11', props);
+    expect(Object.keys(template.findResources('AWS::AccessAnalyzer::Analyzer')).length).toBe(0);
+  });
+});
+
 describe('SecurityResourcesStack - Resource Count Validation', () => {
   afterEach(() => vi.clearAllMocks());
 
@@ -617,6 +722,44 @@ function createConfigRecorderProps(options: { controlTowerEnabled?: boolean; isM
         enableConfigurationRecorder: true,
         ruleSets: [],
       },
+      cloudWatch: { metricSets: [], alarmSets: [], logGroups: [] },
+    },
+    env: { region: 'us-east-1', account: accountId },
+  });
+}
+
+function createAccessAnalyzerProps(accessAnalyzer: {
+  enable: boolean;
+  accountAnalyzer?: {
+    enable?: boolean;
+    deploymentTargets?: {
+      accounts?: string[];
+      organizationalUnits?: string[];
+      excludedAccounts?: string[];
+      excludedRegions?: string[];
+    };
+  };
+}) {
+  const accountName = 'TestAccount';
+  const accountId = '00000001';
+  const baseProps = createAcceleratorStackProps();
+  return createSecurityStackProps({
+    accountsConfig: {
+      ...baseProps.accountsConfig,
+      getAccountId: vi.fn((name: string) => (name === accountName ? accountId : '123456789' + name)),
+      getAccount: vi.fn(() => ({ name: accountName, organizationalUnit: 'Root' })),
+      getAccountNameById: vi.fn(() => accountName),
+      mandatoryAccounts: [{ name: accountName, organizationalUnit: 'Root' }],
+      workloadAccounts: [],
+    } as any,
+    organizationConfig: {
+      ...baseProps.organizationConfig,
+      isIgnored: vi.fn(() => false),
+    } as any,
+    securityConfig: {
+      ...baseProps.securityConfig,
+      accessAnalyzer: accessAnalyzer as any,
+      awsConfig: { ...baseProps.securityConfig.awsConfig, ruleSets: [] },
       cloudWatch: { metricSets: [], alarmSets: [], logGroups: [] },
     },
     env: { region: 'us-east-1', account: accountId },

@@ -43,6 +43,8 @@ import * as t from '../common/types';
  *     documentSets: []
  * accessAnalyzer:
  *   enable: true
+ *   accountAnalyzer:
+ *     enable: true
  * iamPasswordPolicy:
  *   allowUsersToChangePassword: true
  *   requireUppercaseCharacters: true
@@ -2504,6 +2506,8 @@ export interface IResourcePolicyEnforcementConfig {
  * ```
  * accessAnalyzer:
  *   enable: true
+ *   accountAnalyzer:
+ *     enable: true
  * ```
  */
 export interface IAccessAnalyzerConfig {
@@ -2514,6 +2518,103 @@ export interface IAccessAnalyzerConfig {
    * Once enabled, IAM Access Analyzer examines policies and reports a list of findings for resources that grant public or cross-account access from outside your AWS Organizations in the IAM console and through APIs.
    */
   readonly enable: boolean;
+  /**
+   * (OPTIONAL) Configuration for an account level IAM Access Analyzer created in every account.
+   *
+   * @remarks
+   * If not specified, no account level analyzer is created and only the organization level analyzer in the delegated
+   * administrator (Audit) account is managed by the accelerator. This property has no effect unless `enable` is also
+   * set to true.
+   */
+  readonly accountAnalyzer?: IAccountAnalyzerConfig;
+}
+
+/**
+ * *{@link SecurityConfig} / {@link AccessAnalyzerConfig} / {@link AccountAnalyzerConfig}*
+ *
+ * @description
+ * Configuration for an account level IAM Access Analyzer external access analyzer, created in every account and every
+ * enabled region.
+ *
+ * @remarks
+ * The organization level analyzer created by the accelerator only exists in the delegated administrator (Audit)
+ * account and uses the organization as its zone of trust, so per account controls, such as AWS Security Hub control
+ * IAM.28 (`IAM Access Analyzer external access analyzer should be enabled`), fail in every account. An account level
+ * analyzer allows those controls to pass.
+ *
+ * @see https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-getting-started.html
+ *
+ * @example
+ * ```
+ * accessAnalyzer:
+ *   enable: true
+ *   accountAnalyzer:
+ *     enable: true
+ * ```
+ *
+ * Scoped to specific organizational units and accounts:
+ * ```
+ * accessAnalyzer:
+ *   enable: true
+ *   accountAnalyzer:
+ *     enable: true
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
+ *       excludedAccounts:
+ *         - SharedServices
+ * ```
+ */
+export interface IAccountAnalyzerConfig {
+  /**
+   * (OPTIONAL) Controls whether an account level external access analyzer is created in every account and enabled
+   * region.
+   *
+   * @remarks
+   * Default value is false, so omitting this property, or omitting `accountAnalyzer` entirely, leaves the account
+   * level analyzer disabled.
+   *
+   * An account level analyzer uses the local account as its zone of trust, so access granted to any principal outside
+   * that account is reported as external access. This includes access granted to other accounts in the same
+   * organization, which the accelerator itself configures for resources such as the central logs bucket and the
+   * accelerator managed KMS keys. Expect a corresponding increase in IAM Access Analyzer findings in every account.
+   *
+   * IAM Access Analyzer allows only one account level external access analyzer per account per region and the quota is
+   * not adjustable. If an account already has an external access analyzer that was not created by the accelerator, the
+   * analyzer fails to create and the stack deployment for that account and region rolls back. Remove the pre-existing
+   * analyzer before enabling this property.
+   *
+   * Creating the analyzer also provisions the `AWSServiceRoleForAccessAnalyzer` service-linked role in each account.
+   * The service-linked role is not removed when this property is disabled again.
+   *
+   * @default false
+   */
+  readonly enable?: boolean;
+  /**
+   * (OPTIONAL) Specifies which organizational units and accounts should have an account level analyzer created.
+   *
+   * @remarks
+   * When this property is not defined, an account level analyzer is created in every account and enabled region, which
+   * is the recommended configuration because AWS Security Hub control IAM.28 is evaluated in every account.
+   * `deploymentTargets` should only be used when more granular control is required, not as a default configuration.
+   *
+   * Use this property to phase a rollout, or to exclude accounts and regions where an account level analyzer cannot be
+   * created. Two cases to be aware of:
+   *
+   * - An account that already has an external access analyzer the accelerator did not create. Only one account level
+   * analyzer per type is allowed per account per region, so the analyzer fails to create and the stack deployment for
+   * that account and region rolls back.
+   * - A region in a partition where IAM Access Analyzer is unavailable, such as the `aws-iso` and `aws-iso-b`
+   * partitions.
+   *
+   * `deploymentTargets` is an allow list, so it must name at least one account or organizational unit. To keep the
+   * every-account behaviour while excluding a few accounts or regions, set `organizationalUnits: [Root]` alongside
+   * `excludedAccounts` or `excludedRegions`. Config validation rejects a `deploymentTargets` that names neither an
+   * account nor an organizational unit, because that would silently create no analyzer anywhere.
+   *
+   * @see {@link DeploymentTargets}
+   */
+  readonly deploymentTargets?: t.IDeploymentTargets;
 }
 
 /**

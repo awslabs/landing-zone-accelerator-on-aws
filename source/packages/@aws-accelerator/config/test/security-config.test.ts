@@ -19,6 +19,8 @@ import { AccountsConfig } from '../lib/accounts-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
 import { parseSecurityConfig } from '../lib/common/parse';
 import {
+  AccessAnalyzerConfig,
+  AccountAnalyzerConfig,
   AlarmConfig,
   AlarmSetConfig,
   AuditManagerConfig,
@@ -967,5 +969,114 @@ describe('custom Config rule evaluation modes', () => {
     });
 
     expect(() => parseSecurityConfig(config)).not.toThrow();
+  });
+});
+
+describe('accessAnalyzer account level analyzer', () => {
+  function createSecurityConfig(accessAnalyzer: Record<string, unknown>) {
+    return {
+      centralSecurityServices: {
+        delegatedAdminAccount: 'Audit',
+        ebsDefaultVolumeEncryption: { enable: false },
+        s3PublicAccessBlock: { enable: false },
+        macie: { enable: false, publishSensitiveDataFindings: false },
+        guardduty: {
+          enable: false,
+          s3Protection: { enable: false },
+          exportConfiguration: {
+            enable: false,
+            destinationType: 'S3',
+            exportFrequency: 'FIFTEEN_MINUTES',
+          },
+        },
+        securityHub: { enable: false, standards: [] },
+        ssmAutomation: { documentSets: [] },
+      },
+      accessAnalyzer,
+      iamPasswordPolicy: {
+        allowUsersToChangePassword: true,
+        hardExpiry: false,
+        requireUppercaseCharacters: true,
+        requireLowercaseCharacters: true,
+        requireSymbols: true,
+        requireNumbers: true,
+        minimumPasswordLength: 14,
+        passwordReusePrevention: 24,
+        maxPasswordAge: 90,
+      },
+      awsConfig: { enableConfigurationRecorder: false, ruleSets: [] },
+      cloudWatch: { metricSets: [], alarmSets: [] },
+      keyManagementService: { keySets: [] },
+    };
+  }
+
+  it('should default accountAnalyzer to undefined', () => {
+    expect(new AccessAnalyzerConfig().accountAnalyzer).toBeUndefined();
+  });
+
+  it('should default accountAnalyzer enable to false', () => {
+    expect(new AccountAnalyzerConfig().enable).toBe(false);
+  });
+
+  it('should parse accountAnalyzer when provided', () => {
+    const config = parseSecurityConfig(createSecurityConfig({ enable: true, accountAnalyzer: { enable: true } }));
+
+    expect(config.accessAnalyzer.accountAnalyzer?.enable).toBe(true);
+  });
+
+  it('should parse without accountAnalyzer for backward compatibility', () => {
+    const config = parseSecurityConfig(createSecurityConfig({ enable: true }));
+
+    expect(config.accessAnalyzer.accountAnalyzer).toBeUndefined();
+  });
+
+  it('should throw when accountAnalyzer enable is not a boolean', () => {
+    expect(() =>
+      parseSecurityConfig(createSecurityConfig({ enable: true, accountAnalyzer: { enable: 'true' } })),
+    ).toThrow();
+  });
+
+  it('should treat an empty accountAnalyzer as disabled', () => {
+    const config = parseSecurityConfig(createSecurityConfig({ enable: true, accountAnalyzer: {} }));
+
+    expect(config.accessAnalyzer.accountAnalyzer?.enable).toBeUndefined();
+  });
+
+  it('should default accountAnalyzer deploymentTargets to undefined', () => {
+    expect(new AccountAnalyzerConfig().deploymentTargets).toBeUndefined();
+  });
+
+  it('should parse accountAnalyzer deploymentTargets when provided', () => {
+    const config = parseSecurityConfig(
+      createSecurityConfig({
+        enable: true,
+        accountAnalyzer: {
+          enable: true,
+          deploymentTargets: {
+            organizationalUnits: ['Infrastructure'],
+            excludedAccounts: ['SharedServices'],
+            excludedRegions: ['cn-north-1'],
+          },
+        },
+      }),
+    );
+
+    expect(config.accessAnalyzer.accountAnalyzer?.deploymentTargets?.organizationalUnits).toEqual(['Infrastructure']);
+    expect(config.accessAnalyzer.accountAnalyzer?.deploymentTargets?.excludedAccounts).toEqual(['SharedServices']);
+    expect(config.accessAnalyzer.accountAnalyzer?.deploymentTargets?.excludedRegions).toEqual(['cn-north-1']);
+  });
+
+  it('should leave accountAnalyzer deploymentTargets undefined when omitted', () => {
+    const config = parseSecurityConfig(createSecurityConfig({ enable: true, accountAnalyzer: { enable: true } }));
+
+    expect(config.accessAnalyzer.accountAnalyzer?.deploymentTargets).toBeUndefined();
+  });
+
+  it('should throw when accountAnalyzer deploymentTargets is not an object', () => {
+    expect(() =>
+      parseSecurityConfig(
+        createSecurityConfig({ enable: true, accountAnalyzer: { enable: true, deploymentTargets: 'Root' } }),
+      ),
+    ).toThrow();
   });
 });

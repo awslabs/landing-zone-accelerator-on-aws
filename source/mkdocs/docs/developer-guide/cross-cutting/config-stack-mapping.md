@@ -68,7 +68,7 @@ This page provides a quick reference for which configuration file properties are
 | `centralSecurityServices.ebsDefaultVolumeEncryption` | Security |
 | `centralSecurityServices.sessionManager` | Security Resources |
 | `iamPasswordPolicy` | Security |
-| `accessAnalyzer` | Accounts (SLR), Security Audit |
+| `accessAnalyzer` | Accounts (SLR), Security Audit, Security Resources |
 | `awsConfig.ruleSets` | Security Resources |
 | `awsConfig.aggregation` | Security, Organizations |
 | `cloudWatch.alarmSets` | Security Resources |

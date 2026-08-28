@@ -29,6 +29,7 @@ import {
 import { OrganizationConfig } from '../lib/organization-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
 import {
+  AccessAnalyzerConfig,
   AwsConfigRuleSet,
   BlockPublicAmiConfig,
   BlockPublicDocumentSharingConfig,
@@ -191,6 +192,9 @@ export class SecurityConfigValidator {
 
     // Validate Macie Configuation
     this.validateMacieConfig(securityConfig, globalConfig, errors);
+
+    // Validate IAM Access Analyzer configuration
+    this.validateAccessAnalyzerConfig(securityConfig.accessAnalyzer, errors);
 
     if (errors.length) {
       throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -446,6 +450,41 @@ export class SecurityConfigValidator {
             );
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Validate IAM Access Analyzer configuration
+   *
+   * @remarks
+   * The account level analyzer is only created when `accessAnalyzer.enable` is also true, so enabling the account
+   * level analyzer on its own would create nothing. That combination is rejected rather than silently ignored.
+   *
+   * `deploymentTargets` is an allow list, so a `deploymentTargets` that names no account and no organizational unit
+   * creates no analyzer at all. Specifying only `excludedAccounts` or `excludedRegions` is the most likely way to hit
+   * that, and the outcome is the opposite of what the exclusion intends, so it is rejected rather than silently
+   * disabling the feature everywhere.
+   */
+  private validateAccessAnalyzerConfig(accessAnalyzerConfig: AccessAnalyzerConfig, errors: string[]) {
+    if (!accessAnalyzerConfig.accountAnalyzer?.enable) {
+      return;
+    }
+
+    if (!accessAnalyzerConfig.enable) {
+      errors.push(
+        `IAM Access Analyzer "accountAnalyzer.enable" is set to true while "accessAnalyzer.enable" is false. Set "accessAnalyzer.enable" to true to create account level analyzers.`,
+      );
+    }
+
+    const deploymentTargets = accessAnalyzerConfig.accountAnalyzer.deploymentTargets;
+    if (deploymentTargets) {
+      const organizationalUnitCount = deploymentTargets.organizationalUnits?.length ?? 0;
+      const accountCount = deploymentTargets.accounts?.length ?? 0;
+      if (organizationalUnitCount === 0 && accountCount === 0) {
+        errors.push(
+          `IAM Access Analyzer "accountAnalyzer.deploymentTargets" was specified but no account or organizational unit was specified, so no account level analyzer would be created anywhere. Remove "deploymentTargets" to create an analyzer in every account, or set "organizationalUnits: [Root]" alongside the accounts and regions to exclude.`,
+        );
       }
     }
   }
@@ -987,6 +1026,26 @@ export class SecurityConfigValidator {
     this.validateSsmBlockPublicDocumentSharingDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGuardDutyDeploymentTargetAccounts(values, accountNames, errors);
     this.validateSecurityHubDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateAccountAnalyzerDeploymentTargetAccounts(values, accountNames, errors);
+  }
+
+  /**
+   * Function to validate existence of account level IAM Access Analyzer deployment target accounts
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateAccountAnalyzerDeploymentTargetAccounts(
+    values: ISecurityConfig,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const account of values.accessAnalyzer.accountAnalyzer?.deploymentTargets?.accounts ?? []) {
+      if (accountNames.indexOf(account) === -1) {
+        errors.push(
+          `Deployment target account ${account} for accessAnalyzer accountAnalyzer does not exist in accounts-config.yaml file.`,
+        );
+      }
+    }
   }
 
   /**
@@ -1152,6 +1211,22 @@ export class SecurityConfigValidator {
     this.validateEbsEncryptionDeploymentTargetOUs(securityConfig, ouIdNames, errors);
     this.validateGuardDutyDeploymentTargetOUs(securityConfig, ouIdNames, errors);
     this.validateSecurityHubDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+    this.validateAccountAnalyzerDeploymentTargetOUs(securityConfig, ouIdNames, errors);
+  }
+
+  /**
+   * Function to validate existence of account level IAM Access Analyzer deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateAccountAnalyzerDeploymentTargetOUs(values: SecurityConfig, ouIdNames: string[], errors: string[]) {
+    for (const ou of values.accessAnalyzer.accountAnalyzer?.deploymentTargets?.organizationalUnits ?? []) {
+      if (ouIdNames.indexOf(ou) === -1) {
+        errors.push(
+          `Deployment target OU ${ou} for accessAnalyzer accountAnalyzer does not exist in organization-config.yaml file.`,
+        );
+      }
+    }
   }
 
   /**

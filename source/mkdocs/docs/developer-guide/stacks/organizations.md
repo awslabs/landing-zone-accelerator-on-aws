@@ -45,7 +45,7 @@ The Organizations stack creates Tag Policies and Backup Policies and manages the
 
 ### Other Services
 - **RAM organization sharing** — Enables resource sharing across the organization
-- **IAM Access Analyzer** — Enables organization-level analyzer
+- **IAM Access Analyzer** — Enables organization-level analyzer. Account-level analyzers are created separately by the Security Resources stack when `accessAnalyzer.accountAnalyzer.enable` is set
 - **Cost and Usage Report** — Creates CUR if configured
 
 ## Key Code Paths

@@ -444,8 +444,14 @@ export class CentralSecurityServicesConfig implements i.ICentralSecurityServices
   readonly ssmAutomation: SsmAutomationConfig = new SsmAutomationConfig();
 }
 
+export class AccountAnalyzerConfig implements i.IAccountAnalyzerConfig {
+  readonly enable = false;
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
+}
+
 export class AccessAnalyzerConfig implements i.IAccessAnalyzerConfig {
   readonly enable = false;
+  readonly accountAnalyzer: AccountAnalyzerConfig | undefined = undefined;
 }
 
 export class IamPasswordPolicyConfig implements i.IIamPasswordPolicyConfig {

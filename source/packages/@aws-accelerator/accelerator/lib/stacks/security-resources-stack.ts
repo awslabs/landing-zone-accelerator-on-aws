@@ -149,6 +149,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
     //
     this.setupSessionManager();
 
+    //
+    // Account level IAM Access Analyzer
+    //
+    this.configureAccountAccessAnalyzer();
+
     // SecurityHub Log event to CloudWatch
     this.securityHubEventForwardToLogs();
 
@@ -1542,6 +1547,31 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
       }
     }
+  }
+
+  /**
+   * Function to configure account level IAM Access Analyzer
+   *
+   * @remarks
+   * The organization level analyzer created by the security audit stack only exists in the audit account and is not
+   * considered by per account controls, such as AWS Security Hub control IAM.28. This creates an external access
+   * analyzer with the local account as the zone of trust, in every account and enabled region, or in the accounts and
+   * regions given by `deploymentTargets` when that property is defined.
+   */
+  private configureAccountAccessAnalyzer() {
+    const accountAnalyzerConfig = this.props.securityConfig.accessAnalyzer.accountAnalyzer;
+    if (!this.props.securityConfig.accessAnalyzer.enable || !accountAnalyzerConfig?.enable) {
+      return;
+    }
+
+    if (accountAnalyzerConfig.deploymentTargets && !this.isIncluded(accountAnalyzerConfig.deploymentTargets)) {
+      return;
+    }
+
+    this.logger.info(`Adding account level IAM Access Analyzer for region ${cdk.Stack.of(this).region}`);
+    new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccountAccessAnalyzer', {
+      type: 'ACCOUNT',
+    });
   }
 
   private securityHubEventForwardToLogs() {

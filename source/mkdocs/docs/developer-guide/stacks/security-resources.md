@@ -70,6 +70,7 @@ The Security Resources stack deploys AWS Config rules (managed and custom) with 
 | `security-config.yaml → cloudWatch.logGroups` | CloudWatch log groups |
 | `security-config.yaml → cloudTrail.accountTrails` | Account-level CloudTrail trails |
 | `global-config.yaml → logging.sessionManager` | SSM Session Manager config |
+| `security-config.yaml → accessAnalyzer.accountAnalyzer` | Account-level IAM Access Analyzer |
 
 ## Common Issues
 
@@ -78,3 +79,5 @@ The Security Resources stack deploys AWS Config rules (managed and custom) with 
 | Config rule limit exceeded | More than 400 Config rules per account/region | Reduce rules or request limit increase |
 | Remediation role creation failure | IAM role name collision | Check for existing roles with the same name |
 | CloudWatch alarm dimension mismatch | Metric namespace/name doesn't match | Verify metric filter configuration |
+| Account-level IAM Access Analyzer creation failure | The account already has an external access analyzer that the accelerator did not create. The quota is one per account/region and is **not** adjustable | Delete the pre-existing analyzer, then redeploy. Alternatively, exclude the account or region with `accessAnalyzer.accountAnalyzer.deploymentTargets` so the rest of the organization can still be deployed. The stack rolls back until the conflict is removed |
+| Account-level IAM Access Analyzer creation failure in an `aws-iso` or `aws-iso-b` region | IAM Access Analyzer is not available in those partitions | Exclude the region with `accessAnalyzer.accountAnalyzer.deploymentTargets.excludedRegions`, or leave `accessAnalyzer.enable` set to false |
