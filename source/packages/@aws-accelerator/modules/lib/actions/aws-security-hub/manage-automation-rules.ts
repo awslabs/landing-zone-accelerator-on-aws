@@ -47,6 +47,7 @@ export abstract class ManageAutomationRulesModule {
    * @param params {@link ModuleParams}
    * @param stage Optional stage parameter
    * @returns Status message
+   * @throws Error if one or more target regions failed to manage automation rules; the message carries every region's status
    */
   public static async execute(params: ModuleParams): Promise<string> {
     if (!params.moduleRunnerParameters.configs.securityConfig.centralSecurityServices.securityHub.enable) {
@@ -83,6 +84,7 @@ export abstract class ManageAutomationRulesModule {
 
     const statuses: string[] = [];
     const promises: Promise<string>[] = [];
+    let failedRegionCount = 0;
 
     // Execute automation rules management for each target region in parallel
     for (const region of runnerTargetRegions) {
@@ -110,6 +112,7 @@ export abstract class ManageAutomationRulesModule {
           } catch (error) {
             const errorMessage = `Failed to manage automation rules in region ${region}: ${error instanceof Error ? error.message : String(error)}`;
             ManageAutomationRulesModule.logger.error(errorMessage);
+            failedRegionCount++;
             return `[Region: ${region}] ${errorMessage}`;
           }
         })(),
@@ -123,8 +126,16 @@ export abstract class ManageAutomationRulesModule {
       params.runnerParameters.maxConcurrentExecution,
     );
 
-    statusLogger.info(`Module ${params.moduleItem.name} execution completed, results: ${statuses.join('\n')}`);
+    const results = statuses.join('\n');
 
-    return statuses.join('\n');
+    if (failedRegionCount > 0) {
+      const failureMessage = `Module ${params.moduleItem.name} failed to manage automation rules in ${failedRegionCount} of ${runnerTargetRegions.length} region(s): ${results}`;
+      statusLogger.error(failureMessage);
+      throw new Error(failureMessage);
+    }
+
+    statusLogger.info(`Module ${params.moduleItem.name} execution completed, results: ${results}`);
+
+    return results;
   }
 }

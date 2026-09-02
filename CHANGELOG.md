@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): add opt-in failOnConcurrentExecution guard that aborts a deployment when a newer pipeline execution supersedes the config table
 
 ### Fixed
+- fix(security-hub): fail the manage-automation-rules module when the Security Hub API rejects a rule instead of reporting the stage as successful
 - fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
 - fix(config): preserve Config rule tag ownership and exclude ignored OU accounts from tag validation

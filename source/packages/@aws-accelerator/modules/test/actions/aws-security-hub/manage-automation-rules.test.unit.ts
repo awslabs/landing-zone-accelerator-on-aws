@@ -382,13 +382,13 @@ describe('ManageAutomationRulesModule', () => {
         .mockRejectedValueOnce(new Error('Region us-east-1 failed'))
         .mockResolvedValueOnce('Automation rules managed successfully');
 
-      const result = await ManageAutomationRulesModule.execute(params);
+      const executePromise = ManageAutomationRulesModule.execute(params);
 
-      expect(mockManageSecurityHubAutomationRules).toHaveBeenCalledTimes(2);
-      expect(result).toContain(
+      await expect(executePromise).rejects.toThrow(
         '[Region: us-east-1] Failed to manage automation rules in region us-east-1: Region us-east-1 failed',
       );
-      expect(result).toContain('[Region: us-west-2] Automation rules managed successfully');
+      expect(mockManageSecurityHubAutomationRules).toHaveBeenCalledTimes(2);
+      await expect(executePromise).rejects.toThrow('[Region: us-west-2] Automation rules managed successfully');
     });
 
     test('should handle no target regions', async () => {
@@ -486,12 +486,12 @@ describe('ManageAutomationRulesModule', () => {
 
       mockManageSecurityHubAutomationRules.mockRejectedValueOnce(new Error('AWS SDK Error'));
 
-      const result = await ManageAutomationRulesModule.execute(params);
+      const executePromise = ManageAutomationRulesModule.execute(params);
 
-      expect(result).toContain(
+      await expect(executePromise).rejects.toThrow(
         '[Region: us-east-1] Failed to manage automation rules in region us-east-1: AWS SDK Error',
       );
-      expect(result).toContain('[Region: us-west-2] Automation rules managed successfully');
+      await expect(executePromise).rejects.toThrow('[Region: us-west-2] Automation rules managed successfully');
     });
 
     test('should handle mixed success and failure results', async () => {
@@ -508,14 +508,16 @@ describe('ManageAutomationRulesModule', () => {
         .mockRejectedValueOnce(new Error('Region us-west-2 failed'))
         .mockResolvedValueOnce('Automation rules managed successfully');
 
-      const result = await ManageAutomationRulesModule.execute(params);
+      const executePromise = ManageAutomationRulesModule.execute(params);
 
-      expect(mockManageSecurityHubAutomationRules).toHaveBeenCalledTimes(3);
-      expect(result).toContain('[Region: us-east-1] Automation rules managed successfully');
-      expect(result).toContain(
+      // A single failed region must fail the whole module, but every region is still attempted
+      // and the aggregated per-region results are preserved in the thrown error.
+      await expect(executePromise).rejects.toThrow(
         '[Region: us-west-2] Failed to manage automation rules in region us-west-2: Region us-west-2 failed',
       );
-      expect(result).toContain('[Region: eu-west-1] Automation rules managed successfully');
+      expect(mockManageSecurityHubAutomationRules).toHaveBeenCalledTimes(3);
+      await expect(executePromise).rejects.toThrow('[Region: us-east-1] Automation rules managed successfully');
+      await expect(executePromise).rejects.toThrow('[Region: eu-west-1] Automation rules managed successfully');
     });
 
     test('should handle non-Error exceptions', async () => {
@@ -526,11 +528,31 @@ describe('ManageAutomationRulesModule', () => {
 
       mockManageSecurityHubAutomationRules.mockRejectedValueOnce('String error');
 
-      const result = await ManageAutomationRulesModule.execute(params);
-
-      expect(result).toContain(
+      await expect(ManageAutomationRulesModule.execute(params)).rejects.toThrow(
         '[Region: us-east-1] Failed to manage automation rules in region us-east-1: String error',
       );
+    });
+
+    test('should reject when any region is rejected by the API so the stage fails', async () => {
+      const automationRules = [createAutomationRuleConfig('TestRule1')];
+      const securityConfig = createMockSecurityConfig(true, automationRules);
+      const globalConfig = createMockGlobalConfig();
+      const params = createModuleParams(securityConfig, globalConfig);
+
+      // us-east-1 rejected by the API (e.g. RuleOrder out of range), us-west-2 succeeds
+      mockManageSecurityHubAutomationRules
+        .mockRejectedValueOnce(new Error("Invalid parameter 'RuleOrder'. '1100' is greater than maximum value: 1000."))
+        .mockResolvedValueOnce('Automation rules managed successfully');
+
+      const executePromise = ManageAutomationRulesModule.execute(params);
+
+      // The module must NOT resolve to a success status when a rule was rejected.
+      await expect(executePromise).rejects.toThrow(
+        "Failed to manage automation rules in region us-east-1: Invalid parameter 'RuleOrder'. '1100' is greater than maximum value: 1000.",
+      );
+      // Every region is still attempted, and the successful region's status is preserved in the error.
+      expect(mockManageSecurityHubAutomationRules).toHaveBeenCalledTimes(2);
+      await expect(executePromise).rejects.toThrow('[Region: us-west-2] Automation rules managed successfully');
     });
   });
 
