@@ -69,7 +69,7 @@ The Security Resources stack deploys AWS Config rules (managed and custom) with 
 | `security-config.yaml → cloudWatch.metricSets` | CloudWatch metric filters |
 | `security-config.yaml → cloudWatch.logGroups` | CloudWatch log groups |
 | `security-config.yaml → cloudTrail.accountTrails` | Account-level CloudTrail trails |
-| `security-config.yaml → centralSecurityServices.sessionManager` | SSM Session Manager config |
+| `global-config.yaml → logging.sessionManager` | SSM Session Manager config |
 
 ## Common Issues
 

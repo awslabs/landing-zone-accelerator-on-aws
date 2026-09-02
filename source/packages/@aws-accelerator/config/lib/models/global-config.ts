@@ -1930,7 +1930,9 @@ export interface ISessionManagerConfig {
    * **Send to S3** *(Required)*
    *
    * Determines whether sending SessionManager logs to S3 is enabled.
-   * When enabled, the accelerator will send the session manager logs to the central log bucket in the LogArchive account.
+   * When enabled, the accelerator sends the session manager logs directly to the central log bucket in the LogArchive account, which resides in the centralized logging Region (`logging.centralizedLoggingRegion`, the home Region by default).
+   *
+   * Because that bucket is single-Region, instances in any other enabled Region write to it cross-Region. A Region-scoped Amazon S3 gateway VPC endpoint cannot reach a bucket in another Region, so in a fully private Region (VPC endpoints only, no internet egress) that is not the centralized logging Region, Session Manager connections that require this log destination fail to establish and open a blank screen. For those Regions, enable `sendToCloudWatchLogs` instead (it writes to a Region-local log group that the accelerator forwards to the central bucket) or exclude the Region with `excludeRegions`.
    *
    */
   readonly sendToS3: boolean;
