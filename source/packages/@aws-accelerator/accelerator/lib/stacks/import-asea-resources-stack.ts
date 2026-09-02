@@ -40,6 +40,8 @@ import { SsmInventory } from '../asea-resources/ssm-inventory';
 import { Lambda } from '../asea-resources/lambda';
 import { createLogger } from '@aws-accelerator/utils';
 import { FirewallResources } from '../asea-resources/firewall-resources';
+import { CustomerGateways } from '../asea-resources/customer-gateway';
+import { VpnConnections } from '../asea-resources/vpn-connection';
 import { Route53ResolverQueryLogging } from '../asea-resources/route-53-query-logging';
 import { Route53ResolverQueryLoggingAssociation } from '../asea-resources/route-53-query-logging-association';
 import { Route53ResolverEndpoint } from '../asea-resources/route-53-resolver-endpoint';
@@ -131,6 +133,8 @@ export class ImportAseaResourcesStack extends NetworkStack {
     new SsmInventory(this, props);
     new ManagedAdResources(this, props);
     new FirewallResources(this, props);
+    new CustomerGateways(this, props);
+    new VpnConnections(this, props);
     new Route53ResolverQueryLogging(this, props);
     new Route53ResolverQueryLoggingAssociation(this, props);
     new Route53ResolverEndpoint(this, props);

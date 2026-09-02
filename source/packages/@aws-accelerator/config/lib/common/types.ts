@@ -2586,6 +2586,10 @@ export enum AseaResourceType {
   EC2_IGW = 'EC2_VPC_IGW',
   /** EC2 VPN Gateway resources */
   EC2_VPN_GW = 'EC2_VPC_VPN_GW',
+  /** EC2 Customer Gateway resources (adopted from ASEA firewalls[type=CGW]) */
+  CUSTOMER_GATEWAY = 'EC2_CUSTOMER_GATEWAY',
+  /** EC2 Site-to-Site VPN Connection resources (adopted from ASEA firewalls[type=CGW]) */
+  VPN_CONNECTION = 'EC2_VPN_CONNECTION',
 
   /** EC2 Security Group resources */
   EC2_SECURITY_GROUP = 'EC2_SECURITY_GROUP',

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { CustomerGatewayConfig, VpnConnectionConfig } from '@aws-accelerator/config';
+import { AseaResourceType, CustomerGatewayConfig, VpnConnectionConfig } from '@aws-accelerator/config';
 import { CustomerGateway, VpnConnection } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
@@ -79,6 +79,13 @@ export class VpnResources {
       const accountId = props.accountsConfig.getAccountId(cgwItem.account);
 
       if (this.stack.isTargetStack([accountId], [cgwItem.region]) && isIpAddress(cgwItem.ipAddress)) {
+        if (this.stack.isManagedByAsea(AseaResourceType.CUSTOMER_GATEWAY, cgwItem.name)) {
+          this.stack.addLogs(
+            LogLevel.INFO,
+            `Customer Gateway ${cgwItem.name} is managed by ASEA; skipping creation (adopted via ImportAseaResources)`,
+          );
+          continue;
+        }
         this.stack.addLogs(LogLevel.INFO, `Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
         const cgw = new CustomerGateway(this.stack, pascalCase(`${cgwItem.name}CustomerGateway`), {
           name: cgwItem.name,

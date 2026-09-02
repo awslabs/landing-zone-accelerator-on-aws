@@ -293,6 +293,13 @@ export class TransitGatewayRoutes extends AseaResource {
     const mappings = this.props.globalConfig.externalLandingZoneResources!.templateMap;
     let routeId = '';
     let transitGatewayAttachmentId: string | undefined;
+    // VPN and Direct Connect Gateway route targets on an ASEA-adopted TGW route table are
+    // created and managed by the NetworkAssociations stack, not by this import handler
+    // (which only adopts pre-existing ASEA routes via getRouteFromResources). When the route
+    // target is a VPN or DX gateway, attachment resolution is intentionally deferred and the
+    // attachment-id guard below is skipped, so synth does not fail for a newly declared
+    // VPN/DX route target that references an adopted ASEA attachment (#4883).
+    let attachmentManagedByNetworkAssociations = false;
     if (routeItem.attachment) {
       // If route is for VPC attachment
       if (
@@ -339,7 +346,9 @@ export class TransitGatewayRoutes extends AseaResource {
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
-        // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.directConnectGatewayName}`;
+        // The DX gateway route target is created and managed by the NetworkAssociations stack.
+        // Defer here so the guard below does not throw for a DX-gateway route target.
+        attachmentManagedByNetworkAssociations = true;
       }
 
       // If route is for VPN attachment
@@ -353,7 +362,9 @@ export class TransitGatewayRoutes extends AseaResource {
           LogLevel.INFO,
           `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
-        // routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpnConnectionName}`;
+        // The VPN route target is created and managed by the NetworkAssociations stack.
+        // Defer here so the guard below does not throw for an adopted-VPN route target.
+        attachmentManagedByNetworkAssociations = true;
       }
 
       // If route is for TGW peering attachment
@@ -372,7 +383,7 @@ export class TransitGatewayRoutes extends AseaResource {
       }
     }
 
-    if (routeItem.attachment && !transitGatewayAttachmentId) {
+    if (routeItem.attachment && !transitGatewayAttachmentId && !attachmentManagedByNetworkAssociations) {
       this.scope.addLogs(
         LogLevel.ERROR,
         `Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
