@@ -338,6 +338,54 @@ accelerator:attribution-check:
       when: always
     - when: never
 
+release:test:utils:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  variables:
+    KUBERNETES_CPU_REQUEST: "16"
+    KUBERNETES_CPU_LIMIT: "16"
+    KUBERNETES_MEMORY_REQUEST: "64Gi"
+    KUBERNETES_MEMORY_LIMIT: "64Gi"
+  tags:
+    - arch:amd64
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
+    - "cd source/packages/@aws-accelerator/utils"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-accelerator/utils/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+release:test:cdk-extensions:
+  stage: pipeline
+  needs: ["accelerator:build"]
+  variables:
+    KUBERNETES_CPU_REQUEST: "16"
+    KUBERNETES_CPU_LIMIT: "16"
+    KUBERNETES_MEMORY_REQUEST: "64Gi"
+    KUBERNETES_MEMORY_LIMIT: "64Gi"
+  tags:
+    - arch:amd64
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=49152"
+    - "cd source/packages/@aws-cdk-extensions/cdk-extensions"
+    - "yarn test:unit"
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/packages/@aws-cdk-extensions/cdk-extensions/test-reports/*.xml
+    expire_in: 1 day
+  rules:
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
 unit-test:accelerator:
   stage: pipeline
   needs: ["accelerator:build"]
@@ -364,7 +412,7 @@ unit-test:accelerator:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -394,7 +442,7 @@ unit-test:config:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -424,7 +472,7 @@ unit-test:constructs:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -454,7 +502,7 @@ unit-test:govcloud-account-vending:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -488,7 +536,7 @@ unit-test:installer:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -518,7 +566,7 @@ unit-test:modules:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -548,7 +596,7 @@ unit-test:tools:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -578,7 +626,7 @@ unit-test:aws-lza:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -612,7 +660,7 @@ unit-test:installer-container:
     - if: $CI_COMMIT_BRANCH =~ /.*v(\d.+){2}\d$/
       when: never
     - if: $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: never
+      when: always
     - if: $CI_MERGE_REQUEST_IID != null
       when: never
     - when: always
@@ -1017,39 +1065,33 @@ release:artifact-al2023-release:
       when: always
     - when: never
 
-release:run-tests:
-  stage: pipeline
-  variables:
-    KUBERNETES_CPU_REQUEST: "8"
-    KUBERNETES_CPU_LIMIT: "8"
-    KUBERNETES_MEMORY_REQUEST: "32Gi"
-    KUBERNETES_MEMORY_LIMIT: "32Gi"
-  tags:
-    - arch:amd64
-  before_script:
-    # Install dependencies
-    - "rm -rf /var/lib/apt/lists/*"
-    - "apt-get update"
-    - "apt-cache gencaches"
-  script:
-    # Run tests in the same way as the AWS Solutions pipeline
-    - "export NODE_OPTIONS=--max_old_space_size=28672"
-    - "cd source"
-    - "chmod +x ./run-all-tests.sh && ./run-all-tests.sh"
-  artifacts:
-    name: test-results
-    when: on_success
-    untracked: true
-  rules:
-    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
-      when: always
-    - when: never
-
 release:build-distributions:
   stage: pipeline
   needs:
-    - job: release:run-tests
+    - job: accelerator:build
       artifacts: true
+    - job: release:test:utils
+      artifacts: false
+    - job: unit-test:config
+      artifacts: false
+    - job: release:test:cdk-extensions
+      artifacts: false
+    - job: unit-test:constructs
+      artifacts: false
+    - job: unit-test:tools
+      artifacts: false
+    - job: unit-test:modules
+      artifacts: false
+    - job: unit-test:installer
+      artifacts: false
+    - job: unit-test:installer-container
+      artifacts: false
+    - job: unit-test:govcloud-account-vending
+      artifacts: false
+    - job: unit-test:accelerator
+      artifacts: false
+    - job: unit-test:aws-lza
+      artifacts: false
   tags:
     - arch:amd64
   variables:

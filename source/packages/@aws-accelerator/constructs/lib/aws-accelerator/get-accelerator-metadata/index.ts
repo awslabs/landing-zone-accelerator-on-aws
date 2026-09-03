@@ -72,6 +72,7 @@ type LZADDBConfigItem = {
       Arn: string;
       Email: string;
       Name: string;
+      State?: string;
       Status?: string;
       JoinedMethod?: string;
       JoinedTimestamp?: string;
@@ -666,7 +667,14 @@ function getAllOusWithPathsFromDDB(ddbOus: LZADDBConfigItem[]) {
   });
 }
 
-function getAllAccountsWithPathsFromDDB(ddbAccounts: LZADDBConfigItem[], ddbOus: LZADDBConfigItem[]) {
+/**
+ * Builds metadata account entries from configuration table records.
+ *
+ * @param ddbAccounts Account records from the accelerator configuration table
+ * @param ddbOus Organizational unit records used for account paths
+ * @returns Account metadata entries with the compatible status key
+ */
+export function getAllAccountsWithPathsFromDDB(ddbAccounts: LZADDBConfigItem[], ddbOus: LZADDBConfigItem[]) {
   console.log(ddbOus);
   return ddbAccounts.map(ddbAccount => {
     return {
@@ -674,7 +682,7 @@ function getAllAccountsWithPathsFromDDB(ddbAccounts: LZADDBConfigItem[], ddbOus:
       arn: ddbAccount.orgInfo.orgsApiResponse.Arn,
       email: ddbAccount.orgInfo.orgsApiResponse.Email,
       name: ddbAccount.orgInfo.orgsApiResponse.Name,
-      status: ddbAccount.orgInfo.orgsApiResponse.Status,
+      status: ddbAccount.orgInfo.orgsApiResponse.State ?? ddbAccount.orgInfo.orgsApiResponse.Status,
       joinedMethod: ddbAccount.orgInfo.orgsApiResponse.JoinedMethod,
       joinedTimestamp: ddbAccount.orgInfo.orgsApiResponse.JoinedTimestamp,
       path: ddbAccount.ouName,

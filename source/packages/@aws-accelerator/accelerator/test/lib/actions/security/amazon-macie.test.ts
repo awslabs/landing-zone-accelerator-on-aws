@@ -219,6 +219,9 @@ describe('AmazonMacie', () => {
         secretAccessKey: 'test-secret-key',
         sessionToken: 'test-session-token',
       },
+      // Distinct from managementAccountAccessRole so tests prove the module forwards the
+      // runner-resolved accountAccessRoleName (honoring customDeploymentRole), not globalConfig.
+      accountAccessRoleName: 'MyCustomDeploymentRole',
       ...overrides.moduleRunnerParameters,
     };
 
@@ -432,7 +435,9 @@ describe('AmazonMacie', () => {
         credentials: params.moduleRunnerParameters.managementAccountCredentials,
         dryRun: false,
         configuration: {
-          accountAccessRoleName: mockGlobalConfig.managementAccountAccessRole,
+          // Must be the runner-resolved accountAccessRoleName (honors customDeploymentRole),
+          // not globalConfig.managementAccountAccessRole.
+          accountAccessRoleName: 'MyCustomDeploymentRole',
           enable: true,
           delegatedAdminAccountId: 'YYYYYYYYYYYY',
           policyFindingsPublishingFrequency: 'FIFTEEN_MINUTES',

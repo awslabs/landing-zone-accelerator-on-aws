@@ -46,7 +46,7 @@ export abstract class GetCloudFormationTemplatesModule {
       regions,
     });
     const acceleratorPrefix = params.moduleRunnerParameters.resourcePrefixes.accelerator;
-    const roleNameToAssume = params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole;
+    const roleNameToAssume = params.moduleRunnerParameters.accountAccessRoleName;
     const param: IGetCloudFormationTemplatesHandlerParameter = {
       moduleName: params.moduleItem.name,
       operation: 'get-cloudformation-templates',

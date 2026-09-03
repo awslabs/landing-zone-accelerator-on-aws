@@ -131,6 +131,9 @@ describe('AcceleratorPrerequisites', () => {
           },
         ],
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        // Distinct from managementAccountAccessRole so the assertions prove the module reads
+        // accountAccessRoleName (the customDeploymentRole-resolved value), not the management role.
+        accountAccessRoleName: 'MyCustomDeploymentRole',
       },
     };
   });
@@ -310,7 +313,7 @@ describe('AcceleratorPrerequisites', () => {
         region: 'us-east-1',
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         partition: MOCK_CONSTANTS.runnerParameters.partition,
-        assumeRoleName: 'AWSAccelerator-PipelineRole',
+        assumeRoleName: 'MyCustomDeploymentRole',
         credentials: MOCK_CONSTANTS.credentials,
       });
 
@@ -508,7 +511,7 @@ describe('AcceleratorPrerequisites', () => {
         region: 'us-east-1',
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         partition: MOCK_CONSTANTS.runnerParameters.partition,
-        assumeRoleName: 'AWSAccelerator-PipelineRole',
+        assumeRoleName: 'MyCustomDeploymentRole',
         credentials: MOCK_CONSTANTS.credentials,
       });
     });

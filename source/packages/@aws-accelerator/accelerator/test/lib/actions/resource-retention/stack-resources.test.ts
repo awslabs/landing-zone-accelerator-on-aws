@@ -84,6 +84,9 @@ describe('StackResources', () => {
         { Id: '333333333333', Name: 'Workload' },
       ],
       managementAccountCredentials: {} as unknown as never,
+      // Distinct from globalConfig.managementAccountAccessRole so the assertion proves retention uses
+      // the management role (guaranteed pre-bootstrap), not the resolved accountAccessRoleName.
+      accountAccessRoleName: 'MyCustomDeploymentRole',
     } as unknown as never,
   };
 
@@ -134,6 +137,14 @@ describe('StackResources', () => {
       expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
       expect(result.summary).toContain('Successfully processed');
       expect(result.summary).toContain('retained');
+      // Retention must use the runner-resolved account access role (honors customDeploymentRole).
+      // Retention runs pre-bootstrap, so it must use globalConfig.managementAccountAccessRole
+      // (guaranteed to exist), not the resolved accountAccessRoleName.
+      expect(cfnRetention.retainResources).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({ accountAccessRoleName: 'AWSControlTowerExecution' }),
+        }),
+      );
     });
 
     it('should handle retention failures', async () => {

@@ -58,6 +58,11 @@ describe('CreateStackPolicyModule', () => {
     const params = createTestModuleParams(config, AcceleratorModuleStages.FINALIZE);
     await CreateStackPolicyModule.execute(params);
     expect(awsLza.createStackPolicy).toHaveBeenCalled();
+    // Runs pre-bootstrap (PREPARE stage), so it must use globalConfig.managementAccountAccessRole
+    // — the role guaranteed to exist before accounts are bootstrapped — not the resolved role.
+    expect(awsLza.createStackPolicy).toHaveBeenCalledWith(
+      expect.objectContaining({ managementAccountAccessRole: 'AWSControlTowerExecution' }),
+    );
   });
 
   it('should handle undefined optional parameters', async () => {
@@ -101,6 +106,7 @@ function createTestModuleParams(configs: AcceleratorConfigurationsType, stage?: 
         accelerator: 'AWSAccelerator',
       },
       configs: configs,
+      accountAccessRoleName: 'mockCustomDeploymentRole',
     },
     runnerParameters: {
       partition: 'test',

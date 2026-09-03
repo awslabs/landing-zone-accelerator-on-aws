@@ -72,6 +72,10 @@ export abstract class CreateStackPolicyModule {
     const props: IStackPolicyHandlerParameter = {
       enabled: params.moduleRunnerParameters.configs.globalConfig.stackPolicy.enable,
       regions: params.moduleRunnerParameters.configs.globalConfig.enabledRegions ?? [],
+      // This module registers in both PREPARE and FINALIZE; the enable/apply path runs in FINALIZE.
+      // It intentionally uses managementAccountAccessRole (not customDeploymentRole) for its
+      // cross-account operations: it applies stack policies across all org accounts, and the
+      // management access role is the cross-account role guaranteed to be present in every account.
       managementAccountAccessRole: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
       protectedTypes: params.moduleRunnerParameters.configs.globalConfig.stackPolicy.protectedTypes ?? [],
       region: params.moduleRunnerParameters.globalRegion,

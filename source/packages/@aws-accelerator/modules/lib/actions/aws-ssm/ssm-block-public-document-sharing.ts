@@ -164,7 +164,7 @@ export abstract class SsmBlockPublicDocumentSharingModule {
         .blockPublicDocumentSharing!;
     const allAccounts = params.moduleRunnerParameters.organizationAccounts;
     const excludeAccounts = config.excludeAccounts || [];
-    const managementAccountAccessRole = params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole;
+    const managementAccountAccessRole = params.moduleRunnerParameters.accountAccessRoleName;
 
     // Determine which accounts need to be enabled or disabled
     const { enableAccounts, disableAccounts } = SsmBlockPublicDocumentSharingModule.determineAccountActions(

@@ -92,6 +92,26 @@ type AwsOrganizationalUnitKeys = {
   awsKey: string;
 };
 
+/**
+ * Returns an account validation error when its AWS Organizations lifecycle state is not ACTIVE.
+ *
+ * @param accountType Configured account category used in the validation message
+ * @param email Configured account email
+ * @param account AWS Organizations account response
+ * @returns Validation error text, or undefined for an ACTIVE account
+ */
+export function getAccountStateValidationError(
+  accountType: 'Mandatory' | 'Workload',
+  email: string,
+  account: Account,
+): string | undefined {
+  const state = account.State ?? account.Status;
+  if (state === 'ACTIVE') {
+    return undefined;
+  }
+  return `${accountType} account ${email} is in ${state}`;
+}
+
 type DDBItem = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
@@ -227,10 +247,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               item => item.Email?.toLocaleLowerCase() == mandatoryAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (mandatoryOrganizationAccount) {
-              if (mandatoryOrganizationAccount.Status !== 'ACTIVE') {
-                validationErrors.push(
-                  `Mandatory account ${mandatoryAccount['acceleratorKey']} is in ${mandatoryOrganizationAccount.Status}`,
-                );
+              const accountStateError = getAccountStateValidationError(
+                'Mandatory',
+                mandatoryAccount['acceleratorKey'],
+                mandatoryOrganizationAccount,
+              );
+              if (accountStateError) {
+                validationErrors.push(accountStateError);
               }
             } else {
               orgAccountsToAdd.push(mandatoryAccount);
@@ -246,10 +269,13 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               item => item.Email?.toLocaleLowerCase() == workloadAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (organizationAccount) {
-              if (organizationAccount.Status !== 'ACTIVE') {
-                validationErrors.push(
-                  `Workload account ${workloadAccount['acceleratorKey']} is in ${organizationAccount.Status}`,
-                );
+              const accountStateError = getAccountStateValidationError(
+                'Workload',
+                workloadAccount['acceleratorKey'],
+                organizationAccount,
+              );
+              if (accountStateError) {
+                validationErrors.push(accountStateError);
               }
             } else {
               orgAccountsToAdd.push(workloadAccount);

@@ -1469,6 +1469,14 @@ export abstract class ModuleRunner {
       organizationAccounts,
       organizationDetails,
       managementAccountCredentials: props.managementAccountCredentials,
+      // Resolve the cross-account role using the same precedence as the CDK deploy path
+      // (see security-resources-stack.ts): useManagementAccessRole takes precedence, then a
+      // configured customDeploymentRole, otherwise managementAccountAccessRole. This keeps module
+      // cross-account operations aligned with the role the rest of LZA uses.
+      accountAccessRoleName: acceleratorConfigurations.globalConfig.cdkOptions?.useManagementAccessRole
+        ? acceleratorConfigurations.globalConfig.managementAccountAccessRole
+        : (acceleratorConfigurations.globalConfig.cdkOptions?.customDeploymentRole ??
+          acceleratorConfigurations.globalConfig.managementAccountAccessRole),
     };
   }
 

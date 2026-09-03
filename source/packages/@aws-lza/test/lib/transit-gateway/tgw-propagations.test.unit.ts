@@ -60,6 +60,9 @@ const TGW_NAME = 'main-tgw';
 const REGION = 'us-east-1';
 const LOG_PREFIX = 'test';
 
+// Default owned set: treats all managed attachments as owned (backward-compatible with old behavior)
+const ALL_OWNED = new Set([`prop:${RT_ID}:tgw-attach-a`, `prop:${RT_ID}:tgw-attach-b`]);
+
 function desiredAttachment(overrides: Partial<IDesiredAttachment> = {}): IDesiredAttachment {
   return { attachmentId: 'tgw-attach-a', attachmentName: 'vpc-a', attachmentType: 'vpc', ...overrides };
 }
@@ -92,6 +95,7 @@ describe('TgwPropagations', () => {
         REGION,
         [desiredAttachment()],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -118,6 +122,7 @@ describe('TgwPropagations', () => {
         REGION,
         [desiredAttachment()],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -142,6 +147,7 @@ describe('TgwPropagations', () => {
         REGION,
         [desiredAttachment()],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -165,6 +171,7 @@ describe('TgwPropagations', () => {
           REGION,
           [desiredAttachment()],
           new Set(['tgw-attach-a']),
+          ALL_OWNED,
           false,
           LOG_PREFIX,
         ),
@@ -185,6 +192,7 @@ describe('TgwPropagations', () => {
         REGION,
         [desiredAttachment()],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -206,6 +214,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -225,6 +234,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -243,6 +253,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -269,6 +280,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -296,6 +308,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -322,6 +335,7 @@ describe('TgwPropagations', () => {
           REGION,
           [],
           new Set(['tgw-attach-a']),
+          ALL_OWNED,
           false,
           LOG_PREFIX,
         ),
@@ -339,6 +353,7 @@ describe('TgwPropagations', () => {
         REGION,
         [desiredAttachment()],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         true,
         LOG_PREFIX,
       );
@@ -362,6 +377,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a']),
+        ALL_OWNED,
         true,
         LOG_PREFIX,
       );
@@ -392,6 +408,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(['tgw-attach-a', 'tgw-attach-b']),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -409,6 +426,7 @@ describe('TgwPropagations', () => {
         REGION,
         [],
         new Set(),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -438,6 +456,7 @@ describe('TgwPropagations', () => {
         REGION,
         desired,
         new Set(),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
@@ -470,11 +489,90 @@ describe('TgwPropagations', () => {
         REGION,
         desired,
         new Set(),
+        ALL_OWNED,
         false,
         LOG_PREFIX,
       );
       expect(result.filter(r => r.operation === 'created')).toHaveLength(1);
       expect(mockSend).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe('ownership-based deletion', () => {
+    test('should NOT delete propagation on managed attachment when not in owned set', async () => {
+      // Attachment is known (managed) but NOT in ownedResourceIds — externally created
+      mockSend.mockResolvedValue({
+        TransitGatewayRouteTablePropagations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'enabled' }],
+      });
+      const emptyOwned = new Set<string>(); // Nothing owned — first run or external
+
+      const result = await TgwPropagations.process(
+        ec2,
+        RT_ID,
+        RT_NAME,
+        TGW_NAME,
+        REGION,
+        [], // Not in desired
+        new Set(['tgw-attach-a']), // Known/managed
+        emptyOwned, // Not owned by LZA
+        false,
+        LOG_PREFIX,
+      );
+
+      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(0);
+    });
+
+    test('should delete propagation on managed attachment when it IS in owned set', async () => {
+      mockSend.mockResolvedValue({
+        TransitGatewayRouteTablePropagations: [{ TransitGatewayAttachmentId: 'tgw-attach-a', State: 'enabled' }],
+      });
+      const ownedSet = new Set([`prop:${RT_ID}:tgw-attach-a`]); // LZA created this
+
+      const result = await TgwPropagations.process(
+        ec2,
+        RT_ID,
+        RT_NAME,
+        TGW_NAME,
+        REGION,
+        [], // Not in desired (customer removed from config)
+        new Set(['tgw-attach-a']), // Known/managed
+        ownedSet, // Owned by LZA
+        false,
+        LOG_PREFIX,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0].operation).toBe('deleted');
+    });
+
+    test('should not delete external propagation even when attachment is managed and not in desired', async () => {
+      // Simulates: customer created extra propagation via customization stack on LZA-managed attachment
+      mockSend.mockResolvedValue({
+        TransitGatewayRouteTablePropagations: [
+          { TransitGatewayAttachmentId: 'tgw-attach-a', State: 'enabled' }, // External propagation
+          { TransitGatewayAttachmentId: 'tgw-attach-b', State: 'enabled' }, // LZA-owned propagation
+        ],
+      });
+      // Only tgw-attach-b's propagation is owned by LZA
+      const ownedSet = new Set([`prop:${RT_ID}:tgw-attach-b`]);
+
+      const result = await TgwPropagations.process(
+        ec2,
+        RT_ID,
+        RT_NAME,
+        TGW_NAME,
+        REGION,
+        [], // Neither in desired — customer removed both from config
+        new Set(['tgw-attach-a', 'tgw-attach-b']), // Both are managed attachments
+        ownedSet, // Only tgw-attach-b's prop is owned
+        false,
+        LOG_PREFIX,
+      );
+
+      // Only tgw-attach-b should be deleted (owned), tgw-attach-a should survive (external)
+      const deleted = result.filter(r => r.operation === 'deleted');
+      expect(deleted).toHaveLength(1);
+      expect(deleted[0].attachmentName).toContain('tgw-attach-b');
     });
   });
 });

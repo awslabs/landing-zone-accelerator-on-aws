@@ -41,6 +41,8 @@ export interface ITgwModuleConfiguration {
   readonly boundary?: IModuleBoundary;
   readonly concurrency?: IBatchOperationSettings;
   readonly dataSources?: ITgwModuleDataSources;
+  /** Previously owned resources from state — used for safe deletion (only delete what LZA created) */
+  readonly ownedResources?: ITgwOwnedResource[];
 }
 
 export interface ITgwModuleDataSources {
@@ -110,6 +112,13 @@ export interface ITgwConnectConfig {
 
 // ─── Response Interfaces ────────────────────────────────────────────────────
 
+/**
+ * Owned resources are stored as simple resource ID strings.
+ * Format: "assoc:{routeTableId}:{attachmentId}" or "prop:{routeTableId}:{attachmentId}"
+ * Used for safe deletion: only resources in this set can be removed by the module.
+ */
+export type ITgwOwnedResource = string;
+
 export type TgwOperationResult = 'created' | 'updated' | 'exists' | 'deleted' | 'skipped' | 'failed';
 
 export enum DxAssociationState {
@@ -158,6 +167,8 @@ export interface ITgwModuleResponse {
   propagations: ITgwPropagationResponse[];
   dxAssociations: IDxAssociationResponse[];
   connectAttachments: ITgwConnectResponse[];
+  /** Resources owned by LZA after this execution (for state persistence by the action handler) */
+  ownedResources?: ITgwOwnedResource[];
 }
 
 // ─── Internal Types ─────────────────────────────────────────────────────────

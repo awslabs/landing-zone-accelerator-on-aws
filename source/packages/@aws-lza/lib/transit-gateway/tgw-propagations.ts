@@ -50,7 +50,8 @@ export abstract class TgwPropagations {
    * @param tgwName - Transit gateway name for response building
    * @param region - Region for response building
    * @param desired - Desired propagations from config
-   * @param knownAttachmentIds - Set of all managed attachment IDs
+   * @param knownAttachmentIds - Set of all managed attachment IDs (used for transitional state checks)
+   * @param ownedResourceIds - Set of resource IDs previously owned by LZA (used for safe deletion)
    * @param dryRun - Whether to perform dry run without making changes
    * @param logPrefix - Prefix for logging messages
    * @returns Promise resolving to propagation operation results
@@ -63,6 +64,7 @@ export abstract class TgwPropagations {
     region: string,
     desired: IDesiredAttachment[],
     knownAttachmentIds: Set<string>,
+    ownedResourceIds: Set<string>,
     dryRun: boolean,
     logPrefix: string,
   ): Promise<ITgwPropagationResponse[]> {
@@ -93,6 +95,7 @@ export abstract class TgwPropagations {
     const toDelete = current.filter(
       p =>
         knownAttachmentIds.has(p.TransitGatewayAttachmentId!) &&
+        ownedResourceIds.has(`prop:${routeTableId}:${p.TransitGatewayAttachmentId!}`) &&
         !desiredMap.has(p.TransitGatewayAttachmentId!) &&
         p.State === 'enabled',
     );

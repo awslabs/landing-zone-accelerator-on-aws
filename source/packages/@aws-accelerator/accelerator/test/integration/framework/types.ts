@@ -32,6 +32,8 @@ export interface TestManifest {
   expectedAssertions: Record<string, unknown>;
   /** Optional: skip cleanup for this manifest (e.g., next manifest depends on this state) */
   skipCleanup?: boolean;
+  /** Optional: create an external propagation in the prepare hook (ownership tests) */
+  setupExternalPropagation?: boolean;
 }
 
 /**

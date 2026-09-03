@@ -2,7 +2,7 @@
 
 ## Overview
 
-This suite exercises the Landing Zone Accelerator Transit Gateway associations and propagations module against real AWS resources using the chained, manifest-driven test framework. The system under test is `TgwAssociationsAndPropagations.configure`, the LZA wrapper over `@aws-lza` `configureTgw`. Each test manifest applies an incremental configuration change to a single shared baseline and asserts the resulting AWS state. The baseline AWS resources (TGW, route tables, VPCs, VPN, DX Gateway, RAM share) are provisioned once per environment by `tgw-prereqs.sh` and reused across all 13 consolidated manifests.
+This suite exercises the Landing Zone Accelerator Transit Gateway associations and propagations module against real AWS resources using the chained, manifest-driven test framework. The system under test is `TgwAssociationsAndPropagations.configure`, the LZA wrapper over `@aws-lza` `configureTgw`. Each test manifest applies an incremental configuration change to a single shared baseline and asserts the resulting AWS state. The baseline AWS resources (TGW, route tables, VPCs, VPN, DX Gateway, RAM share) are provisioned once per environment by `tgw-prereqs.sh` and reused across all 17 consolidated manifests.
 
 ## Prerequisites
 
@@ -49,10 +49,14 @@ yarn test:integration test/integration/modules/tgw/index.test.integration.ts
 | 07  | dx-gw-update-allowed-prefixes  | Update DX Gateway prefixes               | Same-account DX Gateway allowedPrefixes update and cross-account proposal re-submit                                                           |
 | 08  | dx-gw-delete-associations      | Delete DX Gateway associations           | DX Gateway disassociation through empty `transitGatewayAssociations`                                                                          |
 | 09  | disable-flag                   | Empty transitGateways array              | Wrapper skip path when no TGWs are configured                                                                                                 |
-| 10  | error-missing-tgw              | Reference non-existent TGW               | Error handling for missing TGW SSM parameters                                                                                                 |
-| 11  | error-missing-dx-ssm           | Reference non-existent DX Gateway        | Error handling for missing DX Gateway SSM parameters                                                                                          |
-| 12  | xacct-error-denied-assume      | Reference missing cross-account attach   | Error handling for unresolved cross-account attachment SSM parameters                                                                         |
-| 13  | final-restore-empty            | Restore empty baseline                   | Final cleanup for route-table associations, propagations, duplicate-name vpcTemplate state, and DX Gateway associations                       |
+| 10  | ownership-external-preserved   | External propagation not deleted          | Externally-created propagation (shared-vpc-attach → segregated-rt) is preserved when not in config                                            |
+| 11  | ownership-adopt-external       | Adopt external into config               | Previously-external propagation added to config is reported as "exists" and recorded in owned state                                           |
+| 12  | ownership-delete-adopted       | Delete adopted propagation               | Adopted propagation removed from config is deleted (full ownership lifecycle: external → adopt → delete)                                      |
+| 13  | error-missing-tgw              | Reference non-existent TGW               | Error handling for missing TGW SSM parameters                                                                                                 |
+| 14  | error-missing-dx-ssm           | Reference non-existent DX Gateway        | Error handling for missing DX Gateway SSM parameters                                                                                          |
+| 15  | xacct-error-denied-assume      | Reference missing cross-account attach   | Error handling for unresolved cross-account attachment SSM parameters                                                                         |
+| 998 | recreate-all-resources         | Establish full resource set              | Recreate all resources after error tests to establish valid owned state for final cleanup                                                      |
+| 999 | final-restore-empty            | Delete everything                        | Empty config deletes all owned resources, leaves environment clean for next pipeline run                                                       |
 
 ## Assertion Types
 

@@ -626,6 +626,18 @@ export type AcceleratorModuleRunnerParametersType = {
    * permissions are the intersection of the target role's policy and this session policy.
    */
   readonly sessionPolicy?: string;
+
+  /**
+   * IAM role name that module actions should assume for cross-account operations.
+   *
+   * @description
+   * Resolved once by the runner using the same precedence as the CDK deploy path:
+   * `useManagementAccessRole` takes precedence, then a configured `cdkOptions.customDeploymentRole`,
+   * otherwise `managementAccountAccessRole`. This keeps module cross-account operations aligned with
+   * the role the rest of LZA uses instead of referencing `globalConfig.managementAccountAccessRole`
+   * directly.
+   */
+  readonly accountAccessRoleName: string;
 };
 
 /**

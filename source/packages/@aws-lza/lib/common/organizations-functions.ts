@@ -51,20 +51,15 @@ import { executeApi, setRetryStrategy } from './utility';
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
 /**
- * Returns true when an account's Status (or State, the newer field) is ACTIVE.
- * Suspended, pending-closure, and pending-invitation accounts cannot accept
+ * Returns true when an account's State (or legacy Status) is ACTIVE.
+ * Accounts without either lifecycle field are also treated as active for
+ * compatibility with legacy cached records that did not persist lifecycle state.
+ * Non-active lifecycle states cannot accept
  * cross-account `AssumeRole`, so downstream modules must skip them.
  */
 function isAccountActive(account: Account): boolean {
-  if (account.Status !== undefined) {
-    return account.Status === AccountStatus.ACTIVE;
-  }
-  if (account.State !== undefined) {
-    return account.State === AccountState.ACTIVE;
-  }
-  // No status field present (e.g., DynamoDB cache entry without status). Treat
-  // as active so we don't hide accounts whose state was simply not recorded.
-  return true;
+  const accountState = account.State ?? account.Status;
+  return accountState === undefined || accountState === AccountState.ACTIVE;
 }
 
 /**
@@ -111,7 +106,7 @@ export async function getOrganizationAccounts(
   const skipped = allAccounts.filter(account => !isAccountActive(account));
   if (skipped.length > 0) {
     const summary = skipped
-      .map(account => `${account.Id ?? 'unknown'} (${account.Status ?? account.State ?? 'unknown'})`)
+      .map(account => `${account.Id ?? 'unknown'} (${account.State ?? account.Status ?? 'unknown'})`)
       .join(', ');
     logger.warn(
       `Skipping ${skipped.length} non-ACTIVE AWS Organizations account(s) from module execution: ${summary}`,
@@ -257,14 +252,36 @@ function buildAccountFromItem(item: { [key: string]: unknown }): Account {
     throw new Error(message);
   }
 
+  let orgInfo: { [key: string]: unknown } = {};
+  if (item['orgInfo']) {
+    try {
+      orgInfo = JSON.parse(item['orgInfo'] as string);
+    } catch (error: unknown) {
+      const message = `${MODULE_EXCEPTIONS.INVALID_INPUT}: Invalid JSON in orgInfo field for account ${item['acceleratorKey']}: ${error}`;
+      logger.error(message);
+      throw new Error(message);
+    }
+  }
+
+  const orgsApiResponse =
+    typeof orgInfo['orgsApiResponse'] === 'object' && orgInfo['orgsApiResponse'] !== null
+      ? (orgInfo['orgsApiResponse'] as { [key: string]: unknown })
+      : {};
+
   if (dataBag['name']) {
     account.Name = dataBag['name'] as string;
   }
   if (dataBag['arn']) {
     account.Arn = dataBag['arn'] as string;
   }
-  if (dataBag['status']) {
-    account.Status = dataBag['status'] as AccountStatus;
+  const state = orgsApiResponse['State'];
+  if (state) {
+    account.State = state as AccountState;
+  } else {
+    const status = orgInfo['status'] ?? orgsApiResponse['Status'] ?? dataBag['status'];
+    if (status) {
+      account.Status = status as AccountStatus;
+    }
   }
   if (dataBag['joinedMethod']) {
     account.JoinedMethod = dataBag['joinedMethod'] as AccountJoinedMethod;
@@ -326,7 +343,7 @@ export async function getOrganizationAccountsFromSourceTable(options: {
 
   if (skipped.length > 0) {
     const summary = skipped
-      .map(account => `${account.Id ?? 'unknown'} (${account.Status ?? account.State ?? 'unknown'})`)
+      .map(account => `${account.Id ?? 'unknown'} (${account.State ?? account.Status ?? 'unknown'})`)
       .join(', ');
     logger.warn(
       `Skipping ${skipped.length} non-ACTIVE AWS Organizations account(s) from source table: ${summary}`,

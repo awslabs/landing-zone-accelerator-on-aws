@@ -28,6 +28,7 @@ import {
   ITgwAttachmentConfig,
   ITgwConfig,
   ITgwModuleRequest,
+  ITgwOwnedResource,
   ITgwResolvedContext,
   ITgwAssociationResponse,
   ITgwPropagationResponse,
@@ -49,7 +50,11 @@ export async function configureAssociationsAndPropagations(
   props: ITgwModuleRequest,
   context: ITgwResolvedContext,
   logPrefix: string,
-): Promise<{ associations: ITgwAssociationResponse[]; propagations: ITgwPropagationResponse[] }> {
+): Promise<{
+  associations: ITgwAssociationResponse[];
+  propagations: ITgwPropagationResponse[];
+  ownedResources: ITgwOwnedResource[];
+}> {
   return TgwRouteTables.configure(props, context, logPrefix);
 }
 
@@ -71,7 +76,11 @@ export abstract class TgwRouteTables {
     props: ITgwModuleRequest,
     context: ITgwResolvedContext,
     logPrefix: string,
-  ): Promise<{ associations: ITgwAssociationResponse[]; propagations: ITgwPropagationResponse[] }> {
+  ): Promise<{
+    associations: ITgwAssociationResponse[];
+    propagations: ITgwPropagationResponse[];
+    ownedResources: ITgwOwnedResource[];
+  }> {
     const config = props.configuration;
     const dryRun = props.dryRun ?? false;
     const results: { associations: ITgwAssociationResponse[]; propagations: ITgwPropagationResponse[] } = {
@@ -82,6 +91,10 @@ export abstract class TgwRouteTables {
     this.validateRouteTableReferences(config.transitGateways, config.attachments);
 
     const knownAttachmentIds = new Set(context.attachmentIds.values());
+
+    // Build owned resource IDs set from previously saved state (passed via config)
+    const ownedResourceIds = new Set(config.ownedResources ?? []);
+
     const byAccountRegion = this.groupByAccountRegion(config.transitGateways);
 
     for (const group of byAccountRegion.values()) {
@@ -118,6 +131,7 @@ export abstract class TgwRouteTables {
             routeTables,
             desiredAssociationsByRouteTableId,
             knownAttachmentIds,
+            ownedResourceIds,
             dryRun,
             logPrefix,
           )),
@@ -130,6 +144,7 @@ export abstract class TgwRouteTables {
               config.attachments,
               context,
               knownAttachmentIds,
+              ownedResourceIds,
               tgwName,
               rt.routeTableName,
               group.region,
@@ -141,7 +156,34 @@ export abstract class TgwRouteTables {
       }
     }
 
-    return results;
+    // Build owned resources from desired config: everything resolved and in config is owned by LZA.
+    // Uses the same attachment IDs and route table IDs that Phase 2 used for operations.
+    const ownedResources: ITgwOwnedResource[] = [];
+    logger.info(`Building owned resources from ${config.attachments.length} attachments`, logPrefix);
+    for (const attachment of config.attachments) {
+      const attKey = `${attachment.transitGateway}_${attachment.accountId}_${attachment.name}`;
+      const attId = context.attachmentIds.get(attKey);
+      if (!attId) {
+        logger.info(`  Skipping attachment ${attKey} — not resolved in context`, logPrefix);
+        continue;
+      }
+
+      for (const rtName of attachment.routeTableAssociations) {
+        const rtId = context.routeTableIds.get(`${attachment.transitGateway}_${rtName}`);
+        if (rtId) {
+          ownedResources.push(`assoc:${rtId}:${attId}`);
+        }
+      }
+      for (const rtName of attachment.routeTablePropagations) {
+        const rtId = context.routeTableIds.get(`${attachment.transitGateway}_${rtName}`);
+        if (rtId) {
+          ownedResources.push(`prop:${rtId}:${attId}`);
+        }
+      }
+    }
+    logger.info(`Owned resources collected: ${ownedResources.length}`, logPrefix);
+
+    return { ...results, ownedResources };
   }
 
   /**
@@ -203,6 +245,7 @@ export abstract class TgwRouteTables {
    * @param attachments - All attachment configurations from the request
    * @param context - Resolved TGW/RT/attachment IDs
    * @param knownAttachmentIds - Set of all managed attachment IDs
+   * @param ownedResourceIds - Set of resource IDs previously owned by LZA (for safe deletion)
    * @param tgwName - Transit gateway name
    * @param routeTableName - Route table name
    * @param region - Region for response building
@@ -215,6 +258,7 @@ export abstract class TgwRouteTables {
     attachments: ITgwAttachmentConfig[],
     context: ITgwResolvedContext,
     knownAttachmentIds: Set<string>,
+    ownedResourceIds: Set<string>,
     tgwName: string,
     routeTableName: string,
     region: string,
@@ -245,6 +289,7 @@ export abstract class TgwRouteTables {
       region,
       desiredPropagations,
       knownAttachmentIds,
+      ownedResourceIds,
       dryRun,
       logPrefix,
     );

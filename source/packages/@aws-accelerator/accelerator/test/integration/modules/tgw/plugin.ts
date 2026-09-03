@@ -29,6 +29,7 @@ import {
   DisableTransitGatewayRouteTablePropagationCommand,
   DisassociateTransitGatewayRouteTableCommand,
   EC2Client,
+  EnableTransitGatewayRouteTablePropagationCommand,
   GetTransitGatewayRouteTableAssociationsCommand,
   GetTransitGatewayRouteTablePropagationsCommand,
 } from '@aws-sdk/client-ec2';
@@ -147,7 +148,7 @@ export const tgwPlugin: ModuleTestPlugin = {
    *    table. Skipped/idempotent/dry-run assertions compare against this baseline to
    *    detect whether the wrapper wrote a new row.
    */
-  async prepare(_manifest: TestManifest, environment: ResolvedEnvironment): Promise<void> {
+  async prepare(manifest: TestManifest, environment: ResolvedEnvironment): Promise<void> {
     // One-time reset on first manifest
     if (!stateTableReset) {
       stateTableReset = true;
@@ -168,6 +169,125 @@ export const tgwPlugin: ModuleTestPlugin = {
 
     // Snapshot pre-execution timestamp for every manifest
     await capturePreExecutionTimestamp(environment);
+
+    // Create external propagation for ownership test manifests
+    if (manifest.setupExternalPropagation) {
+      logger.info('--- Preparing ownership test: cleaning route tables + creating external propagation ---');
+
+      // Clean route tables to remove leftover associations/propagations from earlier manifests
+      // (e.g. network-vpn → core-rt propagation from manifest 08 that is not in manifest 10's config).
+      // Without this, unmanaged leftovers would cause assertion failures.
+      await cleanTgwRouteTablesInAws(environment);
+
+      const networkAccountId = process.env['TGW_INTEG_NETWORK_ACCOUNT_ID'];
+      const ssmPrefix = process.env['TGW_INTEG_SSM_PREFIX'] ?? '/accelerator';
+      if (!networkAccountId) {
+        throw new Error('TGW_INTEG_NETWORK_ACCOUNT_ID env var required for ownership test');
+      }
+
+      const networkCreds = await getCredentials({
+        accountId: networkAccountId,
+        region: environment.region,
+        partition: environment.partition,
+        assumeRoleName:
+          process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole',
+        solutionId: 'LzaIntegTest',
+        logPrefix: 'TgwOwnershipTest',
+        credentials: environment.managementAccountCredentials,
+      });
+
+      const ec2 = new EC2Client({
+        region: environment.region,
+        credentials: networkCreds
+          ? {
+              accessKeyId: networkCreds.accessKeyId,
+              secretAccessKey: networkCreds.secretAccessKey,
+              sessionToken: networkCreds.sessionToken,
+            }
+          : undefined,
+      });
+      const ssm = new SSMClient({
+        region: environment.region,
+        credentials: networkCreds
+          ? {
+              accessKeyId: networkCreds.accessKeyId,
+              secretAccessKey: networkCreds.secretAccessKey,
+              sessionToken: networkCreds.sessionToken,
+            }
+          : undefined,
+      });
+
+      // Resolve IDs from SSM — use shared-vpc-attach as the external propagation because
+      // it is NEVER configured with segregated-rt in any previous manifest (01-09), so it will
+      // never appear in the owned state. This makes it a truly external resource.
+      // Note: segregated-rt SSM param is in Network account, shared-vpc-attach is in Shared Services account.
+      const rtIdResp = await ssm.send(
+        new GetParameterCommand({ Name: `${ssmPrefix}/network/transitGateways/main-tgw/routeTables/segregated-rt/id` }),
+      );
+      const segregatedRtId = rtIdResp.Parameter?.Value;
+
+      // Resolve shared-vpc-attach ID from Shared Services account
+      const sharedServicesAccountId = process.env['TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID'];
+      if (!sharedServicesAccountId) {
+        throw new Error('TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID env var required for ownership test');
+      }
+      const sharedServicesCreds = await getCredentials({
+        accountId: sharedServicesAccountId,
+        region: environment.region,
+        partition: environment.partition,
+        assumeRoleName:
+          process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE'] ?? process.env['LZA_GITLAB_ROLE_NAME'] ?? 'LzaGitlabRole',
+        solutionId: 'LzaIntegTest',
+        logPrefix: 'TgwOwnershipTest',
+        credentials: environment.managementAccountCredentials,
+      });
+      const sharedSsm = new SSMClient({
+        region: environment.region,
+        credentials: sharedServicesCreds
+          ? {
+              accessKeyId: sharedServicesCreds.accessKeyId,
+              secretAccessKey: sharedServicesCreds.secretAccessKey,
+              sessionToken: sharedServicesCreds.sessionToken,
+            }
+          : undefined,
+      });
+      const attIdResp = await sharedSsm.send(
+        new GetParameterCommand({
+          Name: `${ssmPrefix}/network/vpc/shared-vpc/transitGatewayAttachment/shared-vpc-attach/id`,
+        }),
+      );
+      const sharedVpcAttachId = attIdResp.Parameter?.Value;
+
+      if (!segregatedRtId || !sharedVpcAttachId) {
+        throw new Error(
+          `Failed to resolve IDs: segregatedRtId=${segregatedRtId}, sharedVpcAttachId=${sharedVpcAttachId}`,
+        );
+      }
+
+      // Check if propagation already exists
+      const existing = await ec2.send(
+        new GetTransitGatewayRouteTablePropagationsCommand({
+          TransitGatewayRouteTableId: segregatedRtId,
+        }),
+      );
+      const alreadyExists = existing.TransitGatewayRouteTablePropagations?.some(
+        p => p.TransitGatewayAttachmentId === sharedVpcAttachId && p.State === 'enabled',
+      );
+
+      if (!alreadyExists) {
+        await ec2.send(
+          new EnableTransitGatewayRouteTablePropagationCommand({
+            TransitGatewayRouteTableId: segregatedRtId,
+            TransitGatewayAttachmentId: sharedVpcAttachId,
+          }),
+        );
+        logger.info(`  Created external propagation: shared-vpc-attach (${sharedVpcAttachId}) → ${segregatedRtId}`);
+      } else {
+        logger.info(
+          `  External propagation already exists: shared-vpc-attach (${sharedVpcAttachId}) → ${segregatedRtId}`,
+        );
+      }
+    }
   },
 };
 

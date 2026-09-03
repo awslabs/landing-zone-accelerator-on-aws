@@ -16,6 +16,7 @@ This section contains architectural details and configuration references for the
     - [Uninstalling the Solution](./uninstall.md)
     - [Troubleshooting](./troubleshooting.md)
     - [Cost and Quotas](./cost-and-quotas.md)
+    - [Security Service Modules](./modules.md)
 
 !!! note "See also"
     - [Implementation Guide - Architecture Details](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-details.html)

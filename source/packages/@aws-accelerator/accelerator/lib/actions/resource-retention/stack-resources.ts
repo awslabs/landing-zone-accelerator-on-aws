@@ -962,6 +962,10 @@ export abstract class StackResources {
       // Exclude accounts in ignored OUs - they have no LZA stacks deployed, so role assumption will fail
       const ignoredOus = params.moduleRunnerParameters.configs.organizationConfig.getIgnoredOus();
       const allAccountIds = params.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds(ignoredOus);
+      // Runs in the PREPARE stage (before accounts are bootstrapped) and assumes into a target
+      // account before checking whether a stack exists there, so a customDeploymentRole is not
+      // guaranteed to exist yet (e.g. an account added in the same run). Use
+      // managementAccountAccessRole, the cross-account role guaranteed to be present pre-bootstrap.
       const accountAccessRoleName = params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole;
       const s3BucketName = getCfnRetentionBucketName(params);
       const bucketRegion = params.runnerParameters.sessionContext.globalRegion;

@@ -21,6 +21,7 @@ import {
   getOrganizationDetails,
   getRunnerTargetRegions,
   isModuleExecutionSkippedByEnvironment,
+  resolveModuleAccountAccessRole,
   scriptUsage,
   validateAndGetRunnerParameters,
 } from '../lib/functions';
@@ -873,6 +874,83 @@ describe('functions', () => {
       // Verify
       expect(result).toBeUndefined();
     });
+
+    test('should assume customDeploymentRole when useManagementAccessRole is false', async () => {
+      // Setup - distinct role values so the assertion proves the correct branch is taken.
+      const getCredentialsSpy = vi
+        .spyOn(lzaCommonFunctions, 'getCredentials')
+        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      mockSend.mockResolvedValue({ Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter });
+
+      const globalConfig = {
+        ...mockImportedLoggingBucketGlobalConfig,
+        managementAccountAccessRole: 'ManagementRole',
+        cdkOptions: {
+          ...(mockImportedLoggingBucketGlobalConfig.cdkOptions ?? {}),
+          useManagementAccessRole: false,
+          customDeploymentRole: 'CustomRole',
+        },
+      } as unknown as GlobalConfig;
+
+      await getCentralLoggingResources(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.centralizedLoggingRegion,
+        MOCK_CONSTANTS.acceleratorResourceNames,
+        globalConfig,
+        mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.DEPLOY,
+          },
+        },
+        MOCK_CONSTANTS.credentials,
+      );
+
+      expect(getCredentialsSpy).toHaveBeenCalledWith(expect.objectContaining({ assumeRoleName: 'CustomRole' }));
+    });
+
+    test('should assume managementAccountAccessRole when useManagementAccessRole is true (takes precedence)', async () => {
+      // Setup - useManagementAccessRole must win over a configured customDeploymentRole,
+      // matching getAcceleratorModuleRunnerParameters precedence.
+      const getCredentialsSpy = vi
+        .spyOn(lzaCommonFunctions, 'getCredentials')
+        .mockResolvedValue(MOCK_CONSTANTS.credentials);
+      mockSend.mockResolvedValue({ Parameter: MOCK_CONSTANTS.centralLogBucketCmkSsmParameter });
+
+      const globalConfig = {
+        ...mockImportedLoggingBucketGlobalConfig,
+        managementAccountAccessRole: 'ManagementRole',
+        cdkOptions: {
+          ...(mockImportedLoggingBucketGlobalConfig.cdkOptions ?? {}),
+          useManagementAccessRole: true,
+          customDeploymentRole: 'CustomRole',
+        },
+      } as unknown as GlobalConfig;
+
+      await getCentralLoggingResources(
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.centralizedLoggingRegion,
+        MOCK_CONSTANTS.acceleratorResourceNames,
+        globalConfig,
+        mockAccountsConfig as AccountsConfig,
+        {
+          name: AcceleratorModuleStages.PREPARE,
+          runOrder: AcceleratorModuleStageOrders.logging.runOrder + 1,
+          module: {
+            name: AcceleratorModules.SETUP_CONTROL_TOWER_LANDING_ZONE,
+            executionPhase: ModuleExecutionPhase.DEPLOY,
+          },
+        },
+        MOCK_CONSTANTS.credentials,
+      );
+
+      expect(getCredentialsSpy).toHaveBeenCalledWith(expect.objectContaining({ assumeRoleName: 'ManagementRole' }));
+    });
   });
 
   describe('getCentralLogBucketName', () => {
@@ -1008,6 +1086,64 @@ describe('functions', () => {
         MOCK_CONSTANTS.resourcePrefixes,
         MOCK_CONSTANTS.credentials,
       );
+    });
+
+    test('should resolve accountAccessRoleName to customDeploymentRole when useManagementAccessRole is false', async () => {
+      // Setup - distinct role values so the assertion proves the correct branch is taken.
+      configs = {
+        ...configs,
+        globalConfig: {
+          ...mockImportedLoggingBucketGlobalConfig,
+          managementAccountAccessRole: 'ManagementRole',
+          cdkOptions: {
+            ...(mockImportedLoggingBucketGlobalConfig.cdkOptions ?? {}),
+            useManagementAccessRole: false,
+            customDeploymentRole: 'CustomRole',
+          },
+        } as unknown as GlobalConfig,
+      };
+      vi.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
+
+      // Execute
+      const result = await getAcceleratorModuleRunnerParameters(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.resourcePrefixes,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(result.accountAccessRoleName).toBe('CustomRole');
+    });
+
+    test('should resolve accountAccessRoleName to managementAccountAccessRole when useManagementAccessRole is true', async () => {
+      // Setup - useManagementAccessRole takes precedence over customDeploymentRole.
+      configs = {
+        ...configs,
+        globalConfig: {
+          ...mockImportedLoggingBucketGlobalConfig,
+          managementAccountAccessRole: 'ManagementRole',
+          cdkOptions: {
+            ...(mockImportedLoggingBucketGlobalConfig.cdkOptions ?? {}),
+            useManagementAccessRole: true,
+            customDeploymentRole: 'CustomRole',
+          },
+        } as unknown as GlobalConfig,
+      };
+      vi.spyOn(ConfigLoader, 'getAcceleratorConfigurations').mockResolvedValue(configs);
+
+      // Execute
+      const result = await getAcceleratorModuleRunnerParameters(
+        MOCK_CONSTANTS.runnerParameters.configDirPath,
+        MOCK_CONSTANTS.runnerParameters.partition,
+        MOCK_CONSTANTS.resourcePrefixes,
+        MOCK_CONSTANTS.runnerParameters.solutionId,
+        MOCK_CONSTANTS.credentials,
+      );
+
+      // Verify
+      expect(result.accountAccessRoleName).toBe('ManagementRole');
     });
 
     test('should return correct parameters when centralized logging region is enabled', async () => {
@@ -1173,6 +1309,40 @@ describe('functions', () => {
 
       // Verify
       expect(result).toBe(false);
+    });
+  });
+
+  describe('resolveModuleAccountAccessRole', () => {
+    const buildGlobalConfig = (cdkOptions: Record<string, unknown>) =>
+      ({
+        managementAccountAccessRole: 'ManagementRole',
+        cdkOptions,
+      }) as unknown as GlobalConfig;
+
+    test('returns managementAccountAccessRole when useManagementAccessRole is true (takes precedence)', () => {
+      const result = resolveModuleAccountAccessRole(
+        buildGlobalConfig({ useManagementAccessRole: true, customDeploymentRole: 'CustomRole' }),
+      );
+      expect(result).toBe('ManagementRole');
+    });
+
+    test('returns customDeploymentRole when useManagementAccessRole is false and customDeploymentRole is set', () => {
+      const result = resolveModuleAccountAccessRole(
+        buildGlobalConfig({ useManagementAccessRole: false, customDeploymentRole: 'CustomRole' }),
+      );
+      expect(result).toBe('CustomRole');
+    });
+
+    test('returns managementAccountAccessRole when customDeploymentRole is not set', () => {
+      const result = resolveModuleAccountAccessRole(buildGlobalConfig({ useManagementAccessRole: false }));
+      expect(result).toBe('ManagementRole');
+    });
+
+    test('returns managementAccountAccessRole when cdkOptions is undefined', () => {
+      const result = resolveModuleAccountAccessRole({
+        managementAccountAccessRole: 'ManagementRole',
+      } as unknown as GlobalConfig);
+      expect(result).toBe('ManagementRole');
     });
   });
 });

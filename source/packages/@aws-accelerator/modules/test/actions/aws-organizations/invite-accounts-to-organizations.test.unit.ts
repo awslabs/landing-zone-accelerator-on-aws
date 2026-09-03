@@ -69,6 +69,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        accountAccessRoleName: 'mockCustomDeploymentRole',
       },
     };
 
@@ -77,6 +78,20 @@ describe('InviteAccountsToOrganizationsModule', () => {
 
     // Verify
     expect(awsLza.inviteAccountsBatchToOrganization).toHaveBeenCalledTimes(1);
+    // Invited accounts are not yet bootstrapped, so this module must use managementAccountAccessRole
+    // (the guaranteed invitation prerequisite) — NOT the runner-resolved accountAccessRoleName, which
+    // could be a customDeploymentRole that does not exist in the target account yet.
+    expect(awsLza.inviteAccountsBatchToOrganization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        configuration: expect.objectContaining({
+          accounts: expect.arrayContaining([
+            expect.objectContaining({
+              accountAccessRoleName: mockGlobalConfiguration.managementAccountAccessRole,
+            }),
+          ]),
+        }),
+      }),
+    );
     expect(response).toBe(
       `Module "${AcceleratorModules.INVITE_ACCOUNTS_TO_ORGANIZATIONS}" completed successfully with status ${status}`,
     );
@@ -116,6 +131,7 @@ describe('InviteAccountsToOrganizationsModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        accountAccessRoleName: 'mockCustomDeploymentRole',
       },
     };
 

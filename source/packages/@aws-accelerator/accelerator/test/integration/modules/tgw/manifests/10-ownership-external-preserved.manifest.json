@@ -1,0 +1,92 @@
+{
+  "name": "ownership-external-preserved",
+  "description": "Verifies externally-created propagation (shared-vpc-attach on segregated-rt, created by prepare hook) is NOT deleted when not in config. The external attachment (shared-vpc) is not in this manifest's config, so the module doesn't even know about it — proving external resources are never touched.",
+  "order": 10,
+  "setupExternalPropagation": true,
+  "moduleConfig": {
+    "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
+    "transitGateways": [
+      {
+        "name": "main-tgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "asn": 64513,
+        "dnsSupport": "enable",
+        "vpnEcmpSupport": "enable",
+        "defaultRouteTableAssociation": "disable",
+        "defaultRouteTablePropagation": "disable",
+        "autoAcceptSharingAttachments": "enable",
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          },
+          {
+            "name": "segregated-rt",
+            "routes": []
+          }
+        ],
+        "shareTargets": {
+          "organizationalUnits": [],
+          "accounts": [
+            "Shared Services"
+          ]
+        }
+      }
+    ],
+    "vpcs": [
+      {
+        "name": "network-vpc",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "network-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
+            "routeTablePropagations": [
+              "core-rt"
+            ]
+          }
+        ]
+      }
+    ],
+    "vpcTemplates": [],
+    "customerGateways": []
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "completed",
+    "tgwRouteTableAssociations": {
+      "core-rt": [
+        "network-vpc-attach"
+      ]
+    },
+    "tgwRouteTablePropagations": {
+      "core-rt": [
+        "network-vpc-attach"
+      ],
+      "segregated-rt": [
+        "shared-vpc-attach"
+      ]
+    },
+    "stateTableEntry": {}
+  },
+  "skipCleanup": true
+}

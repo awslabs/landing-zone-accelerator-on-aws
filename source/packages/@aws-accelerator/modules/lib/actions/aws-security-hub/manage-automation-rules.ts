@@ -78,7 +78,7 @@ export abstract class ManageAutomationRulesModule {
       region: params.moduleRunnerParameters.configs.globalConfig.homeRegion,
       solutionId: params.runnerParameters.solutionId,
       partition: params.runnerParameters.partition,
-      assumeRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
+      assumeRoleName: params.moduleRunnerParameters.accountAccessRoleName,
       credentials: params.moduleRunnerParameters.managementAccountCredentials,
     });
 

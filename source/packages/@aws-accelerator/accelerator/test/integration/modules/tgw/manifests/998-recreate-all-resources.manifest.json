@@ -1,0 +1,225 @@
+{
+  "name": "recreate-all-resources",
+  "description": "Establish full resource set and valid owned state before final cleanup. Runs after error tests to restore lastStatus=completed so manifest 999 can delete using owned state. Does not assert operation counts (created/exists) since prior test state is non-deterministic — only asserts end-state correctness.",
+  "order": 998,
+  "moduleConfig": {
+    "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
+    "transitGateways": [
+      {
+        "name": "main-tgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "asn": 64513,
+        "dnsSupport": "enable",
+        "vpnEcmpSupport": "enable",
+        "defaultRouteTableAssociation": "disable",
+        "defaultRouteTablePropagation": "disable",
+        "autoAcceptSharingAttachments": "enable",
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          },
+          {
+            "name": "segregated-rt",
+            "routes": []
+          }
+        ],
+        "shareTargets": {
+          "organizationalUnits": [],
+          "accounts": [
+            "Shared Services"
+          ]
+        }
+      }
+    ],
+    "vpcs": [
+      {
+        "name": "network-vpc",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "network-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
+            "routeTablePropagations": [
+              "core-rt"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "shared-vpc",
+        "account": "Shared Services",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.101.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "shared-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "segregated-rt"
+            ],
+            "routeTablePropagations": [
+              "core-rt"
+            ]
+          }
+        ]
+      }
+    ],
+    "vpcTemplates": [
+      {
+        "name": "template-vpc",
+        "deploymentTargets": {
+          "accounts": [
+            "Network",
+            "Shared Services"
+          ]
+        },
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.200.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "template-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
+            "routeTablePropagations": []
+          }
+        ]
+      }
+    ],
+    "customerGateways": [
+      {
+        "name": "network-cgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "ipAddress": "203.0.113.12",
+        "asn": 65000,
+        "vpnConnections": [
+          {
+            "name": "network-vpn",
+            "transitGateway": "main-tgw",
+            "staticRoutesOnly": true,
+            "routeTableAssociations": [
+              "core-rt"
+            ],
+            "routeTablePropagations": [
+              "core-rt"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "completed",
+    "tgwRouteTableAssociations": {
+      "core-rt": [
+        "network-vpc-attach",
+        "network-vpn",
+        "template-vpc-attach"
+      ],
+      "segregated-rt": [
+        "shared-vpc-attach"
+      ]
+    },
+    "tgwRouteTablePropagations": {
+      "core-rt": [
+        "network-vpc-attach",
+        "network-vpn",
+        "shared-vpc-attach"
+      ],
+      "segregated-rt": []
+    },
+    "stateTableLastConfigVpcAttachments": [
+      {
+        "vpcName": "network-vpc",
+        "accountId": "${ENV:TGW_INTEG_NETWORK_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [
+          "core-rt"
+        ],
+        "routeTablePropagations": [
+          "core-rt"
+        ]
+      },
+      {
+        "vpcName": "shared-vpc",
+        "accountId": "${ENV:TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [
+          "segregated-rt"
+        ],
+        "routeTablePropagations": [
+          "core-rt"
+        ]
+      },
+      {
+        "vpcName": "template-vpc",
+        "accountId": "${ENV:TGW_INTEG_NETWORK_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [
+          "core-rt"
+        ],
+        "routeTablePropagations": []
+      },
+      {
+        "vpcName": "template-vpc",
+        "accountId": "${ENV:TGW_INTEG_SHARED_SERVICES_ACCOUNT_ID}",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "transitGatewayName": "main-tgw",
+        "routeTableAssociations": [
+          "core-rt"
+        ],
+        "routeTablePropagations": []
+      }
+    ],
+    "stateTableEntry": {}
+  },
+  "skipCleanup": true
+}

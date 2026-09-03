@@ -66,19 +66,33 @@ export abstract class DirectConnectGatewayAssociation {
    * @param props - Module request with credentials and configuration
    * @param context - Resolved TGW/RT/attachment ID maps from Phase 1
    * @param logPrefix - Structured logging prefix
-   * @returns DX association responses and attachment configs for Phase 2
+   * @returns An object containing:
+   *   - `dxResponses`: DX Gateway association operation results
+   *   - `dxAttachments`: attachment configs merged into Phase 2 for route-table associations/propagations
+   *   - `ownedResources`: ownership-state IDs for DX Gateway↔TGW associations created by LZA, one per
+   *     declared association in the form `dxassoc:{dxGatewayId}:{transitGatewayId}`. Persisted to state
+   *     so subsequent runs only delete associations LZA created (externally-created ones are preserved).
    */
   public static async resolveDxGatewayAssociations(
     props: ITgwModuleRequest,
     context: ITgwResolvedContext,
     logPrefix: string,
-  ): Promise<{ dxResponses: IDxAssociationResponse[]; dxAttachments: ITgwAttachmentConfig[] }> {
+  ): Promise<{
+    dxResponses: IDxAssociationResponse[];
+    dxAttachments: ITgwAttachmentConfig[];
+    ownedResources: string[];
+  }> {
     const config = props.configuration;
     const dxGateways = config.directConnectGateways ?? [];
     const dryRun = props.dryRun ?? false;
 
+    // Set of DX Gateway↔TGW associations previously created by LZA (ownership state). Only
+    // associations in this set may be deleted — externally-created associations on managed TGWs
+    // are preserved. Format: "dxassoc:{dxGatewayId}:{transitGatewayId}".
+    const ownedResourceIds = new Set(config.ownedResources ?? []);
+
     if (dxGateways.length === 0) {
-      return { dxResponses: [], dxAttachments: [] };
+      return { dxResponses: [], dxAttachments: [], ownedResources: [] };
     }
 
     const ssmPrefix = config.dataSources?.ssmParameterPrefix;
@@ -187,6 +201,17 @@ export abstract class DirectConnectGatewayAssociation {
       }
     }
 
+    // Owned set built from desired config: every DX Gateway↔TGW association declared in config is
+    // owned by LZA. Persisted to state so subsequent runs know which associations LZA created and
+    // may therefore delete when removed from config.
+    const ownedResources: string[] = [];
+    for (const { dxgwId, assoc } of workItems) {
+      const tgwId = context.transitGatewayIds.get(assoc.name);
+      if (tgwId) {
+        ownedResources.push(`dxassoc:${dxgwId}:${tgwId}`);
+      }
+    }
+
     // ── Deletion phase: remove stale DX-TGW associations ──
     const declaredPairs = new Set(workItems.map(w => `${w.dxgwId}::${context.transitGatewayIds.get(w.assoc.name)}`));
     const managedTgwIds = new Set(context.transitGatewayIds.values());
@@ -215,6 +240,17 @@ export abstract class DirectConnectGatewayAssociation {
         if (assoc.associatedGateway?.type !== 'transitGateway') continue;
         if (!managedTgwIds.has(assocTgwId)) continue;
         if (declaredPairs.has(`${dxgwId}::${assocTgwId}`)) continue;
+
+        // Ownership gate: only delete associations LZA previously created. An association on a
+        // managed TGW that is not in the owned set was created out-of-band and must be preserved.
+        if (!ownedResourceIds.has(`dxassoc:${dxgwId}:${assocTgwId}`)) {
+          logger.info(
+            `Skipping deletion of DX Gateway association ${dxgw.name} ↔ TGW ${assocTgwId}: not created by LZA ` +
+              `(no 'dxassoc:${dxgwId}:${assocTgwId}' in ownership state)`,
+            logPrefix,
+          );
+          continue;
+        }
 
         // Find the TGW name for logging
         const tgwName = [...context.transitGatewayIds.entries()].find(([, id]) => id === assocTgwId)?.[0] ?? assocTgwId;
@@ -261,7 +297,7 @@ export abstract class DirectConnectGatewayAssociation {
       }
     }
 
-    return { dxResponses, dxAttachments };
+    return { dxResponses, dxAttachments, ownedResources };
   }
 
   /**
