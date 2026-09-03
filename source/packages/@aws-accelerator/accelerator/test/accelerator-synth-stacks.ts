@@ -176,7 +176,6 @@ export class AcceleratorSynthStacks {
       enableSingleAccountMode: false,
       useExistingRoles: false,
       centralLogsBucketKmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/00000000-0000-0000-0000-000000000000',
-      isDiagnosticsPackEnabled: 'Yes',
       pipelineAccountId: '111111111111',
       installerStackName: 'AWSAccelerator-InstallerStack',
     };

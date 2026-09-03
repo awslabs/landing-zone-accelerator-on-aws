@@ -27,7 +27,6 @@ import {
   createAccountsStack,
   createBootstrapStack,
   createCustomizationsStacks,
-  createDiagnosticsPackStack,
   createFinalizeStack,
   createIdentityCenterStack,
   createKeyDependencyStacks,
@@ -306,13 +305,6 @@ export async function createCdkApp(options: AcceleratorToolkitProps, outputDir?:
     //
     // Set accelerator environment variables
     const acceleratorEnv = setAcceleratorEnvironment(process.env, resourcePrefixes, options.stage);
-
-    //
-    // Create the diagnostics pack resources. The Diagnostics pack stack will be deployed for multi-account environments without utilizing existing roles for deployment.
-    //
-    if (!useExistingRoles && !acceleratorEnv.enableSingleAccountMode) {
-      addCdkApps(mainCdkApps, createDiagnosticsPackStack(context, acceleratorEnv, resourcePrefixes));
-    }
 
     //
     // PIPELINE and TESTER Stacks

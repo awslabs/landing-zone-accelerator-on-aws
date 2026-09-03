@@ -53,7 +53,6 @@ import {
   PermissionsBoundaryAspect,
 } from '../lib/accelerator-aspects';
 import { ResourcePolicyEnforcementStack } from '../lib/stacks/resource-policy-enforcement-stack';
-import { DiagnosticsPackStack } from '../lib/stacks/diagnostics-pack-stack';
 import { AcceleratorToolkit } from '../lib/toolkit';
 import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { ControlTowerClient, ListLandingZonesCommand } from '@aws-sdk/client-controltower';
@@ -292,68 +291,6 @@ export function createTesterStack(
       return app;
     }
     return undefined;
-  }
-  return undefined;
-}
-
-/**
- * Create Diagnostics Pack Stack
- * @param rootApp
- * @param context
- * @param props
- * @param accountId
- * @param homeRegion
- */
-export function createDiagnosticsPackStack(
-  context: AcceleratorContext,
-  acceleratorEnv: AcceleratorEnvironment,
-  resourcePrefixes: AcceleratorResourcePrefixes,
-) {
-  if (
-    includeStage(context, {
-      stage: AcceleratorStage.DIAGNOSTICS_PACK,
-      account: context.account,
-      region: context.region,
-    })
-  ) {
-    const diagnosticsPackStackName = AcceleratorToolkit.getNonConfigDependentStackName(
-      AcceleratorStage.DIAGNOSTICS_PACK,
-      {
-        stage: context.stage!,
-        accountId: context.account!,
-        region: context.region!,
-      },
-    );
-    const app = new cdk.App({ outdir: `cdk.out/${diagnosticsPackStackName}` });
-    const configBucketName = acceleratorEnv.qualifier
-      ? `${acceleratorEnv.qualifier}-config-${context.account}-${context.region}`
-      : `${resourcePrefixes.bucketName}-config-${context.account}-${context.region}`;
-    const diagnosticsPackStack = new DiagnosticsPackStack(app, diagnosticsPackStackName, {
-      env: { account: context.account, region: context.region },
-      description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
-      terminationProtection: true,
-      acceleratorPrefix: resourcePrefixes.accelerator,
-      ssmParamPrefix: resourcePrefixes.ssmParamName,
-      bucketNamePrefix: resourcePrefixes.bucketName,
-      installerStackName: acceleratorEnv.installerStackName,
-      configRepositoryName: acceleratorEnv.configRepositoryName,
-      configRepositoryLocation: acceleratorEnv.configRepositoryLocation,
-      configBucketName,
-      qualifier: acceleratorEnv.qualifier,
-      synthesizer: getInstallerSynthesizer(
-        context.partition,
-        context.account!,
-        resourcePrefixes.accelerator,
-        context.region!,
-        acceleratorEnv.managementAccountId,
-        acceleratorEnv.managementAccountRoleName,
-      ),
-    });
-    addAcceleratorTags(diagnosticsPackStack, context.partition, [], resourcePrefixes.accelerator);
-    cdk.Aspects.of(diagnosticsPackStack).add(new AwsSolutionsChecks());
-    cdk.Aspects.of(diagnosticsPackStack).add(new PermissionsBoundaryAspect(context.account!, context.partition));
-    new AcceleratorAspects(app, context.partition, context.useExistingRoles ?? false);
-    return app;
   }
   return undefined;
 }

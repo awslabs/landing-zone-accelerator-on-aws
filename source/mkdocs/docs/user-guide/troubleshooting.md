@@ -1,6 +1,6 @@
 # Troubleshooting
 
-For the full troubleshooting guide including the diagnostics pack, see the [Troubleshooting](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) section of the Implementation Guide.
+For the full troubleshooting guide, see the [Troubleshooting](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) section of the Implementation Guide.
 
 ## Common Pipeline Errors
 
@@ -38,9 +38,41 @@ Deleting a route table (or subnet and route table) that an S3 or DynamoDB gatewa
 | Accounts show "Update Available" after adding a region | Manually update accounts in Control Tower (5 at a time) before retrying the pipeline |
 | Landing Zone update fails | Ensure Control Tower is managed by LZA via `controlTower/landingZone` in `global-config.yaml` |
 
-## Diagnostics Pack
+## Removing the deprecated Diagnostics Pack
 
-LZA includes a diagnostics pack that collects pipeline status, stack status, and configuration information. See the [Implementation Guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/diagnostics-pack.html) for instructions on generating a diagnostics report.
+The installer-deployed Diagnostics Pack has been removed. Failure diagnostics are now collected automatically by the pipeline on every failed run — see [Pipeline Diagnostics](pipeline-diagnostics.md).
+
+Upgrading to a release without the Diagnostics Pack leaves two categories of previously deployed resources:
+
+- **`<prefix>-DiagnosticsPackAccessRole` (each account, home region):** removed automatically. It is created by the `DependenciesStack` (deployed in the Key stage), so the next pipeline run synthesizes without it and CloudFormation deletes the role. No manual action is required.
+- **`<prefix>-DiagnosticsPackStack-<account-id>-<home-region>` (pipeline account, home region):** this stack is deployed directly by the installer with termination protection enabled, so it does **not** self-delete when the installer stops deploying it. It is idle and incurs effectively no cost, so it is safe to leave in place. To remove it manually, in the pipeline account and home region:
+
+    1. Look up the exact stack name. The deployed name includes the pipeline account ID and home region as a suffix (for example `AWSAccelerator-DiagnosticsPackStack-111122223333-us-east-1`), so confirm it before running any delete command:
+
+        ```bash
+        aws cloudformation list-stacks \
+          --region <home-region> \
+          --query "StackSummaries[?contains(StackName, 'DiagnosticsPackStack') && StackStatus != 'DELETE_COMPLETE'].StackName"
+        ```
+
+    2. Disable termination protection on the stack, using the full name from the previous step:
+
+        ```bash
+        aws cloudformation update-termination-protection \
+          --no-enable-termination-protection \
+          --stack-name <prefix>-DiagnosticsPackStack-<account-id>-<home-region> \
+          --region <home-region>
+        ```
+
+    3. Delete the stack:
+
+        ```bash
+        aws cloudformation delete-stack \
+          --stack-name <prefix>-DiagnosticsPackStack-<account-id>-<home-region> \
+          --region <home-region>
+        ```
+
+    Replace `<prefix>` with your accelerator prefix (`AWSAccelerator` by default, or your configured qualifier), `<account-id>` with the pipeline account ID, and `<home-region>` with the home region. `delete-stack` returns success even when the stack name does not exist, so verify the name in step 1 first — otherwise the protected stack silently remains. Running a full LZA uninstall also removes this stack, so no manual step is needed if you are uninstalling the solution entirely.
 
 ## Getting Help
 

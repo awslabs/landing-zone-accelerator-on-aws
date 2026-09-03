@@ -2327,10 +2327,6 @@ def handler(event, context):
             ],
             "Environment": [
               {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
-              {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",
               },
@@ -5290,10 +5286,6 @@ def handler(event, context):
               "-c",
             ],
             "Environment": [
-              {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
               {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",
@@ -8270,10 +8262,6 @@ def handler(event, context):
             ],
             "Environment": [
               {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
-              {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",
               },
@@ -11226,10 +11214,6 @@ def handler(event, context):
               "-c",
             ],
             "Environment": [
-              {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
               {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",
@@ -14215,10 +14199,6 @@ def handler(event, context):
             ],
             "Environment": [
               {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
-              {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",
               },
@@ -17138,10 +17118,6 @@ def handler(event, context):
               "-c",
             ],
             "Environment": [
-              {
-                "Name": "ENABLE_DIAGNOSTICS_PACK",
-                "Value": "No",
-              },
               {
                 "Name": "SkipPipelinePrerequisites",
                 "Value": "true",

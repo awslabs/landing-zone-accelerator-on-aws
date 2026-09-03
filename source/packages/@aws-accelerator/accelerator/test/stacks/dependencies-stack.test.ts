@@ -23,7 +23,6 @@ import { createAcceleratorStackProps } from './stack-props-test-helper';
 
 const HOME_REGION = 'us-east-1';
 const OTHER_REGION = 'us-west-2';
-const MANAGEMENT_ACCOUNT_ID = '234567890';
 const WORKLOAD_ACCOUNT_ID = '111111111111';
 const PIPELINE_ACCOUNT_ID_EXTERNAL = '1234567890';
 
@@ -31,7 +30,6 @@ function buildDependenciesProps(opts?: {
   account?: string;
   region?: string;
   homeRegion?: string;
-  isDiagnosticsPackEnabled?: 'Yes' | 'No';
   enableSingleAccountMode?: boolean;
   useExistingRoles?: boolean;
   pipelineAccountId?: string;
@@ -56,7 +54,6 @@ function buildDependenciesProps(opts?: {
     env: { account, region },
     globalConfig,
     iamConfig: { ...base.iamConfig, ...opts?.iamConfig } as IamConfig,
-    isDiagnosticsPackEnabled: opts?.isDiagnosticsPackEnabled ?? 'No',
     enableSingleAccountMode: opts?.enableSingleAccountMode ?? false,
     useExistingRoles: opts?.useExistingRoles ?? false,
     pipelineAccountId: opts?.pipelineAccountId ?? PIPELINE_ACCOUNT_ID_EXTERNAL,
@@ -133,168 +130,6 @@ describe('DependenciesStack - default event bus policy', () => {
     const template = Template.fromStack(stack);
 
     template.resourceCountIs('AWS::Events::EventBusPolicy', 0);
-  });
-});
-
-describe('DependenciesStack - DiagnosticsPack role gating', () => {
-  test('does not create DiagnosticsPackAssumeRole when isDiagnosticsPackEnabled is "No"', () => {
-    const props = buildDependenciesProps({ isDiagnosticsPackEnabled: 'No' });
-    const stack = new DependenciesStack(app, 'test-deps-dp-disabled', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(false);
-  });
-
-  test('does not create DiagnosticsPackAssumeRole in single account mode', () => {
-    const props = buildDependenciesProps({ isDiagnosticsPackEnabled: 'Yes', enableSingleAccountMode: true });
-    const stack = new DependenciesStack(app, 'test-deps-dp-single', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(false);
-  });
-
-  test('does not create DiagnosticsPackAssumeRole when useExistingRoles is true', () => {
-    const props = buildDependenciesProps({ isDiagnosticsPackEnabled: 'Yes', useExistingRoles: true });
-    const stack = new DependenciesStack(app, 'test-deps-dp-existing', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(false);
-  });
-
-  test('creates DiagnosticsPackAssumeRole in workload account home region when diagnostics enabled', () => {
-    const props = buildDependenciesProps({
-      account: WORKLOAD_ACCOUNT_ID,
-      region: HOME_REGION,
-      homeRegion: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-workload-home', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(true);
-  });
-
-  test('does not create DiagnosticsPackAssumeRole outside home region', () => {
-    const props = buildDependenciesProps({
-      account: WORKLOAD_ACCOUNT_ID,
-      region: OTHER_REGION,
-      homeRegion: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-other-region', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(false);
-  });
-
-  test('does not create DiagnosticsPackAssumeRole in management account for non-external deployment', () => {
-    // Non-external deployment: pipelineAccountId == managementAccountId
-    const props = buildDependenciesProps({
-      account: MANAGEMENT_ACCOUNT_ID,
-      region: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-      pipelineAccountId: MANAGEMENT_ACCOUNT_ID,
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-mgmt-non-external', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(false);
-  });
-
-  test('creates DiagnosticsPackAssumeRole in management account for external deployment', () => {
-    const props = buildDependenciesProps({
-      account: MANAGEMENT_ACCOUNT_ID,
-      region: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-      pipelineAccountId: PIPELINE_ACCOUNT_ID_EXTERNAL,
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-mgmt-external', props);
-    const template = Template.fromStack(stack);
-
-    const roles = template.findResources('AWS::IAM::Role');
-    const dpRoleExists = Object.values(roles).some(
-      (r: any) => r.Properties?.RoleName && String(r.Properties.RoleName).includes('DiagnosticsPackAccessRole'),
-    );
-    expect(dpRoleExists).toBe(true);
-  });
-
-  test('DiagnosticsPackAssumeRole policy includes CloudFormation DescribeStacks permission', () => {
-    const props = buildDependenciesProps({
-      account: WORKLOAD_ACCOUNT_ID,
-      region: HOME_REGION,
-      homeRegion: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-cfn-perms', props);
-    const template = Template.fromStack(stack);
-
-    const policies = template.findResources('AWS::IAM::Policy');
-    const hasCfnDescribe = Object.values(policies).some((p: any) => {
-      const serialized = JSON.stringify(p.Properties?.PolicyDocument);
-      return serialized.includes('cloudformation:DescribeStacks');
-    });
-    expect(hasCfnDescribe).toBe(true);
-  });
-
-  test('DiagnosticsPackAssumeRole policy includes Organizations ListAccounts when in management account', () => {
-    const props = buildDependenciesProps({
-      account: MANAGEMENT_ACCOUNT_ID,
-      region: HOME_REGION,
-      homeRegion: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-      pipelineAccountId: PIPELINE_ACCOUNT_ID_EXTERNAL,
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-orgs', props);
-    const template = Template.fromStack(stack);
-
-    const policies = template.findResources('AWS::IAM::Policy');
-    const hasOrgs = Object.values(policies).some((p: any) => {
-      const serialized = JSON.stringify(p.Properties?.PolicyDocument);
-      return serialized.includes('organizations:ListAccounts');
-    });
-    expect(hasOrgs).toBe(true);
-  });
-
-  test('DiagnosticsPackAssumeRole does not include Organizations ListAccounts in workload account', () => {
-    const props = buildDependenciesProps({
-      account: WORKLOAD_ACCOUNT_ID,
-      region: HOME_REGION,
-      homeRegion: HOME_REGION,
-      isDiagnosticsPackEnabled: 'Yes',
-    });
-    const stack = new DependenciesStack(app, 'test-deps-dp-no-orgs', props);
-    const template = Template.fromStack(stack);
-
-    const policies = template.findResources('AWS::IAM::Policy');
-    const hasOrgs = Object.values(policies).some((p: any) => {
-      const serialized = JSON.stringify(p.Properties?.PolicyDocument);
-      return serialized.includes('organizations:ListAccounts');
-    });
-    expect(hasOrgs).toBe(false);
   });
 });
 

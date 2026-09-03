@@ -2400,35 +2400,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@aws-accelerator/diagnostic-pack-reporter@workspace:packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack":
-  version: 0.0.0-use.local
-  resolution: "@aws-accelerator/diagnostic-pack-reporter@workspace:packages/@aws-accelerator/accelerator/lib/lambdas/diagnostic-pack"
-  dependencies:
-    "@aws-sdk/client-cloudformation": "npm:3.1041.0"
-    "@aws-sdk/client-cloudwatch-logs": "npm:3.1041.0"
-    "@aws-sdk/client-codebuild": "npm:3.1041.0"
-    "@aws-sdk/client-codecommit": "npm:3.1041.0"
-    "@aws-sdk/client-codepipeline": "npm:3.1041.0"
-    "@aws-sdk/client-organizations": "npm:3.1041.0"
-    "@aws-sdk/client-s3": "npm:3.1041.0"
-    "@aws-sdk/client-ssm": "npm:3.1041.0"
-    "@aws-sdk/client-sts": "npm:3.1041.0"
-    "@types/js-yaml": "npm:4.0.9"
-    "@types/node": "npm:18.19.50"
-    esbuild: "npm:0.28.1"
-    eslint: "npm:9.37.0"
-    eslint-config-prettier: "npm:10.1.8"
-    eslint-import-resolver-typescript: "npm:4.4.4"
-    eslint-plugin-import: "npm:2.32.0"
-    eslint-plugin-license-header: "npm:0.8.0"
-    eslint-plugin-prettier: "npm:5.5.4"
-    prettier: "npm:3.6.2"
-    ts-node: "npm:10.9.1"
-    typescript: "npm:5.8.3"
-    vitest: "npm:4.1.8"
-  languageName: unknown
-  linkType: soft
-
 "@aws-accelerator/govcloud-account-vending@workspace:packages/@aws-accelerator/govcloud-account-vending":
   version: 0.0.0-use.local
   resolution: "@aws-accelerator/govcloud-account-vending@workspace:packages/@aws-accelerator/govcloud-account-vending"

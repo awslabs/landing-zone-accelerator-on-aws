@@ -344,7 +344,7 @@ export class AcceleratorToolkit {
   }
 
   /**
-   * Function to initialize stack name which are not dependent on config, such as  PIPELINE, TESTER PIPELINE and DIAGNOSTICS_PACK stack name
+   * Function to initialize stack name which are not dependent on config, such as  PIPELINE and TESTER PIPELINE stack name
    * @param stageName {@link AcceleratorStage}
    * @param props
    * @returns
@@ -353,12 +353,6 @@ export class AcceleratorToolkit {
     stageName: AcceleratorStage,
     props: { stage: string; accountId?: string; region?: string },
   ) {
-    if (stageName === AcceleratorStage.DIAGNOSTICS_PACK) {
-      return process.env['ACCELERATOR_QUALIFIER']
-        ? `${process.env['ACCELERATOR_QUALIFIER']}-DiagnosticsPackStack-${props.accountId}-${props.region}`
-        : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
-    }
-
     return process.env['ACCELERATOR_QUALIFIER']
       ? `${process.env['ACCELERATOR_QUALIFIER']}-${stageName}-stack-${props.accountId}-${props.region}`
       : `${AcceleratorStackNames[props.stage]}-${props.accountId}-${props.region}`;
@@ -398,7 +392,6 @@ export class AcceleratorToolkit {
     const managementAcceleratorStages = [
       AcceleratorStage.ACCOUNTS,
       AcceleratorStage.PREPARE,
-      AcceleratorStage.DIAGNOSTICS_PACK,
       AcceleratorStage.PIPELINE,
     ];
     const deploymentRole = props.customDeploymentRoleName ?? `${props.stackPrefix}-Deployment-Role`;
@@ -455,15 +448,6 @@ export class AcceleratorToolkit {
       case AcceleratorStage.TESTER_PIPELINE:
         stackName = [
           AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.TESTER_PIPELINE, {
-            stage: options.stage,
-            accountId: options.accountId,
-            region: options.region,
-          }),
-        ];
-        break;
-      case AcceleratorStage.DIAGNOSTICS_PACK:
-        stackName = [
-          AcceleratorToolkit.getNonConfigDependentStackName(AcceleratorStage.DIAGNOSTICS_PACK, {
             stage: options.stage,
             accountId: options.accountId,
             region: options.region,
@@ -856,7 +840,7 @@ async function sdkProvider(
   const isManagementAccountExternalDeployment = isExternalDeployment && accountId === managementAccountId;
   const isNonManagementAccountExternalDeployment = isExternalDeployment && accountId !== managementAccountId;
 
-  const installStage = [AcceleratorStage.DIAGNOSTICS_PACK, AcceleratorStage.PIPELINE, AcceleratorStage.TESTER_PIPELINE];
+  const installStage = [AcceleratorStage.PIPELINE, AcceleratorStage.TESTER_PIPELINE];
 
   const isExternalInstallStage = isExternalDeployment && installStage.includes(stage as AcceleratorStage);
 

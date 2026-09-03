@@ -437,7 +437,6 @@ describe('shouldLookupDynamoDb', () => {
     expect(shouldLookupDynamoDb(AcceleratorStage.ACCOUNTS)).toBe(false);
     expect(shouldLookupDynamoDb(AcceleratorStage.PIPELINE)).toBe(false);
     expect(shouldLookupDynamoDb(AcceleratorStage.TESTER_PIPELINE)).toBe(false);
-    expect(shouldLookupDynamoDb(AcceleratorStage.DIAGNOSTICS_PACK)).toBe(false);
   });
 
   it('should return true for non-excluded stages', () => {

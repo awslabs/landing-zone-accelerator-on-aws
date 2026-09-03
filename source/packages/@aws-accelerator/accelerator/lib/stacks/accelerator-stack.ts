@@ -218,10 +218,6 @@ export interface AcceleratorStackProps extends cdk.StackProps {
    */
   centralLogsBucketKmsKeyArn?: string;
   /**
-   * Flag indicating diagnostic pack enabled
-   */
-  isDiagnosticsPackEnabled: string;
-  /**
    * Accelerator pipeline account id, for external deployment it will be pipeline account otherwise management account
    */
   pipelineAccountId: string;

@@ -21,7 +21,6 @@ All cross-account roles follow the pattern `<prefix>-<purpose>-Role`:
 | Move account config | `<prefix>-MoveAccountConfigRule-Role` | Config rule for account moves |
 | TGW peering | `<prefix>-TgwPeering-Role` | TGW peering operations |
 | MAD share accept | `<prefix>-MadShareAccept-Role` | Accept Managed AD shares |
-| Diagnostics pack | `<prefix>-DiagnosticsPack-Role` | Diagnostics pack operations |
 
 ## KMS Key Aliases
 

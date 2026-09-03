@@ -2324,11 +2324,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 1`] = `
               "Value": "000000000000",
             },
             {
-              "Name": "ENABLE_DIAGNOSTICS_PACK",
-              "Type": "PLAINTEXT",
-              "Value": "Yes",
-            },
-            {
               "Name": "INSTALLER_STACK_NAME",
               "Type": "PLAINTEXT",
               "Value": "",
@@ -5340,11 +5335,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 2`] = `
               "Value": "000000000000",
             },
             {
-              "Name": "ENABLE_DIAGNOSTICS_PACK",
-              "Type": "PLAINTEXT",
-              "Value": "Yes",
-            },
-            {
               "Name": "INSTALLER_STACK_NAME",
               "Type": "PLAINTEXT",
               "Value": "",
@@ -7900,11 +7890,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 3`] = `
               "Name": "PIPELINE_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": "000000000000",
-            },
-            {
-              "Name": "ENABLE_DIAGNOSTICS_PACK",
-              "Type": "PLAINTEXT",
-              "Value": "Yes",
             },
             {
               "Name": "INSTALLER_STACK_NAME",
@@ -10698,11 +10683,6 @@ exports[`PipelineStack > Construct(PipelineStack):  Snapshot Test 4`] = `
               "Value": "000000000000",
             },
             {
-              "Name": "ENABLE_DIAGNOSTICS_PACK",
-              "Type": "PLAINTEXT",
-              "Value": "Yes",
-            },
-            {
               "Name": "INSTALLER_STACK_NAME",
               "Type": "PLAINTEXT",
               "Value": "",
@@ -13258,11 +13238,6 @@ exports[`PipelineStack customS3Path > Construct(PipelineStack):  Snapshot Test 1
               "Name": "PIPELINE_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": "000000000000",
-            },
-            {
-              "Name": "ENABLE_DIAGNOSTICS_PACK",
-              "Type": "PLAINTEXT",
-              "Value": "Yes",
             },
             {
               "Name": "INSTALLER_STACK_NAME",

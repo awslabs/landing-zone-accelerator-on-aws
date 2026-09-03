@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 
+
+### Changed
+
+- chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide
+
 ## [1.17.0] - 
 
 ### Added

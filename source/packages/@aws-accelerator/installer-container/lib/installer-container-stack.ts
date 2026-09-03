@@ -1484,7 +1484,6 @@ def handler(event, context):
   ): Array<{ name: string; value: string }> {
     // Core environment variables required for all deployment modes
     const coreEnvironmentVariables = [
-      { name: 'ENABLE_DIAGNOSTICS_PACK', value: 'No' },
       { name: 'SkipPipelinePrerequisites', value: 'true' },
       { name: 'SkipAcceleratorPrerequisites', value: 'true' },
       // AWS Region configuration - maps to homeRegion in init-config.ts

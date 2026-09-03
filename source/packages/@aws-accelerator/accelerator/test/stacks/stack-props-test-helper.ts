@@ -141,7 +141,6 @@ export function createAcceleratorStackProps(
     partition: 'unit-test',
     configRepositoryName: 'unit-test',
     configRepositoryLocation: 's3',
-    isDiagnosticsPackEnabled: 'false',
     pipelineAccountId: '1234567890',
     enableSingleAccountMode: true,
     useExistingRoles: false,

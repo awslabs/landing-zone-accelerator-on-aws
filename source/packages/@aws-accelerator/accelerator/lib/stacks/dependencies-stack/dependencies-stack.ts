@@ -16,7 +16,6 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 import { IdentityCenter } from './identity-center';
-import { DiagnosticsPack } from './diagnostics-pack';
 import * as path from 'path';
 
 /**
@@ -44,13 +43,6 @@ export class DependenciesStack extends AcceleratorStack {
     // Create Identity Center dependent resources
     //
     new IdentityCenter(this, props);
-
-    //
-    // Create the diagnostics pack dependent resources. The Diagnostics pack will be deployed for multi-account environments without utilizing existing roles for deployment.
-    //
-    if (!props.enableSingleAccountMode && !props.useExistingRoles) {
-      new DiagnosticsPack(this, props);
-    }
   }
 
   /**

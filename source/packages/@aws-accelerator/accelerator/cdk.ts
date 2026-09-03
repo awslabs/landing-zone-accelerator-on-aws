@@ -60,11 +60,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
   //
   // Validate args: verify config directory
   //
-  if (
-    stage !== AcceleratorStage.PIPELINE &&
-    stage !== AcceleratorStage.TESTER_PIPELINE &&
-    stage !== AcceleratorStage.DIAGNOSTICS_PACK
-  ) {
+  if (stage !== AcceleratorStage.PIPELINE && stage !== AcceleratorStage.TESTER_PIPELINE) {
     if (config === undefined || !fs.existsSync(configDirPath)) {
       console.log(`Invalid --config-dir ${configDirPath}`);
       throw new Error(usage);
@@ -104,7 +100,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
   });
 
   // Run diff after synth if synth command was executed
-  // Skip diff for stages that don't require config directory (pipeline, tester-pipeline, diagnostics-pack)
+  // Skip diff for stages that don't require config directory (pipeline, tester-pipeline)
   const allStages = [
     AcceleratorStage.ORGANIZATIONS,
     AcceleratorStage.KEY,

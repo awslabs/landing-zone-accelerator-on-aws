@@ -17,7 +17,6 @@ export * from './lib/config-repository';
 export * from './lib/pipeline';
 export * from './lib/stacks/accelerator-stack';
 export * from './lib/stacks/bootstrap-stack';
-export * from './lib/stacks/diagnostics-pack-stack';
 export * from './lib/stacks/network-stacks/network-associations-stack/network-associations-stack';
 export * from './lib/stacks/network-stacks/network-prep-stack/network-prep-stack';
 export * from './lib/stacks/network-stacks/network-vpc-stack/network-vpc-stack';

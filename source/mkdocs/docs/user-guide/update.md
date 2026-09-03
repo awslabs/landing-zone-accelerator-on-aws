@@ -21,6 +21,19 @@ The update automatically triggers the core pipeline with the new version.
 !!! warning
     Always review the release notes for breaking changes before updating. Some version upgrades may require configuration file changes.
 
+## Removed Installer Parameters
+
+When a release removes a parameter from the installer template, updating through the CloudFormation console needs no action: the console only prompts for the parameters the new template declares. Automation is different. CloudFormation rejects a parameter key that the template does not declare, so a call that still supplies the removed parameter fails with a `ValidationError` (for example `Parameters: [EnableDiagnosticsPack] do not exist in the template`). The call is rejected before the update starts, so the stack is left untouched rather than rolled back, but the upgrade does not proceed until the caller is fixed.
+
+Check for both of these shapes before upgrading:
+
+- an explicit value, such as `--parameters ParameterKey=EnableDiagnosticsPack,ParameterValue=No`;
+- a wrapper that reads the stack's current parameter set and replays it in full, including `ParameterKey=EnableDiagnosticsPack,UsePreviousValue=true`.
+
+| Removed in | Parameter | Action |
+| ---------- | --------- | ------ |
+| 1.18.0 | `EnableDiagnosticsPack` | Drop the parameter from any installer stack update automation. The Diagnostics Pack it enabled has been removed; failure diagnostics are now collected automatically on every failed pipeline run. See [Removing the deprecated Diagnostics Pack](./troubleshooting.md#removing-the-deprecated-diagnostics-pack) for the leftover resources. |
+
 ## Configuration Changes That Replace Resources
 
 Some configuration properties map to CloudFormation properties that require the underlying resource to be **replaced (recreated)** when they change. For these properties, CloudFormation treats *first adding the property* (absent → present) as a change, so declaring the field on a pre-existing resource can trigger a replacement **even if the value you set matches the current default behavior**. Replacement can be disruptive and, if the resource has dependencies that are not managed by LZA, may fail and leave the old resource orphaned.

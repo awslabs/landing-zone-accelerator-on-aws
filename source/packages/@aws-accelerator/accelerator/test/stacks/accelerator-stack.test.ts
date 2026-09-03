@@ -32,7 +32,6 @@ vi.mock('../../lib/stacks/prepare-stack', () => ({}));
 vi.mock('../../lib/stacks/finalize-stack', () => ({}));
 vi.mock('../../lib/stacks/security-audit-stack', () => ({}));
 vi.mock('../../lib/stacks/security-stack', () => ({}));
-vi.mock('../../lib/stacks/diagnostics-pack-stack', () => ({}));
 
 class TestStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {

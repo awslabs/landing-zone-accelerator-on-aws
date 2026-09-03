@@ -284,7 +284,7 @@ describe('AcceleratorToolkit', () => {
       return (AcceleratorToolkit as any).getDeploymentRole(props);
     };
 
-    it.each(['accounts', 'prepare', 'diagnostics-pack', 'pipeline'])(
+    it.each(['accounts', 'prepare', 'pipeline'])(
       'should return the management deployment role for the %s stage in the management account',
       stage => {
         expect(
@@ -298,7 +298,7 @@ describe('AcceleratorToolkit', () => {
       },
     );
 
-    it.each(['accounts', 'prepare', 'diagnostics-pack', 'pipeline'])(
+    it.each(['accounts', 'prepare', 'pipeline'])(
       'should return the account deployment role for the %s stage when the deployment account is not the management account',
       stage => {
         expect(
@@ -342,7 +342,7 @@ describe('AcceleratorToolkit', () => {
           customDeploymentRoleName: 'MyCustomRole',
           accountId: '111111111111',
           managementAccountId: '111111111111',
-          stage: 'diagnostics-pack',
+          stage: 'prepare',
         }),
       ).toEqual('AWSAccelerator-Management-Deployment-Role');
     });
@@ -354,7 +354,7 @@ describe('AcceleratorToolkit', () => {
           customDeploymentRoleName: 'MyCustomRole',
           accountId: '222222222222',
           managementAccountId: '111111111111',
-          stage: 'diagnostics-pack',
+          stage: 'prepare',
         }),
       ).toEqual('MyCustomRole');
     });

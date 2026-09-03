@@ -39,7 +39,6 @@ interface RoleNames {
   crossAccountSsmParameterShare: string;
   assetFunctionRoleName: string;
   firewallConfigFunctionRoleName: string;
-  diagnosticsPackAssumeRoleName: string;
 }
 interface ParameterNames {
   importedCentralLogBucketCmkArn: string;
@@ -121,7 +120,6 @@ export class AcceleratorResourceNames {
     crossAccountSsmParameterShare: 'PLACE_HOLDER',
     assetFunctionRoleName: 'PLACE_HOLDER',
     firewallConfigFunctionRoleName: 'PLACE_HOLDER',
-    diagnosticsPackAssumeRoleName: 'PLACE_HOLDER',
   };
   public parameters: ParameterNames = {
     importedCentralLogBucketCmkArn: 'PLACE_HOLDER',
@@ -207,8 +205,6 @@ export class AcceleratorResourceNames {
     this.roles.crossAccountSsmParameterShare = props.prefixes.accelerator + '-CrossAccountSsmParameterShare';
     this.roles.assetFunctionRoleName = props.prefixes.accelerator + '-AssetsAccessRole';
     this.roles.firewallConfigFunctionRoleName = props.prefixes.accelerator + '-FirewallConfigAccessRole';
-    // Changing the role name for diagnosticsPackAssumeRoleName will need to be change in diagnostics-pack-stack.ts file, this stack deploys during installer
-    this.roles.diagnosticsPackAssumeRoleName = props.prefixes.accelerator + '-DiagnosticsPackAccessRole';
 
     //
     // SSM Parameter initializations

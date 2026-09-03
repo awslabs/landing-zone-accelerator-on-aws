@@ -478,7 +478,6 @@ export const MOCK_CONSTANTS = {
       crossAccountSsmParameterShare: 'AWSAccelerator-CrossAccountSsmParameterShare',
       assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
       firewallConfigFunctionRoleName: 'AWSAccelerator-FirewallConfigAccessRole',
-      diagnosticsPackAssumeRoleName: 'AWSAccelerator-DiagnosticsPackAccessRole',
     },
     parameters: {
       importedCentralLogBucketCmkArn: '/accelerator/imported-resources/logging/central-bucket/kms/arn',

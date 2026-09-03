@@ -140,7 +140,6 @@ export enum AcceleratorV2Stacks {
  */
 export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.PREPARE]: `${stackPrefix}-PrepareStack`,
-  [AcceleratorStage.DIAGNOSTICS_PACK]: `${stackPrefix}-DiagnosticsPackStack`,
   [AcceleratorStage.PIPELINE]: `${stackPrefix}-PipelineStack`,
   [AcceleratorStage.TESTER_PIPELINE]: `${stackPrefix}-TesterPipelineStack`,
   [AcceleratorStage.ORGANIZATIONS]: `${stackPrefix}-OrganizationsStack`,
@@ -465,7 +464,7 @@ export abstract class Accelerator {
   }
 
   /**
-   * Returns true if the stage is dependent on config directory, except pipeline, tester-pipeline and diagnostic-pack all stages are config dependent
+   * Returns true if the stage is dependent on config directory, except pipeline and tester-pipeline all stages are config dependent
    * @param stage
    * @returns
    */
@@ -473,11 +472,7 @@ export abstract class Accelerator {
     if (!stage) {
       return true;
     }
-    if (
-      stage === AcceleratorStage.PIPELINE ||
-      stage === AcceleratorStage.TESTER_PIPELINE ||
-      stage === AcceleratorStage.DIAGNOSTICS_PACK
-    ) {
+    if (stage === AcceleratorStage.PIPELINE || stage === AcceleratorStage.TESTER_PIPELINE) {
       return false;
     }
     return true;
@@ -1269,7 +1264,6 @@ export function shouldLookupDynamoDb(stage?: string): boolean {
     AcceleratorStage.ACCOUNTS,
     AcceleratorStage.PIPELINE,
     AcceleratorStage.TESTER_PIPELINE,
-    AcceleratorStage.DIAGNOSTICS_PACK,
   ] as string[];
 
   const lookup = process.env['ACCELERATOR_SKIP_DYNAMODB_LOOKUP']

@@ -37,12 +37,7 @@ import {
   setAcceleratorEnvironment,
   setResourcePrefixes,
 } from '../utils/app-utils';
-import {
-  createCustomizationsStacks,
-  createDiagnosticsPackStack,
-  createPipelineStack,
-  createTesterStack,
-} from '../utils/stack-utils';
+import { createCustomizationsStacks, createPipelineStack, createTesterStack } from '../utils/stack-utils';
 
 const pipelineAccountId = '111111111111';
 const managementAccountId = '222222222222';
@@ -114,44 +109,6 @@ function expectDeploymentRole(app: cdk.App | undefined, roleName: string) {
   expect(stackArtifact.cloudFormationExecutionRoleArn).toEqual(expectedRoleArn);
   expect(stackArtifact.lookupRole?.arn).toEqual(expectedRoleArn);
 }
-
-describe('createDiagnosticsPackStack', () => {
-  const stage = AcceleratorStage.DIAGNOSTICS_PACK;
-
-  it('should use the management deployment role when the management account id is not set', () => {
-    const app = createDiagnosticsPackStack(getContext(stage), getAcceleratorEnvironment(stage), resourcePrefixes);
-    expectDeploymentRole(app, 'AWSAccelerator-Management-Deployment-Role');
-  });
-
-  it('should use the management deployment role when the pipeline account is the management account', () => {
-    const app = createDiagnosticsPackStack(
-      getContext(stage),
-      getAcceleratorEnvironment(stage, { id: pipelineAccountId, roleName: managementAccountRoleName }),
-      resourcePrefixes,
-    );
-    expectDeploymentRole(app, 'AWSAccelerator-Management-Deployment-Role');
-  });
-
-  it('should use the account deployment role when the pipeline account is not the management account', () => {
-    const app = createDiagnosticsPackStack(
-      getContext(stage),
-      getAcceleratorEnvironment(stage, { id: managementAccountId, roleName: managementAccountRoleName }),
-      resourcePrefixes,
-    );
-    expectDeploymentRole(app, 'AWSAccelerator-Deployment-Role');
-  });
-
-  it('should use the management deployment role when the management account role name is not set', () => {
-    // Without the role name the accelerator does not assume into the management account, so it must agree with
-    // AcceleratorToolkit.getDeploymentRole and keep using the management deployment role.
-    const app = createDiagnosticsPackStack(
-      getContext(stage),
-      getAcceleratorEnvironment(stage, { id: managementAccountId }),
-      resourcePrefixes,
-    );
-    expectDeploymentRole(app, 'AWSAccelerator-Management-Deployment-Role');
-  });
-});
 
 describe('createPipelineStack', () => {
   const stage = AcceleratorStage.PIPELINE;

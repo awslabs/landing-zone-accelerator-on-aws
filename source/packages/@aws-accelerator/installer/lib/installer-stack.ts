@@ -221,18 +221,6 @@ export class InstallerStack extends cdk.Stack {
   );
 
   /**
-   * Flag for LZ Accelerator diagnostics pack
-   * @private
-   */
-  private readonly enableDiagnosticsPack = new cdk.CfnParameter(this, 'EnableDiagnosticsPack', {
-    type: 'String',
-    allowedValues: ['Yes', 'No'],
-    default: 'Yes',
-    description:
-      'Select Yes if deploying the solution with diagnostics pack enabled. Diagnostics pack enables you to generate root cause reports to potentially diagnose pipeline failures.',
-  });
-
-  /**
    * Management Account ID Parameter
    * @private
    */
@@ -339,11 +327,7 @@ export class InstallerStack extends cdk.Stack {
       },
       {
         Label: { default: 'Environment Configuration' },
-        Parameters: [
-          this.controlTowerEnabled.logicalId,
-          this.acceleratorPrefix.logicalId,
-          this.enableDiagnosticsPack.logicalId,
-        ],
+        Parameters: [this.controlTowerEnabled.logicalId, this.acceleratorPrefix.logicalId],
       },
       {
         Label: { default: 'Config Repository Configuration' },
@@ -369,7 +353,6 @@ export class InstallerStack extends cdk.Stack {
       [this.existingConfigRepositoryBranchName.logicalId]: { default: 'Existing Config Repository Branch Name' },
       [this.existingConfigRepositoryOwner.logicalId]: { default: 'Existing Config Repository Owner' },
       [this.configCodeConnectionArn.logicalId]: { default: 'Existing Config Repository CodeConnection ARN' },
-      [this.enableDiagnosticsPack.logicalId]: { default: 'Enable Diagnostics Pack' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
       [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
@@ -1078,10 +1061,6 @@ export class InstallerStack extends cdk.Stack {
                     echo "SSM Parameter Found, setting ENABLE_ASEA_MIGRATION to true"
                     export ENABLE_ASEA_MIGRATION=true
                   fi;`,
-              `set -e && if [ $ENABLE_DIAGNOSTICS_PACK = "Yes" ]; then
-                yarn run ts-node --transpile-only cdk.ts synth --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
-                yarn run ts-node --transpile-only cdk.ts deploy --stage diagnostics-pack --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}
-              fi`,
               `set -e && yarn run ts-node --transpile-only cdk.ts synth --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && yarn run ts-node --transpile-only cdk.ts deploy --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `set -e && if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
@@ -1186,10 +1165,6 @@ export class InstallerStack extends cdk.Stack {
           INSTALLER_STACK_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.stackName,
-          },
-          ENABLE_DIAGNOSTICS_PACK: {
-            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.enableDiagnosticsPack.valueAsString,
           },
           PIPELINE_ACCOUNT_ID: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

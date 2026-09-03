@@ -157,7 +157,6 @@ cdk synth \
 
 | Variable | Value | Condition |
 |----------|-------|-----------|
-| `ENABLE_DIAGNOSTICS_PACK` | `No` | Always |
 | `SkipPipelinePrerequisites` | `true` | Always |
 | `SkipAcceleratorPrerequisites` | `true` | Always |
 | `MANAGEMENT_ACCOUNT_ID` | Parameter value | External pipeline account |
