@@ -73,6 +73,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): honor an explicit crossZoneLoadBalancing: false for Gateway and Network Load Balancers. This attribute was previously always rendered as true, so any existing GWLB/NLB configured with crossZoneLoadBalancing: false is currently running with cross-zone load balancing enabled; upgrading renders false and turns it off in place on the next deploy (mutable attribute, no resource replacement). Before upgrading, confirm targets/appliances are registered in every enabled Availability Zone so an AZ node with no healthy local target does not black-hole traffic.
 - fix(sts): stop hardcoding the STS endpoint in the accelerator pipeline/CLI execution environment and the `@aws-lza` modules, so the AWS SDK resolves the regional endpoint natively and honors the standard `AWS_ENDPOINT_URL_STS` / `AWS_ENDPOINT_URL` and `AWS_USE_FIPS_ENDPOINT` overrides where those variables are present. This does not cover STS clients invoked inside Lambda custom resources, which do not receive these environment variables at runtime (issue #1183)
 - fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later (issue #4188)
+## [1.16.2] - 2026-08-31
+
+### Fixed
+
+- fix(deps): remediate HIGH CVEs (pacote, tar)
+- fix(accounts): prefer AWS Organizations account State, exclude non-ACTIVE accounts from deployment targets, limit uninstaller cleanup to ACTIVE and PENDING_CLOSURE accounts, and retain legacy Status compatibility
+- fix(asea): correct Route53 query log handling for LZA-created VPCs in ASEA-imported accounts
+- fix(modules): honor cdkOptions.customDeploymentRole for module cross-account operations when configured (behavior change: previously always used managementAccountAccessRole). No action needed when LZA creates the deployment role; if you bring your own role via cdkOptions.useExistingRoles, it must allow the management account to assume it and grant each enabled module's actions before upgrading, otherwise module execution fails with AccessDenied. See Bootstrap docs and MODULE_SESSION_POLICIES.
+- fix(logging): use a condition-based central logs S3 bucket policy for opt-in region Macie and GuardDuty service principals so LoggingStack no longer fails validation when an opt-in region is not activated
+
+## [1.16.1] - 2026-08-17
+
+### Fixed
+
+- fix(deps): remediate HIGH CVEs (js-yaml, fast-uri, ip-address, nanoid, postcss, brace-expansion)
+- fix(tgw): only delete route table associations/propagations that LZA previously created, preserving externally-created resources
+- fix(tgw): only delete Direct Connect Gateway to Transit Gateway associations that LZA previously created, preserving externally-created associations
+
 
 ## [1.16.0] - 2026-07-24
 

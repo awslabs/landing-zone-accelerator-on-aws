@@ -59,6 +59,9 @@ vi.mock('aws-lza', () => {
 vi.mock('../../../../lib/actions/utils/module-state', () => ({
   hasModuleConfigChanged: vi.fn(() => Promise.resolve(true)),
   saveModuleExecutionState: vi.fn(() => Promise.resolve()),
+  getModuleExecutionState: vi.fn(() =>
+    Promise.resolve({ lastResponse: JSON.stringify({ response: { ownedResources: 'gz:existing' } }) }),
+  ),
 }));
 
 vi.mock('../../../../lib/actions/utils/module-logging', () => ({
@@ -67,6 +70,13 @@ vi.mock('../../../../lib/actions/utils/module-logging', () => ({
 
 vi.mock('../../../../lib/actions/utils/common-config', () => ({
   loadOrganizationDataSources: vi.fn(() => Promise.resolve(undefined)),
+}));
+
+vi.mock('../../../../lib/actions/utils/resource-ownership-state', () => ({
+  loadOwnedResources: vi.fn(() => Promise.resolve([])),
+  compressOwnedResources: vi.fn((resources: string[]) =>
+    resources.length === 0 ? [] : `gz:compressed-${resources.length}`,
+  ),
 }));
 
 describe('TgwAssociationsAndPropagations', () => {
@@ -155,6 +165,9 @@ describe('TgwAssociationsAndPropagations', () => {
         acceleratorResourceNames: {} as AcceleratorResourceNames,
         logging: { centralizedRegion: 'us-east-1' },
         organizationAccounts: [],
+        // Distinct from globalConfig.managementAccountAccessRole so the assertion proves the module
+        // forwards the runner-resolved accountAccessRoleName (honoring customDeploymentRole).
+        accountAccessRoleName: 'MyCustomDeploymentRole',
       },
     };
   };
@@ -190,6 +203,34 @@ describe('TgwAssociationsAndPropagations', () => {
 
       expect(result.status).toBe(MODULE_STATE_CODE.SKIPPED);
       expect(result.summary).toContain('configuration has not changed');
+    });
+
+    it('should force execution to seed owned state when config unchanged but no ownedResources in state (post-upgrade)', async () => {
+      const { hasModuleConfigChanged, getModuleExecutionState } = await import(
+        '../../../../lib/actions/utils/module-state.js'
+      );
+      vi.mocked(hasModuleConfigChanged).mockResolvedValue(false);
+      // State exists but has no ownedResources (pre-ownership 1.16.0 state)
+      vi.mocked(getModuleExecutionState).mockResolvedValue({
+        serviceName: 'tgw-associations-and-propagations',
+        lastExecutionTime: '2026-08-01T00:00:00Z',
+        lastConfig: '{}',
+        configHash: 'abc',
+        lastStatus: 'completed',
+        lastResponse: JSON.stringify({ status: 'completed', response: { associations: [], propagations: [] } }),
+      });
+
+      const params = createMockParams({
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcs: [],
+      });
+
+      const result = await TgwAssociationsAndPropagations.configure(params);
+
+      // Module should execute (not skip) to seed the owned state
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
     });
   });
 
@@ -281,7 +322,9 @@ describe('TgwAssociationsAndPropagations', () => {
           moduleName: AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
           configuration: expect.objectContaining({
             enable: true,
-            accountAccessRoleName: 'AWSControlTowerExecution',
+            // Must be the runner-resolved accountAccessRoleName (honors customDeploymentRole),
+            // not globalConfig.managementAccountAccessRole.
+            accountAccessRoleName: 'MyCustomDeploymentRole',
             homeRegion: 'us-east-1',
             transitGateways: [
               expect.objectContaining({ name: 'main-tgw', accountId: 'XXXXXXXXXXXX', region: 'us-east-1' }),
@@ -296,6 +339,82 @@ describe('TgwAssociationsAndPropagations', () => {
             ],
           }),
         }),
+      );
+    });
+
+    it('should inject previously owned resources into module request configuration', async () => {
+      const { configureTgw } = await import('aws-lza');
+      const { loadOwnedResources } = await import('../../../../lib/actions/utils/resource-ownership-state.js');
+      vi.mocked(loadOwnedResources).mockResolvedValue([
+        'assoc:tgw-rtb-core:tgw-attach-111',
+        'prop:tgw-rtb-core:tgw-attach-222',
+      ]);
+
+      const params = createMockParams({
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcs: [],
+      });
+
+      await TgwAssociationsAndPropagations.configure(params);
+
+      expect(configureTgw).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            ownedResources: ['assoc:tgw-rtb-core:tgw-attach-111', 'prop:tgw-rtb-core:tgw-attach-222'],
+          }),
+        }),
+      );
+    });
+
+    it('should compress ownedResources before saving to state', async () => {
+      const { configureTgw } = await import('aws-lza');
+      const { saveModuleExecutionState } = await import('../../../../lib/actions/utils/module-state.js');
+      const { compressOwnedResources } = await import('../../../../lib/actions/utils/resource-ownership-state.js');
+
+      // Mock configureTgw to return a response WITH ownedResources
+      vi.mocked(configureTgw).mockResolvedValue({
+        status: 'completed',
+        summary: 'Completed: associations(+1 -0 =0 !0), propagations(+0 -0 =0)',
+        timestamp: '2026-08-07T00:00:00Z',
+        moduleName: 'tgw-associations-and-propagations',
+        dryRun: false,
+        response: {
+          associations: [],
+          propagations: [],
+          dxAssociations: [],
+          connectAttachments: [],
+          ownedResources: ['assoc:tgw-rtb-core:tgw-attach-aaa', 'prop:tgw-rtb-core:tgw-attach-bbb'],
+        },
+      });
+
+      const params = createMockParams({
+        transitGateways: [
+          { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+        ],
+        vpcs: [],
+      });
+
+      await TgwAssociationsAndPropagations.configure(params);
+
+      // Verify compressOwnedResources was called with the module's returned owned set
+      expect(compressOwnedResources).toHaveBeenCalledWith([
+        'assoc:tgw-rtb-core:tgw-attach-aaa',
+        'prop:tgw-rtb-core:tgw-attach-bbb',
+      ]);
+
+      // Verify saveModuleExecutionState received the compressed value
+      expect(saveModuleExecutionState).toHaveBeenCalledWith(
+        expect.objectContaining({
+          response: expect.objectContaining({
+            response: expect.objectContaining({
+              ownedResources: 'gz:compressed-2',
+            }),
+          }),
+        }),
+        expect.anything(),
+        expect.anything(),
       );
     });
 

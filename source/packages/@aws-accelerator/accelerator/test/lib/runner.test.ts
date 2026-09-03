@@ -1899,6 +1899,114 @@ describe('ModuleRunner', () => {
 
       // Verify - should use homeRegion when centralizedLoggingRegion is undefined
       expect(result.logging.centralizedRegion).toBe(mockGlobalConfig.homeRegion);
+      // When no customDeploymentRole is configured, modules use managementAccountAccessRole.
+      expect(result.accountAccessRoleName).toBe(mockGlobalConfig.managementAccountAccessRole);
+    });
+
+    it('should set accountAccessRoleName to customDeploymentRole when configured', async () => {
+      const { ModuleRunner } = await import('../../lib/runner.js');
+      const configLoader = await import('../../lib/config-loader.js');
+      const awsLza = await import('aws-lza');
+
+      const mockGlobalConfigWithCustomRole = {
+        ...mockGlobalConfig,
+        cdkOptions: {
+          ...mockGlobalConfig.cdkOptions,
+          useManagementAccessRole: false,
+          customDeploymentRole: 'MyCustomDeploymentRole',
+        },
+      };
+
+      vi.mocked(configLoader.ConfigLoader.getAcceleratorConfigurations).mockResolvedValue({
+        globalConfig: mockGlobalConfigWithCustomRole,
+        accountsConfig: mockAccountsConfig,
+        organizationConfig: MOCK_CONSTANTS.configs.organizationConfig,
+        securityConfig: MOCK_CONSTANTS.configs.securityConfig,
+        networkConfig: MOCK_CONSTANTS.configs.networkConfig,
+        iamConfig: MOCK_CONSTANTS.configs.iamConfig,
+        customizationsConfig: MOCK_CONSTANTS.configs.customizationsConfig,
+        replacementsConfig: MOCK_CONSTANTS.configs.replacementsConfig,
+      } as any);
+
+      vi.mocked(awsLza.getOrganizationAccounts).mockResolvedValue([]);
+      vi.mocked(awsLza.getOrganizationDetails).mockResolvedValue({
+        Id: 'o-example123456',
+        Arn: 'arn:aws:organizations::123456789012:organization/o-example123456',
+        FeatureSet: 'ALL',
+        MasterAccountArn: 'arn:aws:organizations::123456789012:account/o-example123456/123456789012',
+        MasterAccountId: '123456789012',
+        MasterAccountEmail: 'test@example.com',
+      });
+
+      const result = await ModuleRunner['getAcceleratorModuleRunnerParameters']({
+        configDirPath: '/mock/config',
+        partition: 'aws',
+        globalRegion: 'us-east-1',
+        resourcePrefixes: {
+          accelerator: 'AWSAccelerator',
+          bucketName: 'aws-accelerator',
+          ssmParamName: '/accelerator',
+        } as any,
+        solutionId: 'test-solution',
+        loadOrganizationsFromDynamoDbTable: false,
+        logPrefix: 'test-prefix',
+      });
+
+      // With useManagementAccessRole disabled, a configured customDeploymentRole is used.
+      expect(result.accountAccessRoleName).toBe('MyCustomDeploymentRole');
+    });
+
+    it('should prefer managementAccountAccessRole when useManagementAccessRole is true even if customDeploymentRole is set', async () => {
+      const { ModuleRunner } = await import('../../lib/runner.js');
+      const configLoader = await import('../../lib/config-loader.js');
+      const awsLza = await import('aws-lza');
+
+      // useManagementAccessRole takes precedence over customDeploymentRole, matching the CDK deploy path.
+      const mockGlobalConfigManagementRolePrecedence = {
+        ...mockGlobalConfig,
+        cdkOptions: {
+          ...mockGlobalConfig.cdkOptions,
+          useManagementAccessRole: true,
+          customDeploymentRole: 'MyCustomDeploymentRole',
+        },
+      };
+
+      vi.mocked(configLoader.ConfigLoader.getAcceleratorConfigurations).mockResolvedValue({
+        globalConfig: mockGlobalConfigManagementRolePrecedence,
+        accountsConfig: mockAccountsConfig,
+        organizationConfig: MOCK_CONSTANTS.configs.organizationConfig,
+        securityConfig: MOCK_CONSTANTS.configs.securityConfig,
+        networkConfig: MOCK_CONSTANTS.configs.networkConfig,
+        iamConfig: MOCK_CONSTANTS.configs.iamConfig,
+        customizationsConfig: MOCK_CONSTANTS.configs.customizationsConfig,
+        replacementsConfig: MOCK_CONSTANTS.configs.replacementsConfig,
+      } as any);
+
+      vi.mocked(awsLza.getOrganizationAccounts).mockResolvedValue([]);
+      vi.mocked(awsLza.getOrganizationDetails).mockResolvedValue({
+        Id: 'o-example123456',
+        Arn: 'arn:aws:organizations::123456789012:organization/o-example123456',
+        FeatureSet: 'ALL',
+        MasterAccountArn: 'arn:aws:organizations::123456789012:account/o-example123456/123456789012',
+        MasterAccountId: '123456789012',
+        MasterAccountEmail: 'test@example.com',
+      });
+
+      const result = await ModuleRunner['getAcceleratorModuleRunnerParameters']({
+        configDirPath: '/mock/config',
+        partition: 'aws',
+        globalRegion: 'us-east-1',
+        resourcePrefixes: {
+          accelerator: 'AWSAccelerator',
+          bucketName: 'aws-accelerator',
+          ssmParamName: '/accelerator',
+        } as any,
+        solutionId: 'test-solution',
+        loadOrganizationsFromDynamoDbTable: false,
+        logPrefix: 'test-prefix',
+      });
+
+      expect(result.accountAccessRoleName).toBe(mockGlobalConfigManagementRolePrecedence.managementAccountAccessRole);
     });
 
     it('should skip DEPLOY modules when in SYNTH phase', async () => {

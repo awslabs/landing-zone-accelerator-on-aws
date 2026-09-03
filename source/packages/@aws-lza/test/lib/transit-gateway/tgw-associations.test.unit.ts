@@ -83,9 +83,18 @@ interface CommandParams {
   TransitGatewayRouteTableId?: string;
 }
 
+// Default owned set: treats all managed attachments as owned (backward-compatible with old behavior)
+const ALL_OWNED = new Set([
+  `assoc:${CORE_RT.routeTableId}:tgw-attach-a`,
+  `assoc:${CORE_RT.routeTableId}:tgw-attach-b`,
+  `assoc:${SHARED_RT.routeTableId}:tgw-attach-a`,
+  `assoc:${SHARED_RT.routeTableId}:tgw-attach-b`,
+]);
+
 async function process(
   desired: Map<string, IDesiredAttachment[]>,
   knownAttachmentIds = new Set(['tgw-attach-a']),
+  ownedResourceIds: Set<string> = ALL_OWNED,
   dryRun = false,
 ) {
   return TgwAssociations.processTransitGateway(
@@ -96,6 +105,7 @@ async function process(
     [CORE_RT, SHARED_RT],
     desired,
     knownAttachmentIds,
+    ownedResourceIds,
     dryRun,
     LOG_PREFIX,
   );
@@ -312,6 +322,7 @@ describe('TgwAssociations', () => {
     const result = await process(
       desiredByRouteTable([[SHARED_RT.routeTableId, [desiredAttachment()]]]),
       undefined,
+      ALL_OWNED,
       true,
     );
 
@@ -327,5 +338,56 @@ describe('TgwAssociations', () => {
       expect.objectContaining({ TransitGatewayAttachmentId: 'tgw-attach-a' }),
       LOG_PREFIX,
     );
+  });
+
+  describe('ownership-based deletion', () => {
+    test('should NOT release association on managed attachment when not in owned set', async () => {
+      // Attachment is known (managed) and associated, but NOT in ownedResourceIds
+      mockSend.mockResolvedValue({
+        TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
+      });
+      const emptyOwned = new Set<string>(); // Nothing owned — first run or external
+
+      const result = await process(
+        desiredByRouteTable([]), // Not in desired
+        new Set(['tgw-attach-a']), // Known/managed
+        emptyOwned, // Not owned by LZA
+      );
+
+      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(0);
+    });
+
+    test('should release association when it IS in owned set and removed from config', async () => {
+      mockSend.mockResolvedValue({
+        TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
+      });
+      const ownedSet = new Set([`assoc:${CORE_RT.routeTableId}:tgw-attach-a`]);
+
+      const result = await process(
+        desiredByRouteTable([]), // Not in desired (customer removed from config)
+        new Set(['tgw-attach-a']), // Known/managed
+        ownedSet, // Owned by LZA
+      );
+
+      expect(result.filter(r => r.operation === 'deleted')).toHaveLength(1);
+    });
+
+    test('should still release for route table moves even when not in owned set', async () => {
+      // Attachment is being moved from core to shared — should release even without ownership
+      mockSend.mockResolvedValue({
+        TransitGatewayAttachments: [currentAttachment('tgw-attach-a', CORE_RT.routeTableId)],
+      });
+      const emptyOwned = new Set<string>(); // Not owned
+
+      const result = await process(
+        desiredByRouteTable([[SHARED_RT.routeTableId, [desiredAttachment()]]]), // Desired at shared (not core)
+        new Set(['tgw-attach-a']),
+        emptyOwned,
+      );
+
+      // Should release from core (move to shared)
+      expect(result).toContainEqual(expect.objectContaining({ operation: 'deleted', routeTableName: 'core-rt' }));
+      expect(result).toContainEqual(expect.objectContaining({ operation: 'created', routeTableName: 'shared-rt' }));
+    });
   });
 });

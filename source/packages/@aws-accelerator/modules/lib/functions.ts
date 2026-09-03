@@ -51,6 +51,20 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
 const statusLogger = createStatusLogger([path.parse(path.basename(__filename)).name]);
 
 /**
+ * Resolves the cross-account role name modules use for their operations, using the same precedence
+ * as the CDK deploy path: `cdkOptions.useManagementAccessRole` takes precedence (uses
+ * `managementAccountAccessRole`), then a configured `cdkOptions.customDeploymentRole`, otherwise
+ * `managementAccountAccessRole`. Centralizing this keeps the resolvers in this file in lockstep.
+ * @param globalConfig {@link GlobalConfig}
+ * @returns The resolved cross-account role name
+ */
+export function resolveModuleAccountAccessRole(globalConfig: GlobalConfig): string {
+  return globalConfig.cdkOptions?.useManagementAccessRole
+    ? globalConfig.managementAccountAccessRole
+    : (globalConfig.cdkOptions?.customDeploymentRole ?? globalConfig.managementAccountAccessRole);
+}
+
+/**
  * Module runner command with option to execute the command.
  */
 export const scriptUsage =
@@ -278,6 +292,7 @@ export async function getAcceleratorModuleRunnerParameters(
     organizationAccounts,
     organizationDetails,
     managementAccountCredentials,
+    accountAccessRoleName: resolveModuleAccountAccessRole(acceleratorConfigurations.globalConfig),
   };
 }
 
@@ -358,7 +373,7 @@ export async function getCentralLoggingResources(
     region: centralizedLoggingRegion,
     solutionId,
     partition,
-    assumeRoleName: globalConfig.cdkOptions.customDeploymentRole ?? globalConfig.managementAccountAccessRole,
+    assumeRoleName: resolveModuleAccountAccessRole(globalConfig),
     credentials: managementAccountCredentials,
   });
 

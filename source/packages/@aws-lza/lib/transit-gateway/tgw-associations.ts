@@ -67,7 +67,8 @@ export abstract class TgwAssociations {
    * @param region - Region for response building
    * @param routeTables - Route table IDs and names for the TGW
    * @param desiredByRouteTableId - Desired associations keyed by target route table ID
-   * @param knownAttachmentIds - Set of all managed attachment IDs
+   * @param knownAttachmentIds - Set of all managed attachment IDs (used for transitional state checks)
+   * @param ownedResourceIds - Set of resource IDs previously owned by LZA (used for safe deletion)
    * @param dryRun - Whether to perform dry run without making changes
    * @param logPrefix - Prefix for logging messages
    * @returns Promise resolving to association operation results
@@ -80,6 +81,7 @@ export abstract class TgwAssociations {
     routeTables: IRouteTableTarget[],
     desiredByRouteTableId: Map<string, IDesiredAttachment[]>,
     knownAttachmentIds: Set<string>,
+    ownedResourceIds: Set<string>,
     dryRun: boolean,
     logPrefix: string,
   ): Promise<ITgwAssociationResponse[]> {
@@ -104,6 +106,13 @@ export abstract class TgwAssociations {
     const toRelease = [...currentByAttachmentId.values()].filter(current => {
       if (!knownAttachmentIds.has(current.attachmentId) || current.state !== 'associated' || !current.routeTableId) {
         return false;
+      }
+      // Only release if LZA previously owned this association (in state) OR if it needs to move to a different RT
+      const resourceKey = `assoc:${current.routeTableId}:${current.attachmentId}`;
+      if (!ownedResourceIds.has(resourceKey)) {
+        // Not owned by LZA — check if it's a move (desired exists but different RT)
+        const desired = desiredByAttachmentId.get(current.attachmentId);
+        return !!desired && desired.routeTableId !== current.routeTableId;
       }
       const desired = desiredByAttachmentId.get(current.attachmentId);
       return !desired || desired.routeTableId !== current.routeTableId;

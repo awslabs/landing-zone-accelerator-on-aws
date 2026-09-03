@@ -18,7 +18,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
-import { CreateAccountResponse } from '@aws-sdk/client-organizations';
+import { Account, CreateAccountResponse } from '@aws-sdk/client-organizations';
 import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 import { CloudFormationCustomResourceEvent, Context } from '@aws-accelerator/utils/lib/common-types';
 import {
@@ -52,6 +52,23 @@ interface AccountConfig {
 type AccountConfigs = Array<AccountConfig>;
 let organizationsClient: OrganizationsClient;
 let documentClient: DynamoDBDocumentClient;
+
+/**
+ * Builds the account information cached in the accelerator configuration table.
+ *
+ * @param email Account email used as the configuration key
+ * @param accountId AWS account ID
+ * @param orgsApiResponse DescribeAccount response
+ * @returns Backward-compatible account cache object with normalized lifecycle state
+ */
+export function buildAccountOrgInfo(email: string, accountId: string, orgsApiResponse?: Account) {
+  return {
+    email,
+    accountId,
+    status: orgsApiResponse?.State ?? orgsApiResponse?.Status,
+    orgsApiResponse,
+  };
+}
 
 export async function handler(
   event: CloudFormationCustomResourceEvent,
@@ -391,12 +408,7 @@ async function updateConfigTableWithAccountInfo(accountId: string, email: string
       UpdateExpression: 'SET awsKey = :awsKey, orgInfo = :orgInfo',
       ExpressionAttributeValues: {
         ':awsKey': accountId,
-        ':orgInfo': JSON.stringify({
-          email,
-          accountId,
-          status: orgsApiResponse?.Status,
-          orgsApiResponse,
-        }),
+        ':orgInfo': JSON.stringify(buildAccountOrgInfo(email, accountId, orgsApiResponse)),
       },
     };
 

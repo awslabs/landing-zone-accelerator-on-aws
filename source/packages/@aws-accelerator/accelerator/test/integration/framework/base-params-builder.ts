@@ -198,6 +198,7 @@ export function buildBaseModuleParams(options: BaseParamsOptions): ModuleParams 
       // permissions-boundary.ts). This avoids the STS PackedPolicyTooLargeException caused
       // by GitLab runner's 8 transitive session tags consuming packed policy space.
       sessionPolicy: undefined,
+      accountAccessRoleName: accessRole,
     },
   };
 }

@@ -162,6 +162,42 @@ describe('configureTgw', () => {
     expect(result.response?.dxAssociations).toHaveLength(0);
   });
 
+  it('should pass through ownedResources from phase2 results in response', async () => {
+    const mockOwnedResources = ['assoc:tgw-rtb-core:tgw-attach-aaa', 'prop:tgw-rtb-core:tgw-attach-bbb'];
+    vi.mocked(configureAssociationsAndPropagations).mockResolvedValue({
+      associations: [],
+      propagations: [],
+      ownedResources: mockOwnedResources,
+    });
+
+    const result = await configureTgw(baseRequest);
+
+    expect(result.status).toBe('completed');
+    expect(result.response?.ownedResources).toEqual(mockOwnedResources);
+  });
+
+  it('should merge route-table and DX Gateway owned resources into response ownedResources', async () => {
+    vi.mocked(configureAssociationsAndPropagations).mockResolvedValue({
+      associations: [],
+      propagations: [],
+      ownedResources: ['assoc:tgw-rtb-core:tgw-attach-aaa'],
+    });
+    vi.mocked(DirectConnectGatewayAssociation.resolveDxGatewayAssociations).mockResolvedValue({
+      dxResponses: [],
+      dxAttachments: [],
+      ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
+    });
+
+    const result = await configureTgw(baseRequest);
+
+    expect(result.status).toBe('completed');
+    // Both the route-table owned ID and the DX Gateway association owned ID must be persisted.
+    expect(result.response?.ownedResources).toEqual(
+      expect.arrayContaining(['assoc:tgw-rtb-core:tgw-attach-aaa', 'dxassoc:dxgw-111:tgw-0abc']),
+    );
+    expect(result.response?.ownedResources).toHaveLength(2);
+  });
+
   it('should merge DX attachments into Phase 2 request', async () => {
     vi.mocked(DirectConnectGatewayAssociation.resolveDxGatewayAssociations).mockResolvedValue({
       dxResponses: [
@@ -551,13 +587,14 @@ describe('configureTgw', () => {
     expect(result.error?.message).toBe('SSM parameter not found');
   });
 
-  it('should return FAILED on associations error', async () => {
+  it('should return FAILED on associations error without ownedResources in error response', async () => {
     vi.mocked(configureAssociationsAndPropagations).mockRejectedValue(new Error('Route table ID not resolved'));
 
     const result = await configureTgw(baseRequest);
 
     expect(result.status).toBe('failed');
     expect(result.error?.message).toBe('Route table ID not resolved');
+    expect(result.response).toBeUndefined();
   });
 
   it('should return FAILED with partial response when an association item fails', async () => {

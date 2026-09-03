@@ -1,24 +1,36 @@
 {
   "name": "error-missing-tgw",
   "description": "Reference a non-existent TGW SSM parameter and expect failure",
-  "order": 10,
+  "order": 13,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
-    "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
     "transitGateways": [
       {
         "name": "main-tgw",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
         "asn": 64513,
-        "routeTables": [{ "name": "core-rt", "routes": [] }]
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          }
+        ]
       },
       {
         "name": "nonexistent-tgw",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
         "asn": 64513,
-        "routeTables": [{ "name": "core-rt", "routes": [] }]
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          }
+        ]
       }
     ],
     "vpcs": [
@@ -26,14 +38,25 @@
         "name": "network-vpc",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.100.0.0/16"],
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "network-vpc-attach",
-            "transitGateway": { "name": "nonexistent-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "nonexistent-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
-            "routeTableAssociations": ["core-rt"],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
             "routeTablePropagations": []
           }
         ]

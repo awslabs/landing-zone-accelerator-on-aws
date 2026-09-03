@@ -330,7 +330,7 @@ export abstract class AmazonMacie {
       dryRun: params.runnerParameters.dryRun,
       sessionPolicy: params.moduleRunnerParameters.sessionPolicy,
       configuration: {
-        accountAccessRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
+        accountAccessRoleName: params.moduleRunnerParameters.accountAccessRoleName,
         enable: macieConfig.enable,
         delegatedAdminAccountId: params.moduleRunnerParameters.configs.accountsConfig.getAccountId(
           params.moduleRunnerParameters.configs.securityConfig.centralSecurityServices.delegatedAdminAccount,

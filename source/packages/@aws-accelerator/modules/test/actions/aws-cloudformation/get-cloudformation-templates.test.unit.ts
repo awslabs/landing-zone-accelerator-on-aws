@@ -80,6 +80,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        accountAccessRoleName: 'mockCustomDeploymentRole',
       },
     };
 
@@ -96,6 +97,8 @@ describe('GetCloudFormationTemplatesModule', () => {
             { accountId: '222222222222', region: 'us-east-2' },
             { accountId: '222222222222', region: 'us-east-1' },
           ],
+          // Cross-account assume must use the runner-resolved role (honors customDeploymentRole).
+          roleNameToAssume: 'mockCustomDeploymentRole',
         }),
       }),
     );
@@ -129,6 +132,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        accountAccessRoleName: 'mockCustomDeploymentRole',
       },
     };
 
@@ -170,6 +174,7 @@ describe('GetCloudFormationTemplatesModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: MOCK_CONSTANTS.organizationAccounts,
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        accountAccessRoleName: 'mockCustomDeploymentRole',
       },
     };
 

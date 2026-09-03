@@ -1,10 +1,12 @@
 {
   "name": "final-restore-empty",
   "description": "Restore route-table associations, propagations, and DX Gateway associations to the empty baseline",
-  "order": 13,
+  "order": 999,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
-    "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
     "transitGateways": [
       {
         "name": "main-tgw",
@@ -17,10 +19,21 @@
         "defaultRouteTablePropagation": "disable",
         "autoAcceptSharingAttachments": "enable",
         "routeTables": [
-          { "name": "core-rt", "routes": [] },
-          { "name": "segregated-rt", "routes": [] }
+          {
+            "name": "core-rt",
+            "routes": []
+          },
+          {
+            "name": "segregated-rt",
+            "routes": []
+          }
         ],
-        "shareTargets": { "organizationalUnits": [], "accounts": ["Shared Services"] }
+        "shareTargets": {
+          "organizationalUnits": [],
+          "accounts": [
+            "Shared Services"
+          ]
+        }
       }
     ],
     "vpcs": [
@@ -28,13 +41,22 @@
         "name": "network-vpc",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.100.0.0/16"],
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "network-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
             "routeTableAssociations": [],
             "routeTablePropagations": []
           }
@@ -44,13 +66,22 @@
         "name": "shared-vpc",
         "account": "Shared Services",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.101.0.0/16"],
+        "cidrs": [
+          "10.101.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "shared-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
             "routeTableAssociations": [],
             "routeTablePropagations": []
           }
@@ -60,15 +91,29 @@
     "vpcTemplates": [
       {
         "name": "template-vpc",
-        "deploymentTargets": { "accounts": ["Network", "Shared Services"] },
+        "deploymentTargets": {
+          "accounts": [
+            "Network",
+            "Shared Services"
+          ]
+        },
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.200.0.0/16"],
+        "cidrs": [
+          "10.200.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "template-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
             "routeTableAssociations": [],
             "routeTablePropagations": []
           }
@@ -94,14 +139,30 @@
       }
     ],
     "directConnectGateways": [
-      { "name": "network-dxgw", "account": "Network", "asn": 64512, "transitGatewayAssociations": [] },
-      { "name": "shared-dxgw", "account": "Shared Services", "asn": 64512, "transitGatewayAssociations": [] }
+      {
+        "name": "network-dxgw",
+        "account": "Network",
+        "asn": 64512,
+        "transitGatewayAssociations": []
+      },
+      {
+        "name": "shared-dxgw",
+        "account": "Shared Services",
+        "asn": 64512,
+        "transitGatewayAssociations": []
+      }
     ]
   },
   "expectedAssertions": {
     "moduleResponseStatus": "completed",
-    "tgwRouteTableAssociations": { "core-rt": [], "segregated-rt": [] },
-    "tgwRouteTablePropagations": { "core-rt": [], "segregated-rt": [] },
+    "tgwRouteTableAssociations": {
+      "core-rt": [],
+      "segregated-rt": []
+    },
+    "tgwRouteTablePropagations": {
+      "core-rt": [],
+      "segregated-rt": []
+    },
     "stateTableLastConfigVpcAttachments": [
       {
         "vpcName": "network-vpc",

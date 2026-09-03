@@ -177,7 +177,7 @@ All module logs are shipped to CloudWatch Logs (`{prefix}-Module-Verbose-Logs`) 
 |---|---|
 | `EXECUTE_INTEGRATION_TEST` | `Yes` to enable integration tests, `No` to disable |
 | `ACCELERATOR_PREFIX` | Resource naming prefix (e.g., `LzaIntegTest`) |
-| `INTEGRATION_TEST_ROLE_NAME` | IAM role name in every account (e.g., `LzaIntegrationTestRole`) |
+| `LZA_GITLAB_ROLE_NAME` | IAM role name for CI credential vending (e.g., `LzaGitlabRole`) |
 | `SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID` | Management account ID |
 | `SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID` | Log archive account ID |
 

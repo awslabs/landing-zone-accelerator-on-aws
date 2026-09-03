@@ -12,6 +12,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AcceleratorTool, AcceleratorToolProps } from '../lib/classes/accelerator-tool';
+import { OrganizationsClient } from '@aws-sdk/client-organizations';
 
 // Mock CloudFormation client for stack detection and config extraction tests
 vi.mock('@aws-sdk/client-cloudformation', async importOriginal => {
@@ -151,6 +152,110 @@ describe('resetCredentialEnvironment', () => {
     // Then
     expect(process.env['AWS_ACCESS_KEY_ID']).toBeUndefined();
     expect(process.env['AWS_PROFILE']).toBeUndefined();
+  });
+});
+
+describe('getOrganizationAccountList lifecycle filtering', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('prefers State and only cleans up ACTIVE and PENDING_CLOSURE accounts', async () => {
+    vi.spyOn(OrganizationsClient.prototype, 'send').mockResolvedValue({
+      Accounts: [
+        {
+          Id: '111111111111',
+          Name: 'StateActive',
+          Email: 'state-active@example.com',
+          State: 'ACTIVE',
+          Status: 'SUSPENDED',
+        },
+        {
+          Id: '222222222222',
+          Name: 'LegacyActive',
+          Email: 'legacy-active@example.com',
+          Status: 'ACTIVE',
+        },
+        {
+          Id: '333333333333',
+          Name: 'StateSuspended',
+          Email: 'state-suspended@example.com',
+          State: 'SUSPENDED',
+          Status: 'ACTIVE',
+        },
+        {
+          Id: '444444444444',
+          Name: 'LegacySuspended',
+          Email: 'legacy-suspended@example.com',
+          Status: 'SUSPENDED',
+        },
+        {
+          Id: '555555555555',
+          Name: 'Closed',
+          Email: 'closed@example.com',
+          State: 'CLOSED',
+          Status: 'ACTIVE',
+        },
+        {
+          Id: '666666666666',
+          Name: 'PendingActivation',
+          Email: 'pending-activation@example.com',
+          State: 'PENDING_ACTIVATION',
+        },
+        {
+          Id: '777777777777',
+          Name: 'PendingClosure',
+          Email: 'pending-closure@example.com',
+          State: 'PENDING_CLOSURE',
+        },
+        {
+          Id: '888888888888',
+          Name: 'MissingState',
+          Email: 'missing-state@example.com',
+        },
+        {
+          Id: '999999999999',
+          Name: 'UnknownState',
+          Email: 'unknown-state@example.com',
+          State: 'UNKNOWN_STATE',
+        },
+      ],
+      NextToken: undefined,
+    } as never);
+    const tool = new AcceleratorTool(makeProps());
+    tool['pipelineManagementAccount'] = {
+      accountId: '111111111111',
+      assumeRoleName: undefined,
+      credentials: undefined,
+    };
+    const warnSpy = vi.spyOn(tool['logger'], 'warn');
+
+    const result = await tool['getOrganizationAccountList']();
+
+    expect(result).toEqual([
+      { accountName: 'StateActive', accountId: '111111111111' },
+      { accountName: 'LegacyActive', accountId: '222222222222' },
+      { accountName: 'PendingClosure', accountId: '777777777777' },
+    ]);
+    expect(warnSpy.mock.calls.filter(([message]) => String(message).includes('lifecycle state'))).toHaveLength(6);
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account StateSuspended (state-suspended@example.com) has lifecycle state SUSPENDED and will not be cleaned up',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account LegacySuspended (legacy-suspended@example.com) has lifecycle state SUSPENDED and will not be cleaned up',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account Closed (closed@example.com) has lifecycle state CLOSED and will not be cleaned up',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account PendingActivation (pending-activation@example.com) has lifecycle state PENDING_ACTIVATION and will not be cleaned up',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account MissingState (missing-state@example.com) has lifecycle state UNKNOWN and will not be cleaned up',
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Account UnknownState (unknown-state@example.com) has lifecycle state UNKNOWN_STATE and will not be cleaned up',
+    );
   });
 });
 

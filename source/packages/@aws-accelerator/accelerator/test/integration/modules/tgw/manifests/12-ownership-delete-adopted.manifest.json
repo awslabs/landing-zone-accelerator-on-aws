@@ -1,0 +1,109 @@
+{
+  "name": "ownership-delete-adopted",
+  "description": "Config removes the previously-adopted propagation (shared-vpc \u2192 segregated-rt). Since manifest 11 recorded it in owned state, the module should now delete it. This proves: external resource adopted into config \u2192 removal from config \u2192 module deletes it (full ownership lifecycle).",
+  "order": 12,
+  "moduleConfig": {
+    "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
+    "transitGateways": [
+      {
+        "name": "main-tgw",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "asn": 64513,
+        "dnsSupport": "enable",
+        "vpnEcmpSupport": "enable",
+        "defaultRouteTableAssociation": "disable",
+        "defaultRouteTablePropagation": "disable",
+        "autoAcceptSharingAttachments": "enable",
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          },
+          {
+            "name": "segregated-rt",
+            "routes": []
+          }
+        ],
+        "shareTargets": {
+          "organizationalUnits": [],
+          "accounts": [
+            "Shared Services"
+          ]
+        }
+      }
+    ],
+    "vpcs": [
+      {
+        "name": "network-vpc",
+        "account": "Network",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "network-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
+            "routeTablePropagations": [
+              "core-rt"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "shared-vpc",
+        "account": "Shared Services",
+        "region": "${ENV:TGW_INTEG_HOME_REGION}",
+        "cidrs": [
+          "10.101.0.0/16"
+        ],
+        "transitGatewayAttachments": [
+          {
+            "name": "shared-vpc-attach",
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
+            "subnets": [],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [],
+            "routeTablePropagations": []
+          }
+        ]
+      }
+    ],
+    "vpcTemplates": [],
+    "customerGateways": []
+  },
+  "expectedAssertions": {
+    "moduleResponseStatus": "completed",
+    "tgwRouteTablePropagations": {
+      "core-rt": [
+        "network-vpc-attach"
+      ],
+      "segregated-rt": []
+    },
+    "stateTableEntry": {}
+  },
+  "skipCleanup": true
+}

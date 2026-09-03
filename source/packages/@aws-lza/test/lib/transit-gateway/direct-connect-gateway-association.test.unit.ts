@@ -1026,7 +1026,7 @@ describe('DirectConnectGatewayAssociation', () => {
   });
 
   describe('deletion phase', () => {
-    it('should delete stale same-account DX association', async () => {
+    it('should preserve an externally-created DX association that LZA does not own', async () => {
       const request = makeRequest({
         directConnectGateways: [
           {
@@ -1035,6 +1035,54 @@ describe('DirectConnectGatewayAssociation', () => {
             transitGatewayAssociations: [],
           },
         ],
+        // Empty owned set: the existing association was created out-of-band, not by LZA.
+        ownedResources: [],
+      });
+      mockSsmResolveDxGatewayId();
+      // Deletion phase: Describe returns an external association on a managed TGW.
+      mockDxSend.mockResolvedValueOnce({
+        directConnectGatewayAssociations: [
+          {
+            associatedGateway: { id: 'tgw-0abc', type: 'transitGateway' },
+            associationId: 'assoc-external',
+            associationState: 'associated',
+          },
+        ],
+      });
+
+      const result = await DirectConnectGatewayAssociation.resolveDxGatewayAssociations(request, makeContext(), 'test');
+
+      // Not owned → skipped, not deleted. Only SSM(1) + Describe(1) — no Delete, no Poll.
+      expect(result.dxResponses.filter(r => r.operation === 'deleted')).toHaveLength(0);
+      expect(mockDxSend).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('not created by LZA'), expect.any(String));
+    });
+
+    it('should record declared associations in the owned resource set', async () => {
+      mockSsmResolveDxGatewayId();
+      mockSameAccountCreateFlow();
+
+      const result = await DirectConnectGatewayAssociation.resolveDxGatewayAssociations(
+        makeRequest(),
+        makeContext(),
+        'test',
+      );
+
+      // Default makeRequest declares dxgw-1 ↔ main-tgw; owned ID uses resolved dxgwId:tgwId.
+      expect(result.ownedResources).toContain('dxassoc:dxgw-111:tgw-0abc');
+    });
+
+    it('should delete stale same-account DX association when previously owned by LZA', async () => {
+      const request = makeRequest({
+        directConnectGateways: [
+          {
+            name: 'dxgw-1',
+            accountId: '111111111111',
+            transitGatewayAssociations: [],
+          },
+        ],
+        // Association was created by LZA on a prior run, so it is eligible for deletion.
+        ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
       });
       mockSsmResolveDxGatewayId();
       // Deletion phase: Describe returns stale association
@@ -1073,6 +1121,7 @@ describe('DirectConnectGatewayAssociation', () => {
             transitGatewayAssociations: [],
           },
         ],
+        ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
       });
       mockSsmResolveDxGatewayId();
       // Deletion phase: Describe returns stale association
@@ -1109,6 +1158,7 @@ describe('DirectConnectGatewayAssociation', () => {
               transitGatewayAssociations: [],
             },
           ],
+          ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
         }),
         dryRun: true,
       };
@@ -1236,6 +1286,8 @@ describe('DirectConnectGatewayAssociation', () => {
             transitGatewayAssociations: [],
           },
         ],
+        // Owned by LZA, so it passes the ownership gate — the skip here is due to transitional state.
+        ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
       });
       mockSsmResolveDxGatewayId();
       mockDxSend.mockResolvedValueOnce({
@@ -1264,6 +1316,8 @@ describe('DirectConnectGatewayAssociation', () => {
             transitGatewayAssociations: [],
           },
         ],
+        // Both existing associations are LZA-owned; deletion is gated only by association state.
+        ownedResources: ['dxassoc:dxgw-111:tgw-0abc'],
       });
       mockSsmResolveDxGatewayId();
       mockDxSend.mockResolvedValueOnce({

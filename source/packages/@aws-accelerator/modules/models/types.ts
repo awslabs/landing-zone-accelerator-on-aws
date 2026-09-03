@@ -196,6 +196,16 @@ export type AcceleratorModuleRunnerParametersType = {
    * Management account credential, only available when solution deployed from external account
    */
   readonly managementAccountCredentials?: AwsCredentialIdentityProvider;
+  /**
+   * IAM role name modules assume for cross-account operations.
+   *
+   * Resolved once by the runner using the same precedence as the CDK deploy path:
+   * `useManagementAccessRole` takes precedence, then a configured `cdkOptions.customDeploymentRole`,
+   * otherwise `managementAccountAccessRole`. This keeps module cross-account operations aligned with
+   * the role the rest of LZA uses instead of referencing `globalConfig.managementAccountAccessRole`
+   * directly.
+   */
+  readonly accountAccessRoleName: string;
 };
 
 /**

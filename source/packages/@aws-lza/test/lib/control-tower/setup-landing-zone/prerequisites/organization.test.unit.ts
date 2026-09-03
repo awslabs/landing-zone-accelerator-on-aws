@@ -644,6 +644,42 @@ describe('IAM Role Tests', () => {
     expect(EnableAllFeaturesCommand).toHaveBeenCalledTimes(0);
   });
 
+  describe('getOrganizationAccounts lifecycle filtering', () => {
+    test('prefers State, falls back to Status, and excludes non-ACTIVE states', async () => {
+      (paginateListAccounts as vi.Mock).mockImplementation(function () {
+        return {
+          [Symbol.asyncIterator]: async function* () {
+            yield {
+              Accounts: [
+                {
+                  Id: 'state-active',
+                  State: 'ACTIVE',
+                  Status: 'SUSPENDED',
+                },
+                {
+                  Id: 'status-active',
+                  Status: 'ACTIVE',
+                },
+                {
+                  Id: 'state-suspended',
+                  State: 'SUSPENDED',
+                  Status: 'ACTIVE',
+                },
+                {
+                  Id: 'missing-state',
+                },
+              ],
+            };
+          },
+        };
+      });
+
+      const result = await Organization.getOrganizationAccounts(new OrganizationsClient({}));
+
+      expect(result.map(account => account.Id)).toEqual(['state-active', 'status-active']);
+    });
+  });
+
   describe('getOrganizationAccountDetailsByEmail Tests', () => {
     test('get accounts by email', async () => {
       // Setup

@@ -148,6 +148,9 @@ describe('ManageAutomationRulesModule', () => {
         organizationDetails: MOCK_CONSTANTS.organizationDetails,
         organizationAccounts: [],
         managementAccountCredentials: MOCK_CONSTANTS.credentials,
+        // Distinct from globalConfig.managementAccountAccessRole so assertions prove the module uses
+        // the runner-resolved accountAccessRoleName (honoring customDeploymentRole), not globalConfig.
+        accountAccessRoleName: 'MyCustomDeploymentRole',
       },
     };
   }
@@ -233,7 +236,7 @@ describe('ManageAutomationRulesModule', () => {
         region: 'us-east-1',
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         partition: MOCK_CONSTANTS.runnerParameters.partition,
-        assumeRoleName: 'AWSControlTowerExecution',
+        assumeRoleName: 'MyCustomDeploymentRole',
         credentials: MOCK_CONSTANTS.credentials,
       });
       expect(mockGetRunnerTargetRegions).toHaveBeenCalledWith(['us-east-1', 'us-west-2'], []);
@@ -574,26 +577,28 @@ describe('ManageAutomationRulesModule', () => {
         region: 'us-east-1',
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         partition: MOCK_CONSTANTS.runnerParameters.partition,
-        assumeRoleName: 'AWSControlTowerExecution',
+        assumeRoleName: 'MyCustomDeploymentRole',
         credentials: MOCK_CONSTANTS.credentials,
       });
       expect(result).toContain('Automation rules managed successfully');
     });
 
-    test('should use custom management account access role', async () => {
+    test('should assume the runner-resolved accountAccessRoleName', async () => {
       const automationRules = [createAutomationRuleConfig('TestRule1')];
       const securityConfig = createMockSecurityConfig(true, automationRules);
-      const globalConfig = createMockGlobalConfig('us-east-1', 'CustomRole');
+      const globalConfig = createMockGlobalConfig();
       const params = createModuleParams(securityConfig, globalConfig);
 
       const result = await ManageAutomationRulesModule.execute(params);
 
+      // The module must assume the runner-resolved accountAccessRoleName (which honors
+      // cdkOptions.customDeploymentRole), not globalConfig.managementAccountAccessRole.
       expect(mockGetCredentials).toHaveBeenCalledWith({
         accountId: '111111111111',
         region: 'us-east-1',
         solutionId: MOCK_CONSTANTS.runnerParameters.solutionId,
         partition: MOCK_CONSTANTS.runnerParameters.partition,
-        assumeRoleName: 'CustomRole',
+        assumeRoleName: 'MyCustomDeploymentRole',
         credentials: MOCK_CONSTANTS.credentials,
       });
       expect(result).toContain('Automation rules managed successfully');

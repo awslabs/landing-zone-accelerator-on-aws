@@ -136,4 +136,70 @@ describe('ResolverResources', () => {
       expect(result[0].firewallDomainListId).toEqual(expected);
     });
   });
+
+  // Regression coverage for GitLab issue #4873 defect 2:
+  // createResolverQueryLogs used `break` when a VPC's query log was ASEA-managed, which
+  // exited the ENTIRE VPC loop. Any VPC ordered after the first ASEA-managed one then never
+  // got a query-log config or SSM parameter. The fix changes `break` to `continue`.
+  describe('createResolverQueryLogs (issue #4873 defect 2)', () => {
+    const delegatedAdminAccountId = '1234567890';
+    const centralConfig = {} as CentralNetworkServicesConfig;
+    const orgId = '1';
+
+    test('a non-ASEA VPC ordered after an ASEA-managed VPC still gets a query-log entry', () => {
+      // Construct while the top-level beforeEach mock is still active (returns an empty Map, cheap),
+      // then restore the real createResolverQueryLogs so we exercise the actual loop.
+      const resolverResources = new ResolverResources(
+        networkStack,
+        delegatedAdminAccountId,
+        centralConfig,
+        props,
+        orgId,
+      );
+      vi.spyOn(ResolverResources.prototype as any, 'createResolverQueryLogs').mockRestore();
+
+      // First VPC is ASEA-managed, second is not.
+      vi.spyOn(networkStack as any, 'isManagedByAsea').mockImplementation(
+        (_type: any, name: string) => name === 'asea-managed-qlog',
+      );
+      // Bypass the real QueryLoggingConfig construct + addSsmParameter; return a deterministic logId.
+      vi.spyOn(resolverResources as any, 'createQueryLogItem').mockReturnValue({ logId: 'test-log-id' });
+
+      const testProps = createAcceleratorStackProps();
+      // Both VPCs must resolve to the stack's own account ('00000001') and region ('us-east-1'),
+      // otherwise the loop body is skipped and the test would pass for the wrong reason.
+      testProps.accountsConfig.getAccountId = vi.fn(() => '00000001') as any;
+      (testProps.networkConfig as any).vpcs = [
+        {
+          name: 'asea-vpc',
+          account: 'Network',
+          region: 'us-east-1',
+          vpcRoute53Resolver: {
+            queryLogs: { name: 'asea-managed-qlog', destinations: ['s3'] },
+          },
+        },
+        {
+          name: 'lza-vpc',
+          account: 'Network',
+          region: 'us-east-1',
+          vpcRoute53Resolver: {
+            queryLogs: { name: 'lza-qlog', destinations: ['s3'] },
+          },
+        },
+      ];
+
+      const result: Map<string, string> = (resolverResources as any).createResolverQueryLogs(
+        delegatedAdminAccountId,
+        testProps,
+        undefined,
+        orgId,
+      );
+
+      // The second (non-ASEA) VPC must still get its query-log entry.
+      // With the old `break`, the loop exited at the first ASEA-managed VPC and this was absent.
+      expect(result.get('lza-qlog-s3')).toBe('test-log-id');
+      // The ASEA-managed VPC is skipped, so it has no entry.
+      expect(result.get('asea-managed-qlog-s3')).toBeUndefined();
+    });
+  });
 });

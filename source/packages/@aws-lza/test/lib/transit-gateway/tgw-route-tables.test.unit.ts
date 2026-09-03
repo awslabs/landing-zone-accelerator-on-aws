@@ -77,6 +77,13 @@ function makeRequest(overrides: Partial<ITgwModuleRequest['configuration']> = {}
     configuration: {
       enable: true,
       accountAccessRoleName: 'AWSControlTowerExecution',
+      // Default owned resources covering standard test attachment (backward-compatible)
+      ownedResources: [
+        'assoc:tgw-rtb-core:tgw-attach-a',
+        'assoc:tgw-rtb-shared:tgw-attach-a',
+        'prop:tgw-rtb-core:tgw-attach-a',
+        'prop:tgw-rtb-shared:tgw-attach-a',
+      ],
       transitGateways: [
         {
           name: 'main-tgw',
@@ -744,6 +751,24 @@ describe('configureAssociationsAndPropagations', () => {
       const result = await configureAssociationsAndPropagations(request, context, 'test');
       expect(result.associations).toHaveLength(2);
       expect(result.associations.map(a => a.tgwName).sort()).toEqual(['tgw-east', 'tgw-west']);
+    });
+
+    test('should return ownedResources with correct key format for resolved attachments', async () => {
+      mockExecuteApi.mockImplementation(async (_name: string, _params: unknown, fn: () => Promise<unknown>) => fn());
+
+      const result = await configureAssociationsAndPropagations(makeRequest(), makeContext(), 'test');
+
+      // Default config: routeTableAssociations: ['core-rt'], routeTablePropagations: ['core-rt', 'shared-rt']
+      // Verify owned resources contain the correct key format: assoc:{rtId}:{attachId} / prop:{rtId}:{attachId}
+      expect(result.ownedResources).toContain('assoc:tgw-rtb-core:tgw-attach-a');
+      expect(result.ownedResources).toContain('prop:tgw-rtb-core:tgw-attach-a');
+      expect(result.ownedResources).toContain('prop:tgw-rtb-shared:tgw-attach-a');
+      expect(result.ownedResources).toHaveLength(3);
+      // Verify all entries are strings with no undefined segments
+      for (const r of result.ownedResources) {
+        expect(typeof r).toBe('string');
+        expect(r).not.toContain('undefined');
+      }
     });
   });
 });

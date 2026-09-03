@@ -61,6 +61,9 @@ export abstract class InviteAccountsToOrganizationsModule {
           return {
             accountId: accountItem.accountId,
             email: accountItem.email,
+            // Invited accounts are not yet members or bootstrapped, so a customDeploymentRole does
+            // not exist in them yet. Only managementAccountAccessRole is guaranteed to exist (the
+            // documented invitation prerequisite), so this cross-account assume must use it directly.
             accountAccessRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
             tags: [
               {

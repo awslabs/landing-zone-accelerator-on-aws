@@ -65,11 +65,11 @@ export async function configureTgw(props: ITgwModuleRequest): Promise<IModuleRes
 
     // Phase 1b: DX Gateway associations (creates attachments, adds IDs to context)
     statusLogger.info('Phase 1b: Resolving DX Gateway associations', logPrefix);
-    const { dxResponses, dxAttachments } = await DirectConnectGatewayAssociation.resolveDxGatewayAssociations(
-      props,
-      resolvedContext,
-      logPrefix,
-    );
+    const {
+      dxResponses,
+      dxAttachments,
+      ownedResources: dxOwnedResources,
+    } = await DirectConnectGatewayAssociation.resolveDxGatewayAssociations(props, resolvedContext, logPrefix);
 
     // Merge DX attachments into the request so Phase 2 handles their RT associations/propagations
     const mergedProps =
@@ -144,6 +144,9 @@ export async function configureTgw(props: ITgwModuleRequest): Promise<IModuleRes
       propagations: phase2Results.propagations,
       dxAssociations: dxResponses,
       connectAttachments: connectResponses,
+      // Combine route-table owned IDs (assoc:/prop:) with DX Gateway association owned IDs (dxassoc:)
+      // so all LZA-created resources are recorded in a single ownership set persisted to state.
+      ownedResources: [...(phase2Results.ownedResources ?? []), ...(dxOwnedResources ?? [])],
     };
 
     logSummary(response, dryRun, logPrefix);

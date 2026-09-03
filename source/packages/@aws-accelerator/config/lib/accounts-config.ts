@@ -568,7 +568,7 @@ export class AccountsConfig implements i.IAccountsConfig {
           this.accountIds?.push({
             email: item.Email.toLocaleLowerCase(),
             accountId: item.Id,
-            status: item.Status,
+            status: item.State ?? item.Status,
             orgsApiResponse: item as Account,
           });
         }

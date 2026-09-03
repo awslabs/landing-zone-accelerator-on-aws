@@ -181,7 +181,7 @@ export abstract class Organization {
     for await (const page of paginator) {
       for (const account of page.Accounts ?? []) {
         // Only include accounts that are in ACTIVE state (excludes SUSPENDED accounts)
-        if (account.Status === 'ACTIVE') {
+        if ((account.State ?? account.Status) === 'ACTIVE') {
           organizationAccounts.push(account);
         }
       }

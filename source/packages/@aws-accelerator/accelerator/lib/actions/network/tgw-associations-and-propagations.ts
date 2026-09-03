@@ -36,7 +36,8 @@ import { isIpAddress } from '../../stacks/network-stacks/utils/validation-utils'
 import { AcceleratorModules, ModuleParams } from '../../types';
 import { loadOrganizationDataSources } from '../utils/common-config';
 import { logModuleExecutionResult } from '../utils/module-logging';
-import { hasModuleConfigChanged, saveModuleExecutionState } from '../utils/module-state';
+import { hasModuleConfigChanged, saveModuleExecutionState, getModuleExecutionState } from '../utils/module-state';
+import { loadOwnedResources, compressOwnedResources } from '../utils/resource-ownership-state';
 
 /**
  * TGW associations and propagations configuration for state comparison.
@@ -351,7 +352,7 @@ export abstract class TgwAssociationsAndPropagations {
       sessionPolicy: params.moduleRunnerParameters.sessionPolicy,
       configuration: {
         enable: true,
-        accountAccessRoleName: globalConfig.managementAccountAccessRole,
+        accountAccessRoleName: params.moduleRunnerParameters.accountAccessRoleName,
         homeRegion: globalConfig.homeRegion,
         transitGateways: tgwConfigs,
         attachments,
@@ -426,24 +427,54 @@ export abstract class TgwAssociationsAndPropagations {
       return failedStatus;
     }
 
-    // Skip if configuration hasn't changed
+    // Skip if configuration hasn't changed — unless ownership state needs seeding (upgrade from pre-ownership version)
     if (!configChanged) {
-      const message = `Skipping module ${params.moduleItem.name} as configuration has not changed since last execution.`;
-      TgwAssociationsAndPropagations.statusLogger.info(message, logPrefix);
-      return {
-        status: MODULE_STATE_CODE.SKIPPED,
-        summary: message,
-        timestamp: new Date().toISOString(),
-        moduleName: params.moduleItem.name,
-        dryRun: params.runnerParameters.dryRun,
-      };
+      const state = await getModuleExecutionState(
+        AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
+        params,
+        logPrefix,
+      );
+      const lastResponse = state?.lastResponse ? JSON.parse(state.lastResponse) : undefined;
+      const hasOwnedResources = lastResponse?.response?.ownedResources !== undefined;
+
+      if (hasOwnedResources) {
+        const message = `Skipping module ${params.moduleItem.name} as configuration has not changed since last execution.`;
+        TgwAssociationsAndPropagations.statusLogger.info(message, logPrefix);
+        return {
+          status: MODULE_STATE_CODE.SKIPPED,
+          summary: message,
+          timestamp: new Date().toISOString(),
+          moduleName: params.moduleItem.name,
+          dryRun: params.runnerParameters.dryRun,
+        };
+      }
+      TgwAssociationsAndPropagations.statusLogger.info(
+        'Configuration unchanged but ownership state not yet seeded — executing to seed owned resources (one-time post-upgrade)',
+        logPrefix,
+      );
     }
 
     // ========================================
     // Build request and call module
     // ========================================
     TgwAssociationsAndPropagations.statusLogger.info('Building TGW module request', logPrefix);
-    const request = await this.buildTgwRequest(params, logPrefix);
+    const baseRequest = await this.buildTgwRequest(params, logPrefix);
+
+    // Load previously owned resources for safe deletion (first run = empty = add-only)
+    const previouslyOwned = await loadOwnedResources(
+      params,
+      AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
+      logPrefix,
+    );
+
+    // Merge owned resources into the request configuration (readonly-safe spread)
+    const request: ITgwModuleRequest = {
+      ...baseRequest,
+      configuration: {
+        ...baseRequest.configuration,
+        ownedResources: previouslyOwned,
+      },
+    };
 
     TgwAssociationsAndPropagations.statusLogger.info('Executing TGW module', logPrefix);
     const status = await configureTgw(request);
@@ -451,13 +482,24 @@ export abstract class TgwAssociationsAndPropagations {
     // ========================================
     // Save execution state
     // ========================================
+    // Compress owned resources for efficient DDB storage (create a copy to avoid mutating the response type)
+    const stateResponse = status.response?.ownedResources
+      ? {
+          ...status,
+          response: {
+            ...status.response,
+            ownedResources: compressOwnedResources(status.response.ownedResources as string[]),
+          },
+        }
+      : status;
+
     try {
       await saveModuleExecutionState(
         {
           serviceName: AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
           config: currentConfig,
           status: status.status,
-          response: status,
+          response: stateResponse,
           dryRun: params.runnerParameters.dryRun,
         },
         params,

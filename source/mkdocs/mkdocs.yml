@@ -24,6 +24,7 @@ nav:
       - Troubleshooting: user-guide/troubleshooting.md
       - Cost and Quotas: user-guide/cost-and-quotas.md
       - Pipeline Diagnostics: user-guide/pipeline-diagnostics.md
+      - Security Service Modules: user-guide/modules.md
   - Developer Guide:
       - developer-guide/index.md
       - Development Dependencies: developer-guide/dependencies.md

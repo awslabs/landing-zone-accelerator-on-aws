@@ -105,7 +105,7 @@ export abstract class AcceleratorPrerequisites {
         region,
         solutionId: params.runnerParameters.solutionId,
         partition: params.runnerParameters.partition,
-        assumeRoleName: params.moduleRunnerParameters.configs.globalConfig.managementAccountAccessRole,
+        assumeRoleName: params.moduleRunnerParameters.accountAccessRoleName,
         credentials: params.moduleRunnerParameters.managementAccountCredentials,
       });
       if (!credentials) {

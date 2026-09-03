@@ -1,17 +1,24 @@
 {
   "name": "error-missing-dx-ssm",
   "description": "Reference a non-existent DX Gateway SSM parameter and expect failure",
-  "order": 11,
+  "order": 14,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
-    "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
     "transitGateways": [
       {
         "name": "main-tgw",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
         "asn": 64513,
-        "routeTables": [{ "name": "core-rt", "routes": [] }]
+        "routeTables": [
+          {
+            "name": "core-rt",
+            "routes": []
+          }
+        ]
       }
     ],
     "vpcs": [
@@ -19,13 +26,22 @@
         "name": "network-vpc",
         "account": "Network",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.100.0.0/16"],
+        "cidrs": [
+          "10.100.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "network-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
             "routeTableAssociations": [],
             "routeTablePropagations": []
           }
@@ -41,8 +57,12 @@
           {
             "name": "main-tgw",
             "account": "Network",
-            "allowedPrefixes": ["10.0.0.0/8"],
-            "routeTableAssociations": ["core-rt"],
+            "allowedPrefixes": [
+              "10.0.0.0/8"
+            ],
+            "routeTableAssociations": [
+              "core-rt"
+            ],
             "routeTablePropagations": []
           }
         ]

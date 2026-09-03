@@ -225,8 +225,13 @@ export class CentralLogsBucket extends Construct {
     // Add explicit S3 bucket policy for security service principals with aws:SourceOrgID condition.
     // These are handled here instead of in the Bucket construct because CDK grant methods
     // (grantRead/grantWrite/grantReadWrite) do not support IAM conditions.
+    // Non-regional (global) service principals: a direct Service principal is valid. Opt-in
+    // region principals (e.g. macie.<region>.amazonaws.com) are handled separately below because
+    // CloudFormation/S3 reject a direct regional Service principal when the opt-in region is not
+    // activated in the account (issue #4918).
     awsPrincipalAccesses
       .filter(item => item.accessType !== BucketAccessType.NO_ACCESS && item.name !== 'SessionManager')
+      .filter(item => !isRegionalServicePrincipal(item.principal))
       .forEach(item => {
         const actions: string[] = [];
         if (item.accessType === BucketAccessType.READONLY || item.accessType === BucketAccessType.READWRITE) {
@@ -255,6 +260,56 @@ export class CentralLogsBucket extends Construct {
           }),
         );
       });
+
+    // Opt-in region service principals grouped by service. A direct Service principal for a
+    // non-activated opt-in region fails policy validation, so mirror the KMS block above and
+    // Bucket.addConsolidatedRegionalAccess: one StarPrincipal statement per service scoped by
+    // aws:PrincipalServiceName (and aws:SourceOrgID when set). Issue #4918.
+    const s3RegionalActionsByService = new Map<string, Set<string>>();
+    const s3RegionalPrincipalsByService = new Map<string, string[]>();
+    awsPrincipalAccesses
+      .filter(item => item.accessType !== BucketAccessType.NO_ACCESS && item.name !== 'SessionManager')
+      .filter(item => isRegionalServicePrincipal(item.principal))
+      .forEach(item => {
+        const serviceName = item.principal.split('.')[0];
+        const actions = s3RegionalActionsByService.get(serviceName) ?? new Set<string>();
+        if (item.accessType === BucketAccessType.READONLY || item.accessType === BucketAccessType.READWRITE) {
+          ['s3:GetObject*', 's3:GetBucket*', 's3:List*'].forEach(action => actions.add(action));
+        }
+        if (item.accessType === BucketAccessType.WRITEONLY || item.accessType === BucketAccessType.READWRITE) {
+          [
+            's3:PutObject',
+            's3:PutObjectLegalHold',
+            's3:PutObjectRetention',
+            's3:PutObjectTagging',
+            's3:PutObjectVersionTagging',
+            's3:Abort*',
+            's3:DeleteObject*',
+          ].forEach(action => actions.add(action));
+        }
+        s3RegionalActionsByService.set(serviceName, actions);
+
+        const principals = s3RegionalPrincipalsByService.get(serviceName) ?? [];
+        principals.push(item.principal);
+        s3RegionalPrincipalsByService.set(serviceName, principals);
+      });
+
+    for (const [serviceName, principals] of s3RegionalPrincipalsByService) {
+      this.bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow ${serviceName} regional services access`,
+          principals: [new cdk.aws_iam.StarPrincipal()],
+          actions: [...(s3RegionalActionsByService.get(serviceName) ?? new Set<string>())],
+          resources: [this.bucket.getS3Bucket().bucketArn, this.bucket.getS3Bucket().arnForObjects('*')],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalServiceName': principals,
+              ...(sourceOrgId ? { 'aws:SourceOrgID': sourceOrgId } : {}),
+            },
+          },
+        }),
+      );
+    }
 
     props.awsPrincipalAccesses?.forEach(item => {
       if (item.name === 'SessionManager') {

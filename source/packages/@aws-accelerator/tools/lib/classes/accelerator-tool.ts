@@ -55,7 +55,7 @@ import {
   ScheduleKeyDeletionCommand,
 } from '@aws-sdk/client-kms';
 import {
-  AccountStatus,
+  AccountState,
   ListAccountsCommand,
   ListParentsCommand,
   DescribeOrganizationalUnitCommand,
@@ -812,8 +812,11 @@ export class AcceleratorTool {
         organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
       );
       for (const account of page.Accounts ?? []) {
-        if (account.Status == AccountStatus.SUSPENDED) {
-          this.logger.error(`Account ${account.Name} (${account.Email}) is suspended, will not be cleaned up`);
+        const accountState = account.State ?? account.Status;
+        if (accountState !== AccountState.ACTIVE && accountState !== AccountState.PENDING_CLOSURE) {
+          this.logger.warn(
+            `Account ${account.Name ?? '<unknown>'} (${account.Email ?? '<email unavailable>'}) has lifecycle state ${accountState ?? 'UNKNOWN'} and will not be cleaned up`,
+          );
           continue;
         }
         if (account.Id && account.Name) {

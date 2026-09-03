@@ -1,10 +1,12 @@
 {
   "name": "xacct-error-denied-assume",
   "description": "Reference a missing cross-account attachment SSM parameter and expect failure",
-  "order": 12,
+  "order": 15,
   "moduleConfig": {
     "homeRegion": "${ENV:TGW_INTEG_HOME_REGION}",
-    "enabledRegions": ["${ENV:TGW_INTEG_HOME_REGION}"],
+    "enabledRegions": [
+      "${ENV:TGW_INTEG_HOME_REGION}"
+    ],
     "transitGateways": [
       {
         "name": "main-tgw",
@@ -17,10 +19,21 @@
         "defaultRouteTablePropagation": "disable",
         "autoAcceptSharingAttachments": "enable",
         "routeTables": [
-          { "name": "core-rt", "routes": [] },
-          { "name": "segregated-rt", "routes": [] }
+          {
+            "name": "core-rt",
+            "routes": []
+          },
+          {
+            "name": "segregated-rt",
+            "routes": []
+          }
         ],
-        "shareTargets": { "organizationalUnits": [], "accounts": ["Shared Services"] }
+        "shareTargets": {
+          "organizationalUnits": [],
+          "accounts": [
+            "Shared Services"
+          ]
+        }
       }
     ],
     "vpcs": [
@@ -28,14 +41,25 @@
         "name": "missing-shared-vpc",
         "account": "Shared Services",
         "region": "${ENV:TGW_INTEG_HOME_REGION}",
-        "cidrs": ["10.199.0.0/16"],
+        "cidrs": [
+          "10.199.0.0/16"
+        ],
         "transitGatewayAttachments": [
           {
             "name": "missing-shared-vpc-attach",
-            "transitGateway": { "name": "main-tgw", "account": "Network" },
+            "transitGateway": {
+              "name": "main-tgw",
+              "account": "Network"
+            },
             "subnets": [],
-            "options": { "applianceModeSupport": "disable", "dnsSupport": "enable", "ipv6Support": "disable" },
-            "routeTableAssociations": ["core-rt"],
+            "options": {
+              "applianceModeSupport": "disable",
+              "dnsSupport": "enable",
+              "ipv6Support": "disable"
+            },
+            "routeTableAssociations": [
+              "core-rt"
+            ],
             "routeTablePropagations": []
           }
         ]

@@ -15,6 +15,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   Account,
   AccountJoinedMethod,
+  AccountState,
   AccountStatus,
   AWSOrganizationsNotInUseException,
   OrganizationsClient,
@@ -93,7 +94,8 @@ const MOCK_CONSTANTS = {
       Id: 'YYYYYYYYYYYY',
       Name: 'Account1',
       Email: 'account1@example.com',
-      Status: 'ACTIVE' as AccountStatus,
+      State: 'ACTIVE' as AccountState,
+      Status: 'SUSPENDED' as AccountStatus,
       JoinedMethod: 'INVITED' as AccountJoinedMethod,
       Arn: 'arn:aws:organizations::XXXXXXXXXXXX:account/o-test123456/YYYYYYYYYYYY',
       JoinedTimestamp: new Date('2023-01-01T00:00:00Z'),
@@ -121,9 +123,15 @@ const MOCK_CONSTANTS = {
       dataBag: JSON.stringify({
         name: 'Account1',
         arn: 'arn:aws:organizations::XXXXXXXXXXXX:account/o-test123456/YYYYYYYYYYYY',
-        status: 'ACTIVE',
+        status: 'SUSPENDED',
         joinedMethod: 'INVITED',
         joinedTimestamp: '2023-01-01T00:00:00Z',
+      }),
+      orgInfo: JSON.stringify({
+        orgsApiResponse: {
+          State: 'ACTIVE',
+          Status: 'SUSPENDED',
+        },
       }),
     },
     {
@@ -133,9 +141,13 @@ const MOCK_CONSTANTS = {
       dataBag: JSON.stringify({
         name: 'Account2',
         arn: 'arn:aws:organizations::XXXXXXXXXXXX:account/o-test123456/ZZZZZZZZZZZZ',
-        status: 'ACTIVE',
+        status: 'SUSPENDED',
         joinedMethod: 'CREATED',
         joinedTimestamp: '2023-01-02T00:00:00Z',
+      }),
+      orgInfo: JSON.stringify({
+        status: 'ACTIVE',
+        orgsApiResponse: { Status: 'SUSPENDED' },
       }),
     },
   ],
@@ -252,7 +264,7 @@ describe('organizations-functions', () => {
       );
     });
 
-    test('should exclude accounts whose Status is not ACTIVE', async () => {
+    test('should prefer State, fall back to Status, and retain accounts without a lifecycle state', async () => {
       const suspendedAccount: Account = {
         Id: 'AAAAAAAAAAAA',
         Name: 'SuspendedAccount',
@@ -271,10 +283,21 @@ describe('organizations-functions', () => {
         Arn: 'arn:aws:organizations::XXXXXXXXXXXX:account/o-test123456/BBBBBBBBBBBB',
         JoinedTimestamp: new Date('2024-07-01T00:00:00Z'),
       };
+      const missingStateAccount: Account = {
+        Id: 'CCCCCCCCCCCC',
+        Name: 'MissingStateAccount',
+        Email: 'missing-state@example.com',
+      };
       const mockPaginator = {
         [Symbol.asyncIterator]: async function* () {
           yield {
-            Accounts: [MOCK_CONSTANTS.accounts[0], suspendedAccount, MOCK_CONSTANTS.accounts[1], pendingClosureAccount],
+            Accounts: [
+              MOCK_CONSTANTS.accounts[0],
+              suspendedAccount,
+              MOCK_CONSTANTS.accounts[1],
+              pendingClosureAccount,
+              missingStateAccount,
+            ],
           };
         },
       };
@@ -282,7 +305,7 @@ describe('organizations-functions', () => {
 
       const result = await getOrganizationAccounts(MOCK_CONSTANTS.logPrefix, new OrganizationsClient({}));
 
-      expect(result).toEqual(MOCK_CONSTANTS.accounts);
+      expect(result).toEqual([...MOCK_CONSTANTS.accounts, missingStateAccount]);
       expect(result.map(a => a.Id)).not.toContain(suspendedAccount.Id);
       expect(result.map(a => a.Id)).not.toContain(pendingClosureAccount.Id);
     });
@@ -475,7 +498,7 @@ describe('organizations-functions', () => {
         Email: 'account1@example.com',
         Name: 'Account1',
         Arn: 'arn:aws:organizations::XXXXXXXXXXXX:account/o-test123456/YYYYYYYYYYYY',
-        Status: 'ACTIVE',
+        State: 'ACTIVE',
         JoinedMethod: 'INVITED',
         JoinedTimestamp: new Date('2023-01-01T00:00:00Z'),
       });
@@ -630,6 +653,28 @@ describe('organizations-functions', () => {
       ).rejects.toThrow('Invalid JSON in dataBag field for account account1@example.com:');
     });
 
+    test('should throw error when orgInfo contains invalid JSON', async () => {
+      mockQueryDynamoDBTable.mockResolvedValue({
+        items: [
+          {
+            awsKey: 'YYYYYYYYYYYY',
+            acceleratorKey: 'account1@example.com',
+            dataType: 'mandatoryAccount',
+            dataBag: JSON.stringify({ name: 'Account1' }),
+            orgInfo: 'invalid json',
+          },
+        ],
+      });
+
+      await expect(
+        getOrganizationAccountsFromSourceTable({
+          client: new DynamoDBClient({}),
+          organizationsDataSource: MOCK_CONSTANTS.organizationsDataSource,
+          logPrefix: MOCK_CONSTANTS.logPrefix,
+        }),
+      ).rejects.toThrow('Invalid JSON in orgInfo field for account account1@example.com:');
+    });
+
     test('should handle minimal account data', async () => {
       const minimalTableData = [
         {
@@ -738,6 +783,36 @@ describe('organizations-functions', () => {
       expect(result).toHaveLength(2);
       expect(result.map(a => a.Id)).not.toContain('AAAAAAAAAAAA');
       expect(result.map(a => a.Id)).not.toContain('BBBBBBBBBBBB');
+    });
+
+    test('should exclude accounts whose nested legacy Organizations status is not ACTIVE', async () => {
+      const nestedLegacyStatusAccountId = 'AAAAAAAAAAAA';
+      mockQueryDynamoDBTable.mockResolvedValue({
+        items: [
+          ...MOCK_CONSTANTS.tableData,
+          {
+            awsKey: nestedLegacyStatusAccountId,
+            acceleratorKey: 'suspended@example.com',
+            dataType: 'workloadAccount',
+            dataBag: JSON.stringify({
+              name: 'SuspendedAccount',
+            }),
+            orgInfo: JSON.stringify({
+              orgsApiResponse: {
+                Status: 'SUSPENDED',
+              },
+            }),
+          },
+        ],
+      });
+
+      const result = await getOrganizationAccountsFromSourceTable({
+        client: new DynamoDBClient({}),
+        organizationsDataSource: MOCK_CONSTANTS.organizationsDataSource,
+        logPrefix: MOCK_CONSTANTS.logPrefix,
+      });
+
+      expect(result.map(account => account.Id)).not.toContain(nestedLegacyStatusAccountId);
     });
   });
 

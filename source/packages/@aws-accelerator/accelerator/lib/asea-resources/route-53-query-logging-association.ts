@@ -49,6 +49,9 @@ export class Route53ResolverQueryLoggingAssociation extends AseaResource {
       const associationLogicalId = `${associationLogicalIdWithReplacedVpc}`.replace(/-|_/g, '');
 
       const importResource = this.scope.importStackResources.getResourceByLogicalId(associationLogicalId);
+      if (!importResource) {
+        continue;
+      }
       const cfnResolverQueryLoggingAssociation = this.scope.getResource(
         associationLogicalId,
       ) as cdk.aws_route53resolver.CfnResolverQueryLoggingConfigAssociation;
