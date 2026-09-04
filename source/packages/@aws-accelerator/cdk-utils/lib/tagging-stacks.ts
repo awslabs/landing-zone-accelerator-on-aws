@@ -6,6 +6,18 @@ import { ITag } from '@aws-accelerator/config';
 const logger = createLogger(['tagging-utils']);
 
 /**
+ * Priority applied to accelerator-wide default (global) tags from global-config.yaml.
+ *
+ * CDK assigns tags set directly on a CloudFormation resource (for example, resource-level
+ * tags declared in network-config.yaml and passed through the resource `tags` property)
+ * a priority of 50 ({@link https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.TagManager.html | TagManager} external tag priority),
+ * whereas tags applied through the {@link cdk.Tag} aspect default to priority 100 and would
+ * otherwise overwrite them. Global tags are intended to act as overridable defaults, so they
+ * are applied below the resource-level priority to let a same-key resource-level tag win.
+ */
+const GLOBAL_DEFAULT_TAG_PRIORITY = 49;
+
+/**
  * Applies Accelerator tagging to all taggable resources in the given construct subtree.
  *
  * This function is required rather than using an Aspect class for two reasons:
@@ -50,13 +62,18 @@ export function addAcceleratorTags(node: IConstruct, partition: string, tags: IT
       if (resource instanceof cdk.aws_ec2.CfnTransitGateway && partition !== 'aws') {
         continue;
       }
+      // The mandatory 'Accelerator'/'Accel-P' identification tags are applied at the cdk.Tag
+      // default priority (100) so they remain non-overridable by resource-level tags, unlike the
+      // user-defined global tags below which are lowered to act as overridable defaults.
       if (resource.cfnResourceType === 'AWS::EC2::SecurityGroup') {
         new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
       }
       new cdk.Tag('Accelerator', acceleratorPrefix).visit(resource);
 
       tags.forEach(t => {
-        new cdk.Tag(t.key, t.value).visit(resource);
+        // Global tags are overridable defaults, so apply them below the priority CDK gives
+        // resource-level tags (50) to let a same-key resource-level tag take precedence.
+        new cdk.Tag(t.key, t.value, { priority: GLOBAL_DEFAULT_TAG_PRIORITY }).visit(resource);
       });
 
       if (resource.cfnResourceType === 'Custom::SsmPutParameterValue') {

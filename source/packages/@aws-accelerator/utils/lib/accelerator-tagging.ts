@@ -35,9 +35,11 @@ export function isAcceleratorTaggingEnabled(partition: string): boolean {
 /**
  * Resolve the effective tag set a resource carries once Accelerator tagging is applied.
  *
- * Mirrors the precedence that `addAcceleratorTags` produces at synth: resource-level (prop)
- * tags are applied first, then the generated `Accelerator` tag and the global config tags are
- * applied as CDK Tag aspects at a higher priority, so global values win on key collisions.
+ * Mirrors the precedence that `addAcceleratorTags` produces at synth. Values are written into
+ * the map from lowest to highest priority so the last write wins on a key collision: global
+ * config tags are the lowest (CDK aspect priority 49), resource-level (prop) tags override them
+ * (CDK external tag priority 50), and the generated `Accelerator` tag is highest (cdk.Tag default
+ * priority 100) and cannot be overridden.
  *
  * @param props resource-level tags, global config tags, partition and Accelerator prefix
  * @returns map of tag key to the value the deployed resource will carry
@@ -50,14 +52,19 @@ export function resolveAcceleratorTags(props: {
 }): Map<string, string> {
   const tags = new Map<string, string>();
 
-  // Prop tags use last-key-wins semantics at the lower aspect priority.
+  const taggingEnabled = isAcceleratorTaggingEnabled(props.partition);
+
+  // Global config tags are overridable defaults at the lowest priority, so write them first.
+  if (taggingEnabled) {
+    (props.globalTags ?? []).forEach(tag => tags.set(tag.key, tag.value));
+  }
+
+  // Resource-level (prop) tags win over global tags on key collision; last key wins among themselves.
   (props.resourceTags ?? []).forEach(tag => tags.set(tag.key, tag.value));
 
-  if (isAcceleratorTaggingEnabled(props.partition)) {
-    // addAcceleratorTags adds the generated Accelerator tag first, then global tags,
-    // so a global tag sharing either key overrides the value set above.
+  // The generated Accelerator tag is highest priority and cannot be overridden.
+  if (taggingEnabled) {
     tags.set('Accelerator', props.acceleratorPrefix);
-    (props.globalTags ?? []).forEach(tag => tags.set(tag.key, tag.value));
   }
 
   return tags;

@@ -63,23 +63,23 @@ describe('function resolveAcceleratorTags', () => {
     expect(tags.get('owner')).toEqual('network');
   });
 
-  test('global tags override resource tags on key collision', () => {
+  test('resource tags override global tags on key collision', () => {
     const tags = resolveAcceleratorTags({
       resourceTags: [{ key: 'env', value: 'dev' }],
       globalTags: [{ key: 'env', value: 'prod' }],
       partition: 'aws',
       acceleratorPrefix: 'AWSAccelerator',
     });
-    expect(tags.get('env')).toEqual('prod');
+    expect(tags.get('env')).toEqual('dev');
   });
 
-  test('global tags override the generated Accelerator tag', () => {
+  test('the generated Accelerator tag is not overridden by a global tag', () => {
     const tags = resolveAcceleratorTags({
       globalTags: [{ key: 'Accelerator', value: 'Custom' }],
       partition: 'aws',
       acceleratorPrefix: 'AWSAccelerator',
     });
-    expect(tags.get('Accelerator')).toEqual('Custom');
+    expect(tags.get('Accelerator')).toEqual('AWSAccelerator');
   });
 
   test('later resource tags win over earlier ones for the same key', () => {

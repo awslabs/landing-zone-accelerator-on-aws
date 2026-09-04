@@ -221,6 +221,69 @@ describe('SecurityGroup tagging', () => {
   });
 });
 
+describe('resource-level tag precedence over global tags', () => {
+  it('lets a resource-level tag override a global tag with the same key', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'PrecedenceStack');
+
+    // Resource-level tag applied directly on the CfnResource (as network-config.yaml does via the tags property)
+    new ec2.CfnVPC(stack, 'Vpc', {
+      cidrBlock: '10.0.0.0/16',
+      tags: [
+        { key: 'example:application', value: 'local-app' },
+        { key: 'example:cost-centre', value: 'cc99999' },
+      ],
+    });
+
+    // Global tags from global-config.yaml with colliding keys
+    addAcceleratorTags(
+      stack,
+      'aws',
+      [
+        { key: 'example:application', value: 'global-app' },
+        { key: 'example:cost-centre', value: 'cc00000' },
+      ],
+      'AWSAccelerator',
+    );
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::EC2::VPC', {
+      Tags: Match.arrayWith([
+        Match.objectLike({ Key: 'example:application', Value: 'local-app' }),
+        Match.objectLike({ Key: 'example:cost-centre', Value: 'cc99999' }),
+      ]),
+    });
+    // The global values must have lost outright — neither should be rendered on the resource.
+    template.hasResourceProperties('AWS::EC2::VPC', {
+      Tags: Match.not(Match.arrayWith([Match.objectLike({ Value: 'global-app' })])),
+    });
+    template.hasResourceProperties('AWS::EC2::VPC', {
+      Tags: Match.not(Match.arrayWith([Match.objectLike({ Value: 'cc00000' })])),
+    });
+  });
+
+  it('still applies global tags for keys the resource does not define', () => {
+    const app = new cdk.App();
+    const stack = new cdk.Stack(app, 'PrecedenceDefaultsStack');
+
+    new ec2.CfnVPC(stack, 'Vpc', {
+      cidrBlock: '10.0.0.0/16',
+      tags: [{ key: 'example:application', value: 'local-app' }],
+    });
+
+    addAcceleratorTags(stack, 'aws', [{ key: 'example:cost-centre', value: 'cc00000' }], 'AWSAccelerator');
+
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('AWS::EC2::VPC', {
+      Tags: Match.arrayWith([
+        Match.objectLike({ Key: 'Accelerator', Value: 'AWSAccelerator' }),
+        Match.objectLike({ Key: 'example:application', Value: 'local-app' }),
+        Match.objectLike({ Key: 'example:cost-centre', Value: 'cc00000' }),
+      ]),
+    });
+  });
+});
+
 describe('SsmPutParameterValue tagging', () => {
   it('does not throw when tagging Custom::SsmPutParameterValue resource', () => {
     const app = new cdk.App();

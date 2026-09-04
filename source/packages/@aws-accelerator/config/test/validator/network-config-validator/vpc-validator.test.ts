@@ -1038,7 +1038,7 @@ describe('VpcValidator - IPAM pool allocationResourceTags requirement', () => {
     expect(loggedFindings()).toHaveLength(0);
   });
 
-  test('REPORT: global config tag overrides a satisfying VPC-local tag', () => {
+  test('PASS: a satisfying VPC-local tag is not overridden by a same-key global config tag', () => {
     const errors: string[] = [];
     const { networkConfig, helpers } = buildShareFixture({
       vpcAccount: 'Network',
@@ -1051,9 +1051,30 @@ describe('VpcValidator - IPAM pool allocationResourceTags requirement', () => {
 
     new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'dev' }]));
 
-    const findings = loggedFindings();
+    // Global config tags are overridable defaults, so the VPC deploys with its own env=prod and
+    // satisfies the pool requirement. This assertion previously expected the opposite (a finding
+    // for "env (required prod, actual dev)"), which encoded the precedence defect this change fixes.
+    expect(loggedFindings()).toHaveLength(0);
+  });
+
+  test('REPORT: a global config tag no longer satisfies a requirement the VPC overrides with its own value', () => {
+    const errors: string[] = [];
+    const { networkConfig, helpers } = buildShareFixture({
+      vpcAccount: 'Network',
+      ipams: [buildIpam({ allocationResourceTags: [{ key: 'env', value: 'dev' }] })],
+      vpcConsumers: {
+        ipamAllocations: [{ ipamPoolName: 'TestPool', netmaskLength: 24 } as IpamAllocationConfig],
+      },
+      vpcTags: [{ key: 'env', value: 'prod' }],
+    });
+
+    new VpcValidator(networkConfig, helpers, errors, undefined, buildGlobalConfig([{ key: 'env', value: 'dev' }]));
+
+    // Mirror of the case above: the pool requires the global value, but the resource-level tag now
+    // wins, so the allocation requirement is reported as unsatisfied.
+    const findings = loggedFindings().filter(message => message.includes('IPAM pool "TestPool"'));
     expect(findings).toHaveLength(1);
-    expect(findings[0]).toContain('env (required prod, actual dev)');
+    expect(findings[0]).toContain('Mismatched: env (required dev, actual prod).');
   });
 
   test('PASS: duplicate VPC tag keys use the last configured value', () => {
