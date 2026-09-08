@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide
+- chore(organizations): drop unread account status and name fields in move-account handler
 
 ## [1.17.0] - 
 

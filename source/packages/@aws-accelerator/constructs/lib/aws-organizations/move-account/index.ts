@@ -158,7 +158,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
 async function moveAccounts(
   allAwsOuKeys: AwsOrganizationalUnitKeys[],
   allAccountsFromConfigTable: DDBItems,
-  allAccountsFromOrganization: { ouId: string; accountId: string; status: string }[],
+  allAccountsFromOrganization: { ouId: string; accountId: string }[],
 ): Promise<void> {
   const moveAccountList: {
     accountName: string;
@@ -267,8 +267,8 @@ async function moveAccount(account: {
 
 async function getOrganizationAccounts(
   organizationalUnitKeys: ConfigOrganizationalUnitKeys[],
-): Promise<{ ouId: string; accountId: string; status: string }[]> {
-  const organizationAccounts: { ouId: string; accountId: string; accountName: string; status: string }[] = [];
+): Promise<{ ouId: string; accountId: string }[]> {
+  const organizationAccounts: { ouId: string; accountId: string }[] = [];
   for (const ouKey of organizationalUnitKeys) {
     let nextToken: string | undefined = undefined;
     do {
@@ -279,8 +279,6 @@ async function getOrganizationAccounts(
         organizationAccounts.push({
           ouId: ouKey.awsKey,
           accountId: account.Id!,
-          accountName: account.Name!,
-          status: account.Status!,
         });
       }
       nextToken = page.NextToken;
