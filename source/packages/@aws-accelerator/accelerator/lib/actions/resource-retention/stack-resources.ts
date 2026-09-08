@@ -335,6 +335,14 @@ async function retainStackResources(
       // Stack does not exist - explicit error code check
       finalStatus = RetentionStatus.NOT_FOUND;
       resultStatus = 'NOT_FOUND';
+    } else if (response.errorCode === RetentionErrorCode.REGION_NOT_AVAILABLE) {
+      // Target Region is unreachable for this account (a disabled opt-in Region). Nothing can be
+      // retained there now. Reset the state to PENDING (non-terminal) so the target is retried on
+      // a later Prepare run once the account enables the Region - deliberately NOT NOT_FOUND or
+      // COMPLETED, which are terminal and would permanently suppress retention. Reported as
+      // SKIPPED so it is not counted as a failure and does not fail the Prepare stage.
+      finalStatus = RetentionStatus.PENDING;
+      resultStatus = 'SKIPPED';
     } else {
       // Any other case (FAILED status or unexpected status) - treat as FAILED
       finalStatus = RetentionStatus.FAILED;
@@ -469,9 +477,20 @@ async function executeBatched<T, R>(
 
     results.push(...batchResults);
 
-    // Log batch completion with success/failure counts
-    const succeeded = batchResults.filter(r => r.status === 'fulfilled').length;
-    const failed = batchResults.filter(r => r.status === 'rejected').length;
+    // Log batch completion with accurate success/failure counts. A rejected promise is a
+    // failure; a fulfilled promise is a failure only when the resolved result itself carries a
+    // FAILED status. retainStackResources resolves with a FAILED result rather than rejecting,
+    // so counting every fulfilled promise as succeeded previously under-reported failures - e.g.
+    // "2 succeeded, 0 failed" logged immediately before two FAILED retentions.
+    // Results without a status field (other executeBatched callers) are unaffected: a fulfilled
+    // promise still counts as succeeded.
+    const failed = batchResults.filter(r => {
+      if (r.status === 'rejected') {
+        return true;
+      }
+      return (r.value as unknown as { status?: string } | undefined)?.status === 'FAILED';
+    }).length;
+    const succeeded = batchResults.length - failed;
     statusLogger.info(
       `Batch ${batchNumber}/${totalBatches} completed: ${succeeded} succeeded, ${failed} failed`,
       logPrefix,

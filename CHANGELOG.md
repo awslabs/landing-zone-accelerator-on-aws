@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - fix(tagging): apply global-config tags as overridable defaults so a resource-level tag with the same key (e.g. on a VPC or route table) takes precedence
 - fix(asea): import ASEA-created Customer Gateways and Site-to-Site VPN connections so their Transit Gateway VPN attachments can be referenced for route table association and propagation in network-config
+- fix(prepare): defer stack-resources-retention for disabled opt-in Regions instead of failing the Prepare stage with `InvalidClientTokenId` when an added account has not yet enabled an opt-in Region listed in `enabledRegions`; the affected account/Region is skipped without persisting a terminal retention state and is retried on a later run once the Region is enabled
 - fix(security-hub): fail the manage-automation-rules module when the Security Hub API rejects a rule instead of reporting the stage as successful
 - fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them

@@ -28,6 +28,31 @@ vi.mock('../../../../lib/actions/utils/common-config', () => ({
   getCfnRetentionBucketName: vi.fn(() => 'cdk-accel-assets-123456789012-us-east-1'),
 }));
 
+// Capture statusLogger.info so tests can assert the batch-completion tally emitted by
+// executeBatched. Only the logger factories are stubbed; all other aws-lza exports (e.g.
+// MODULE_STATE_CODE) are preserved.
+const { statusLoggerInfoSpy } = vi.hoisted(() => ({ statusLoggerInfoSpy: vi.fn() }));
+vi.mock('aws-lza', async importOriginal => {
+  const actual = await importOriginal<typeof import('aws-lza')>();
+  // Any logger method (info/warn/error/debug/processStart/processEnd/...) resolves to a vi.fn;
+  // statusLogger.info is pinned to the shared spy so batch-tally calls accumulate. Symbols and
+  // `then` return undefined so the stub is never treated as a thenable.
+  const makeLogger = (overrides: Record<string, unknown>) =>
+    new Proxy(overrides, {
+      get: (target, prop) => {
+        if (typeof prop === 'symbol' || prop === 'then') {
+          return undefined;
+        }
+        return prop in target ? target[prop as string] : vi.fn();
+      },
+    });
+  return {
+    ...actual,
+    createLogger: () => makeLogger({}),
+    createStatusLogger: () => makeLogger({ info: statusLoggerInfoSpy }),
+  };
+});
+
 describe('StackResources', () => {
   const mockParams: ModuleParams = {
     moduleItem: {
@@ -214,6 +239,127 @@ describe('StackResources', () => {
 
       expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
       expect(result.summary).toContain('not found');
+    });
+
+    it('should defer REGION_NOT_AVAILABLE targets without persisting terminal state', async () => {
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          {
+            serviceName: AcceleratorModules.MACIE,
+            resourceTypes: ['Custom::MacieExportConfigClassification'],
+          },
+        ],
+      };
+
+      const allStates = new Map();
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(allStates);
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'Region ca-west-1 is not enabled for account 333333333333; deferring retention',
+        errorCode: cfnRetention.RetentionErrorCode.REGION_NOT_AVAILABLE,
+        requestedResourceTypes: ['Custom::MacieExportConfigClassification'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'FAILED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 0,
+        },
+      });
+
+      const result = await StackResources.retain(mockParams);
+
+      // Module still completes (a disabled Region is not a failure) and the target is skipped.
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      expect(result.summary).toContain('skipped');
+      // The deferred target is reset to PENDING so it re-runs on a later Prepare...
+      expect(retentionState.updateRetentionStatus).toHaveBeenCalledWith(
+        expect.objectContaining({ status: RetentionStatus.PENDING }),
+        expect.anything(),
+        expect.anything(),
+      );
+      // ...and is never persisted as terminal NOT_FOUND or COMPLETED, which would suppress
+      // retention once the account enables the Region.
+      expect(retentionState.updateRetentionStatus).not.toHaveBeenCalledWith(
+        expect.objectContaining({ status: RetentionStatus.NOT_FOUND }),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(retentionState.updateRetentionStatus).not.toHaveBeenCalledWith(
+        expect.objectContaining({ status: RetentionStatus.COMPLETED }),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    it('should count fulfilled non-FAILED retentions as succeeded in the batch tally', async () => {
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          { serviceName: AcceleratorModules.MACIE, resourceTypes: ['Custom::MacieExportConfigClassification'] },
+        ],
+      };
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(new Map());
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'ok',
+        requestedResourceTypes: ['Custom::MacieExportConfigClassification'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'SUCCEEDED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 0,
+        },
+      });
+
+      await StackResources.retain(mockParams);
+
+      const batchLine = statusLoggerInfoSpy.mock.calls
+        .map(c => String(c[0]))
+        .find(m => /Batch \d+\/\d+ completed:/.test(m));
+      expect(batchLine).toBeDefined();
+      // No fulfilled result is FAILED, so the failed count must be zero.
+      expect(batchLine).toMatch(/0 failed/);
+    });
+
+    it('should count a fulfilled FAILED retention as failed in the batch tally', async () => {
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          { serviceName: AcceleratorModules.MACIE, resourceTypes: ['Custom::MacieExportConfigClassification'] },
+        ],
+      };
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(new Map());
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'deployment failed',
+        requestedResourceTypes: ['Custom::MacieExportConfigClassification'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'FAILED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 0,
+        },
+      });
+
+      // retainStackResourcesBatch throws when any target FAILED; StackResources.retain catches it
+      // and returns a FAILED module result. The batch tally is logged before that throw.
+      const result = await StackResources.retain(mockParams);
+      expect(result.status).toBe(MODULE_STATE_CODE.FAILED);
+
+      const batchLine = statusLoggerInfoSpy.mock.calls
+        .map(c => String(c[0]))
+        .find(m => /Batch \d+\/\d+ completed:/.test(m));
+      expect(batchLine).toBeDefined();
+      // A fulfilled result whose status is FAILED must be counted as failed (>=1), not succeeded.
+      expect(batchLine).toMatch(/[1-9]\d* failed/);
+      expect(batchLine).toMatch(/0 succeeded/);
     });
 
     it('should handle dry-run mode', async () => {

@@ -68,6 +68,7 @@ import {
   UpdateStackCommand,
 } from '@aws-sdk/client-cloudformation';
 import { S3Client } from '@aws-sdk/client-s3';
+import { AccountClient, GetRegionOptStatusCommand } from '@aws-sdk/client-account';
 import {
   AssumeRoleCredentialType,
   IModuleRequest,
@@ -81,6 +82,7 @@ import {
   uploadFileToS3,
   waitUntil,
 } from 'aws-lza';
+import { OptInRegions } from '@aws-accelerator/utils';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { IStackRetentionConfig } from './types';
@@ -118,6 +120,15 @@ export enum RetentionErrorCode {
   DEPLOYMENT_FAILED = 'DEPLOYMENT_FAILED',
   /** No resources found matching the specified resource types */
   NO_MATCHING_RESOURCES = 'NO_MATCHING_RESOURCES',
+  /**
+   * The target Region is not reachable for this account because it is a disabled (or
+   * never-enabled) opt-in Region. Nothing can exist or be retained there now, so the target
+   * is deferred and re-evaluated on a later run once the Region is enabled. This is
+   * deliberately DISTINCT from STACK_NOT_FOUND: STACK_NOT_FOUND is persisted as a terminal
+   * state (treated as completed) and would permanently suppress retention for the target once
+   * the Region becomes available.
+   */
+  REGION_NOT_AVAILABLE = 'REGION_NOT_AVAILABLE',
   /** Unknown or unexpected error occurred during retention operation */
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
 }
@@ -480,6 +491,47 @@ function createResponseWithRetentionStatus(config: IRetentionResponseConfig): IR
 }
 
 /**
+ * Sentinel error signalling that the target Region is unreachable for the account because it is
+ * a disabled (or never-enabled) opt-in Region, as opposed to the stack genuinely not existing.
+ *
+ * `isStackExists()` throws this instead of returning `false` so the caller can classify the
+ * outcome as {@link RetentionErrorCode.REGION_NOT_AVAILABLE} (deferred, non-terminal) rather than
+ * STACK_NOT_FOUND (terminal).
+ */
+class RegionNotAvailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'RegionNotAvailableError';
+  }
+}
+
+/**
+ * Builds the response returned when the target Region is unreachable for the account (a disabled
+ * opt-in Region). It carries {@link RetentionErrorCode.REGION_NOT_AVAILABLE} so the state layer
+ * defers the target (resets it to PENDING and re-evaluates next run) instead of persisting a
+ * terminal NOT_FOUND/COMPLETED that would suppress retention once the Region is enabled.
+ *
+ * @param props The retention request being processed
+ * @param message Human-readable reason the Region is being deferred
+ */
+function createRegionNotAvailableResponse(
+  props: IRetainResourceModuleRequest,
+  message: string,
+): IRetainResourceModuleResponse {
+  return createResponseWithRetentionStatus({
+    message,
+    requestedResourceTypes: props.configuration.resourceTypes,
+    deploymentAttempted: false,
+    stackName: props.configuration.stackName,
+    modificationStatus: StackSetOperationStatus.FAILED,
+    appliedResources: [],
+    notFoundResources: props.configuration.resourceTypes,
+    totalProcessed: 0,
+    errorCode: RetentionErrorCode.REGION_NOT_AVAILABLE,
+  });
+}
+
+/**
  * Retains CloudFormation resources by applying the "Retain" deletion policy.
  *
  * @async
@@ -648,6 +700,26 @@ export async function retainResources(props: IRetainResourceModuleRequest): Prom
     });
   }
 
+  // Proactively skip disabled opt-in Regions before touching CloudFormation. When an account is
+  // added whose accounts-config enables an opt-in Region the account has not yet activated, the
+  // CloudFormation call below would otherwise fail with InvalidClientTokenId and kill the Prepare
+  // stage. A disabled opt-in Region is unreachable, so there is nothing to
+  // retain there. This check is a no-op (no API call) for standard Regions.
+  const regionReachable = await isRegionReachableForAccount({
+    credentials,
+    endpointRegion: props.region,
+    targetRegion: props.configuration.region,
+    solutionId: props.solutionId,
+    logPrefix,
+  });
+  if (!regionReachable) {
+    const message =
+      `Region ${props.configuration.region} is not enabled for account ${props.configuration.accountId}; ` +
+      `deferring retention (Region is unreachable, nothing to retain; will re-evaluate once it is enabled)`;
+    logger.warn(message, logPrefix);
+    return createRegionNotAvailableResponse(props, message);
+  }
+
   const client = new CloudFormationClient({
     region: props.configuration.region,
     customUserAgent: props.solutionId,
@@ -655,8 +727,20 @@ export async function retainResources(props: IRetainResourceModuleRequest): Prom
     credentials: credentials,
   });
 
-  // Check if stack exists
-  const stackExists = await isStackExists(client, props.configuration.stackName, logPrefix);
+  // Check if stack exists. If the proactive opt-in check above failed open (e.g. the account
+  // lacks account:GetRegionOptStatus) and the Region is in fact a disabled opt-in Region, the
+  // CloudFormation call rejects with InvalidClientTokenId; isStackExists() surfaces that as a
+  // RegionNotAvailableError so we defer the target here rather than treating it as not-found.
+  let stackExists: boolean;
+  try {
+    stackExists = await isStackExists(client, props.configuration.stackName, logPrefix, props.configuration.region);
+  } catch (e: unknown) {
+    if (e instanceof RegionNotAvailableError) {
+      logger.warn(e.message, logPrefix);
+      return createRegionNotAvailableResponse(props, e.message);
+    }
+    throw e;
+  }
   if (!stackExists) {
     const message = `Stack ${props.configuration.stackName} not found`;
     logger.warn(message, logPrefix);
@@ -775,7 +859,12 @@ export async function retainResources(props: IRetainResourceModuleRequest): Prom
   return response;
 }
 
-async function isStackExists(client: CloudFormationClient, stackName: string, logPrefix: string): Promise<boolean> {
+async function isStackExists(
+  client: CloudFormationClient,
+  stackName: string,
+  logPrefix: string,
+  targetRegion: string,
+): Promise<boolean> {
   logger.info(`Checking if stack ${stackName} exists.`, logPrefix);
   try {
     const commandName = 'DescribeStacksCommand';
@@ -816,8 +905,110 @@ async function isStackExists(client: CloudFormationClient, stackName: string, lo
         logger.warn(`Stack ${stackName} does not exist.`, logPrefix);
         return false;
       }
+      // A disabled (or never-enabled) opt-in Region rejects CloudFormation calls with
+      // InvalidClientTokenId ("The security token included in the request is invalid"). Only an
+      // OPT-IN Region can be in this state, so scope the deferral to opt-in Regions: signal an
+      // unreachable opt-in Region as a RegionNotAvailableError (distinct from stack-not-found) so
+      // the caller defers the target instead of failing the Prepare stage. A
+      // standard (always-on) Region can never be disabled, so an InvalidClientTokenId there is a
+      // genuine credential failure (suspended/closed account, rejected assumed-role) and MUST stay
+      // fatal - it falls through to `throw e` below. Genuine credential expiry
+      // (ExpiredToken/ExpiredTokenException) is likewise never swallowed. This gate depends on the
+      // OptInRegions allowlist in @aws-accelerator/utils (regions.ts) - see the maintenance note in
+      // isRegionReachableForAccount.
+      if (e.name === 'InvalidClientTokenId' && OptInRegions.includes(targetRegion)) {
+        logger.warn(
+          `CloudFormation is unreachable for stack ${stackName} in opt-in Region ${targetRegion} ` +
+            `(${e.name}: ${e.message}); Region is not enabled for this account, deferring retention.`,
+          logPrefix,
+        );
+        throw new RegionNotAvailableError(
+          `Region ${targetRegion} unreachable for stack ${stackName} (${e.name}: ${e.message})`,
+        );
+      }
     }
     throw e;
+  }
+}
+
+/**
+ * Determines whether the target Region is reachable for the given account before any
+ * CloudFormation call is attempted.
+ *
+ * Standard (always-on) Regions short-circuit to `true` with no API call. For opt-in Regions
+ * this calls `account:GetRegionOptStatus` using the target account's own credentials to check
+ * whether the account has actually enabled the Region. A disabled (or never-enabled) opt-in
+ * Region is unreachable for CloudFormation, so there is nothing to retain there and the target
+ * can be skipped proactively rather than failing the Prepare stage with a fatal
+ * `InvalidClientTokenId`.
+ *
+ * The status lookup uses `endpointRegion` (the invoking/home Region, always enabled) for the
+ * Account API endpoint while querying the opt-in status of `targetRegion`. If the status cannot
+ * be determined for any reason we fail open (return `true`) and let `isStackExists()` classify
+ * the downstream rejection, so this check can never make retention worse than before.
+ *
+ * @param params.credentials Credentials scoped to the target account (undefined = ambient creds)
+ * @param params.endpointRegion An always-reachable Region for the Account API endpoint
+ * @param params.targetRegion The Region whose reachability is being evaluated
+ * @param params.solutionId Solution id for the custom user agent
+ * @param params.logPrefix Log prefix for correlation
+ * @returns `true` when the Region is reachable (or unknown), `false` when it is a disabled opt-in Region
+ */
+async function isRegionReachableForAccount(params: {
+  credentials?: AssumeRoleCredentialType;
+  endpointRegion: string;
+  targetRegion: string;
+  solutionId?: string;
+  logPrefix: string;
+}): Promise<boolean> {
+  // Standard Regions are always reachable - no API call needed.
+  // Maintenance note: this Region scoping (and the InvalidClientTokenId gate in isStackExists)
+  // depends on the OptInRegions allowlist in @aws-accelerator/utils (regions.ts). A newly launched
+  // opt-in Region that is not yet in that list is treated as standard here, so the proactive skip
+  // is bypassed and its disabled-Region rejection would surface as a fatal InvalidClientTokenId,
+  // reintroducing the Prepare-stage failure this guard prevents. Keep regions.ts current as AWS
+  // adds opt-in Regions so this deferral keeps covering them.
+  if (!OptInRegions.includes(params.targetRegion)) {
+    return true;
+  }
+
+  try {
+    const accountClient = new AccountClient({
+      region: params.endpointRegion,
+      customUserAgent: params.solutionId,
+      retryStrategy: setRetryStrategy(),
+      credentials: params.credentials,
+    });
+
+    const response = await executeApi(
+      'GetRegionOptStatusCommand',
+      { RegionName: params.targetRegion },
+      () => accountClient.send(new GetRegionOptStatusCommand({ RegionName: params.targetRegion })),
+      logger,
+      params.logPrefix,
+    );
+
+    const status = (response as { RegionOptStatus?: string }).RegionOptStatus;
+    const enabled = status === 'ENABLED' || status === 'ENABLED_BY_DEFAULT';
+    if (!enabled) {
+      logger.warn(
+        `Opt-in Region ${params.targetRegion} is '${status ?? 'not enabled'}' for this account; ` +
+          `skipping retention (Region is unreachable, nothing to retain).`,
+        params.logPrefix,
+      );
+    }
+    return enabled;
+  } catch (e: unknown) {
+    // Fail open: if we cannot determine opt-in status (e.g. missing account:GetRegionOptStatus
+    // permission), proceed with the normal flow and rely on isStackExists() to classify any
+    // downstream Region-unreachable rejection. This guard can only skip work, never add failure.
+    logger.warn(
+      `Unable to determine opt-in status for Region ${params.targetRegion} ` +
+        `(${e instanceof Error ? `${e.name}: ${e.message}` : 'unknown error'}); ` +
+        `proceeding and relying on stack-existence handling.`,
+      params.logPrefix,
+    );
+    return true;
   }
 }
 

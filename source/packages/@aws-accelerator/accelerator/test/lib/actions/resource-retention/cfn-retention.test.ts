@@ -59,6 +59,15 @@ vi.mock('@aws-sdk/client-s3', () => ({
   }),
 }));
 
+vi.mock('@aws-sdk/client-account', () => ({
+  AccountClient: vi.fn(function () {
+    return {
+      send: vi.fn(),
+    };
+  }),
+  GetRegionOptStatusCommand: vi.fn(),
+}));
+
 // Mock node:fs/promises
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
@@ -182,6 +191,10 @@ describe('retainResources', () => {
           return {
             StackId: 'arn:aws:cloudformation:us-east-1:123456789012:stack/test-stack/12345',
           };
+        }
+
+        if (commandName === 'GetRegionOptStatusCommand') {
+          return { RegionName: parameters['RegionName'], RegionOptStatus: 'ENABLED' };
         }
 
         return {};
@@ -311,6 +324,164 @@ describe('retainResources', () => {
     const response = await retainResources(input);
     expect(response.resourceRetentionStatus?.stackModificationStatus).toBe('FAILED');
     expect(response.message).toContain('not found');
+  });
+
+  it('should skip retention for a disabled opt-in Region without calling CloudFormation', async () => {
+    const { executeApi } = await import('aws-lza');
+    const describeStacksSpy = vi.fn();
+    (executeApi as ReturnType<typeof vi.fn>).mockImplementation(
+      async (commandName: string, parameters: Record<string, unknown>) => {
+        if (commandName === 'GetRegionOptStatusCommand') {
+          return { RegionName: parameters['RegionName'], RegionOptStatus: 'DISABLED' };
+        }
+        if (commandName === 'DescribeStacksCommand') {
+          describeStacksSpy();
+          return { Stacks: [] };
+        }
+        return {};
+      },
+    );
+
+    const optInInput = {
+      ...input,
+      configuration: { ...input.configuration, region: 'ca-west-1' },
+    };
+
+    const response = await retainResources(optInInput);
+
+    expect(response.message).toContain('not enabled');
+    expect(response.deploymentAttempted).toBe(false);
+    expect(response.resourceRetentionStatus?.stackModificationStatus).toBe('FAILED');
+    // Must be the non-terminal REGION_NOT_AVAILABLE code, not STACK_NOT_FOUND: the latter is
+    // persisted as terminal NOT_FOUND and would suppress retention once the Region is enabled.
+    expect(response.errorCode).toBe('REGION_NOT_AVAILABLE');
+    // The doomed CloudFormation call must never be attempted for a disabled opt-in Region.
+    expect(describeStacksSpy).not.toHaveBeenCalled();
+  });
+
+  it('should proceed normally when an opt-in Region is enabled for the account', async () => {
+    // The shared executeApi mock returns RegionOptStatus ENABLED for opt-in Regions.
+    const optInInput = {
+      ...input,
+      configuration: { ...input.configuration, region: 'ca-west-1' },
+    };
+
+    const response = await retainResources(optInInput);
+
+    expect(response.deploymentAttempted).toBe(true);
+    expect(response.message).toBe('Resource retention and deployment completed successfully');
+  });
+
+  it('should fail open and proceed when opt-in status cannot be determined', async () => {
+    const { executeApi } = await import('aws-lza');
+    (executeApi as ReturnType<typeof vi.fn>).mockImplementation(async (commandName: string) => {
+      if (commandName === 'GetRegionOptStatusCommand') {
+        const error = new Error('User is not authorized to perform: account:GetRegionOptStatus');
+        error.name = 'AccessDeniedException';
+        throw error;
+      }
+      if (commandName === 'DescribeStacksCommand') {
+        return {
+          Stacks: [
+            {
+              StackName: input.configuration.stackName,
+              StackStatus: 'CREATE_COMPLETE',
+              StackStatusReason: 'Stack created successfully',
+            },
+          ],
+        };
+      }
+      if (commandName === 'GetTemplateCommand') {
+        return {
+          TemplateBody: JSON.stringify({
+            Resources: {
+              TestMacieResource: {
+                Type: 'Custom::MacieEnableOrganizationAdminAccount',
+                Properties: { ServiceToken: 'arn:aws:lambda:us-east-1:123456789012:function:test' },
+              },
+            },
+          }),
+        };
+      }
+      if (commandName === 'UpdateStackCommand') {
+        return { StackId: 'arn:aws:cloudformation:us-east-1:123456789012:stack/test-stack/12345' };
+      }
+      return {};
+    });
+
+    const optInInput = {
+      ...input,
+      configuration: { ...input.configuration, region: 'ca-west-1' },
+    };
+
+    const response = await retainResources(optInInput);
+    // GetRegionOptStatus threw, so the guard fails open and the normal flow runs to completion.
+    expect(response.deploymentAttempted).toBe(true);
+  });
+
+  it('should defer an opt-in Region InvalidClientTokenId when the opt-in pre-check fails open (tier-1)', async () => {
+    const { executeApi } = await import('aws-lza');
+    (executeApi as ReturnType<typeof vi.fn>).mockImplementation(async (commandName: string) => {
+      if (commandName === 'GetRegionOptStatusCommand') {
+        // Pre-check fails open (cannot determine opt-in status), so the tier-1 fallback is exercised.
+        const error = new Error('User is not authorized to perform: account:GetRegionOptStatus');
+        error.name = 'AccessDeniedException';
+        throw error;
+      }
+      if (commandName === 'DescribeStacksCommand') {
+        const error = new Error('The security token included in the request is invalid');
+        error.name = 'InvalidClientTokenId';
+        throw error;
+      }
+      return {};
+    });
+
+    // Opt-in Region (ca-west-1): a token rejection is a disabled-Region signal, deferred as
+    // REGION_NOT_AVAILABLE (non-terminal), not classified as stack-not-found.
+    const optInInput = {
+      ...input,
+      configuration: { ...input.configuration, region: 'ca-west-1' },
+    };
+
+    const response = await retainResources(optInInput);
+    expect(response.deploymentAttempted).toBe(false);
+    expect(response.errorCode).toBe('REGION_NOT_AVAILABLE');
+    expect(response.message).toContain('unreachable');
+    expect(response.message).not.toContain('not found');
+  });
+
+  it('should rethrow InvalidClientTokenId in a standard Region as a genuine auth failure', async () => {
+    const { executeApi } = await import('aws-lza');
+    (executeApi as ReturnType<typeof vi.fn>).mockImplementation(async (commandName: string) => {
+      if (commandName === 'DescribeStacksCommand') {
+        const error = new Error('The security token included in the request is invalid');
+        error.name = 'InvalidClientTokenId';
+        throw error;
+      }
+      return {};
+    });
+
+    // A standard (always-on) Region can never be a disabled opt-in Region, so InvalidClientTokenId
+    // is a real credential failure (suspended/closed account, rejected assumed-role) and must stay
+    // fatal - never deferred or swallowed. `input` uses the standard Region us-east-1.
+    await expect(retainResources(input)).rejects.toThrow('The security token included in the request is invalid');
+  });
+
+  it('should rethrow ExpiredToken rather than deferring it as region-not-available', async () => {
+    const { executeApi } = await import('aws-lza');
+    (executeApi as ReturnType<typeof vi.fn>).mockImplementation(async (commandName: string) => {
+      if (commandName === 'DescribeStacksCommand') {
+        const error = new Error('The security token included in the request is expired');
+        error.name = 'ExpiredToken';
+        throw error;
+      }
+      return {};
+    });
+
+    // Genuine credential expiry must stay fatal: it is neither swallowed as stack-not-found nor
+    // deferred as region-not-available, otherwise a real auth failure would silently skip
+    // retention. This pins the swallow/defer-vs-rethrow boundary.
+    await expect(retainResources(input)).rejects.toThrow('The security token included in the request is expired');
   });
 
   it('should handle template modification failure', async () => {
