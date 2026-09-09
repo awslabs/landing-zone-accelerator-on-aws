@@ -4617,6 +4617,12 @@ export interface IVpcConfig {
    * AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints
    * before enabling it.
    *
+   * NOTE: Setting this property from `true` back to `false`, or deleting a VPC that previously used central endpoints, does not
+   * remove the VPC's association with the central endpoint Route 53 private hosted zones. The accelerator only creates these
+   * associations; it never removes them. Until a stale association is removed manually with the Route 53
+   * `DisassociateVPCFromHostedZone` API, the VPC continues to resolve and route to the central endpoints. Refer to the
+   * networking FAQ for the manual removal procedure.
+   *
    * @default false
    *
    * @remarks
@@ -4980,6 +4986,12 @@ export interface IVpcTemplatesConfig {
    * endpoints. This includes having the Route 53 Private Hosted Zone
    * associated with this VPC. Centralized endpoints are configured per
    * region, and can span to spoke accounts
+   *
+   * NOTE: Setting this property from `true` back to `false`, or deleting a VPC that previously used central endpoints, does not
+   * remove the VPC's association with the central endpoint Route 53 private hosted zones. The accelerator only creates these
+   * associations; it never removes them. Until a stale association is removed manually with the Route 53
+   * `DisassociateVPCFromHostedZone` API, the VPC continues to resolve and route to the central endpoints. Refer to the
+   * networking FAQ for the manual removal procedure.
    *
    * @default false
    *

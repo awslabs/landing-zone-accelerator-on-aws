@@ -4381,7 +4381,7 @@
         },
         "useCentralEndpoints": {
           "default": false,
-          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts.\n\nNOTE: The AWS partition and regions must support the creation of Route 53 private hosted zones and DNS alias records for AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints before enabling it.",
+          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts.\n\nNOTE: The AWS partition and regions must support the creation of Route 53 private hosted zones and DNS alias records for AWS VPC Endpoint resource types or the pipeline will fail. Ensure your partition and regions will support useCentralEndpoints before enabling it.\n\nNOTE: Setting this property from `true` back to `false`, or deleting a VPC that previously used central endpoints, does not remove the VPC's association with the central endpoint Route 53 private hosted zones. The accelerator only creates these associations; it never removes them. Until a stale association is removed manually with the Route 53 `DisassociateVPCFromHostedZone` API, the VPC continues to resolve and route to the central endpoints. Refer to the networking FAQ for the manual removal procedure.",
           "type": "boolean"
         },
         "virtualPrivateGateway": {
@@ -4748,7 +4748,7 @@
         },
         "useCentralEndpoints": {
           "default": false,
-          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts",
+          "description": "(OPTIONAL) When set to true, this VPC will be configured to utilize centralized endpoints. This includes having the Route 53 Private Hosted Zone associated with this VPC. Centralized endpoints are configured per region, and can span to spoke accounts\n\nNOTE: Setting this property from `true` back to `false`, or deleting a VPC that previously used central endpoints, does not remove the VPC's association with the central endpoint Route 53 private hosted zones. The accelerator only creates these associations; it never removes them. Until a stale association is removed manually with the Route 53 `DisassociateVPCFromHostedZone` API, the VPC continues to resolve and route to the central endpoints. Refer to the networking FAQ for the manual removal procedure.",
           "type": "boolean"
         },
         "virtualPrivateGateway": {

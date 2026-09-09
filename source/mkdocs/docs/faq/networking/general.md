@@ -29,6 +29,57 @@ Additionally, to utilize these central endpoints from other VPCs and VPC templat
 !!!note "See also"
     For additional information on this design pattern, refer to [Centralized access to VPC private endpoints](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-access-to-vpc-private-endpoints.html) from the AWS Whitepaper _Building a Scalable and Secure Multi-VPC AWS Network Infrastructure_
 
+## Why is my VPC still associated with the central endpoint private hosted zones after I set `useCentralEndpoints: false` or deleted the VPC?
+
+Landing Zone Accelerator associates a VPC with the central interface endpoint Route 53 private hosted zones (PHZs) **additively only**. When you set `useCentralEndpoints: true`, a custom resource running in the account that owns the central interface endpoint VPC (the account where `interfaceEndpoints.central: true` is configured, which is the `Network` account in the [Universal Configuration](https://github.com/aws/lza-universal-configuration/tree/main/modules/base/default/network-config.yaml)) associates that VPC with each endpoint service's PHZ.
+
+The accelerator never performs the reverse operation. When you later set `useCentralEndpoints: false`, or delete the VPC entirely, LZA does **not** disassociate the VPC from those hosted zones. The association is left in place, and you must remove it manually. This is a deliberate design decision, not a defect.
+
+### Why the accelerator does not remove the association automatically
+
+Disassociating a VPC from a private hosted zone immediately stops private DNS resolution for those service endpoints inside the VPC. If the accelerator automatically removed an association for a VPC that still relied on the central endpoints (for example, a VPC that opts out in configuration but whose workloads still depend on private DNS during a migration), it would break name resolution and interrupt those workloads. There is also no reliable way for the accelerator to distinguish associations it created from associations you may have created outside LZA against the same hosted zone, so an automated reverse pass risks removing associations it does not own. Because the blast radius of an incorrect disassociation is high and the manual operation is a single API call, the accelerator leaves both the decision and the action to you.
+
+### Impact of leaving the association in place
+
+- Workloads in the VPC continue to resolve the central endpoints' private DNS names and route API calls through the central interface endpoints, so you continue to incur interface-endpoint usage and cross-VPC data-transfer charges even if you intended that traffic to take a different path.
+- Each association counts against the Route 53 quota for the number of VPCs that can be associated with a private hosted zone (a default of 300 per hosted zone, adjustable). Stale associations consume that quota.
+
+### How to remove the association manually
+
+Perform these steps only **after** a pipeline run that includes the configuration change. When you set `useCentralEndpoints: false` (or remove the VPC from `network-config.yaml`), the next pipeline run strips the `accelerator:use-central-endpoints` tag from the VPC, which is what stops the association custom resource from re-adding it. If you disassociate before that run, the accelerator re-associates the VPC on its next run.
+
+1. **List the hosted zones the VPC is still associated with.** Run this using the VPC ID and the Region the VPC was created in. You can run it from the account that owns the VPC or from the account that owns the central interface endpoint VPC:
+
+    ```bash
+    aws route53 list-hosted-zones-by-vpc \
+      --vpc-id <vpc-id> \
+      --vpc-region <region>
+    ```
+
+    The central endpoint hosted zones are named for the service and Region, for example `ec2.us-east-1.amazonaws.com` (there is one zone per endpoint service you configured as central). Note the `HostedZoneId` of each central endpoint zone you want to detach.
+
+2. **Disassociate the VPC from each central endpoint hosted zone.** You can run this from either the account that created the hosted zone (the central interface endpoint VPC account) or the account that created the VPC; no cross-account authorization is required for disassociation. For a VPC that has already been deleted, run it from the hosted zone owner account:
+
+    ```bash
+    aws route53 disassociate-vpc-from-hosted-zone \
+      --hosted-zone-id <hosted-zone-id> \
+      --vpc VPCRegion=<region>,VPCId=<vpc-id>
+    ```
+
+    Repeat for each central endpoint hosted zone returned in step 1.
+
+**Notes:**
+
+1. Disassociate only the central endpoint hosted zones you intend to stop using. Do not disassociate the VPC from hosted zones owned by an AWS service (those with an `OwningService` value in the `list-hosted-zones-by-vpc` output) or from any zone you associated outside of LZA.
+2. You cannot remove the last VPC from a private hosted zone. The central interface endpoint VPC remains associated with each zone as its owner, so disassociating a spoke VPC is always permitted.
+3. If a VPC opts out of central endpoints in configuration but its workloads still depend on private DNS resolution to those endpoints, leave the association in place. Leaving it is the safe default; removing it stops resolution immediately.
+
+!!!warning
+    Disassociation takes effect immediately and stops private DNS resolution for those endpoints in the VPC. Confirm that no workloads in the VPC still depend on the central endpoints before you disassociate.
+
+!!!note "See also"
+    [DisassociateVPCFromHostedZone](https://docs.aws.amazon.com/Route53/latest/APIReference/API_DisassociateVPCFromHostedZone.html) in the _Amazon Route 53 API Reference_, and [Quotas on hosted zones](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html) in the _Amazon Route 53 Developer Guide_.
+
 ## How do I remove a route table that a gateway endpoint (S3 or DynamoDB) routes into?
 
 Gateway endpoints for `s3` and `dynamodb` associate directly with route tables through the `RouteTableIds` property of the underlying `AWS::EC2::VPCEndpoint` resource. Landing Zone Accelerator builds that association list from any route entry in the VPC whose `type` is `gatewayEndpoint` and whose `target` is `s3` or `dynamodb`.
