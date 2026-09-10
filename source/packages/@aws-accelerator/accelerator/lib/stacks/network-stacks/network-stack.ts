@@ -567,6 +567,17 @@ export abstract class NetworkStack extends AcceleratorStack {
           }
         }
       }
+
+      // Map VPC-level resolver endpoints defined under vpcRoute53Resolver.endpoints[]
+      if ('vpcRoute53Resolver' in vpcItem) {
+        for (const endpointItem of vpcItem.vpcRoute53Resolver?.endpoints ?? []) {
+          const endpointId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            this.getSsmPath(SsmResourceType.RESOLVER_ENDPOINT, [endpointItem.name]),
+          );
+          endpointMap.set(`${vpcItem.name}_${endpointItem.name}`, endpointId);
+        }
+      }
     }
     return endpointMap;
   }

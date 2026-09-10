@@ -124,4 +124,52 @@ describe('Route53ResolverValidator', () => {
       expect(errors).toHaveLength(1);
     });
   });
+
+  describe('validateForwardRuleNames', () => {
+    const helpers = new NetworkValidatorFunctions({} as NetworkConfig, ['Root'], [], [], ['us-east-1']);
+
+    it('flags a rule name duplicated across a central and a VPC-level endpoint', () => {
+      const values = {
+        centralNetworkServices: {
+          route53Resolver: {
+            endpoints: [{ name: 'central-outbound', type: 'OUTBOUND', rules: [{ name: 'dup-rule' }] }],
+          },
+        },
+        vpcs: [
+          {
+            name: 'workload',
+            vpcRoute53Resolver: {
+              endpoints: [{ name: 'vpc-outbound', type: 'OUTBOUND', rules: [{ name: 'dup-rule' }] }],
+            },
+          },
+        ],
+      } as unknown as NetworkConfig;
+
+      validator['validateForwardRuleNames'](values, helpers, errors);
+
+      expect(errors.some(e => e.includes('Resolver FORWARD rules has duplicates'))).toBe(true);
+    });
+
+    it('accepts unique rule names across central and VPC-level endpoints', () => {
+      const values = {
+        centralNetworkServices: {
+          route53Resolver: {
+            endpoints: [{ name: 'central-outbound', type: 'OUTBOUND', rules: [{ name: 'central-rule' }] }],
+          },
+        },
+        vpcs: [
+          {
+            name: 'workload',
+            vpcRoute53Resolver: {
+              endpoints: [{ name: 'vpc-outbound', type: 'OUTBOUND', rules: [{ name: 'vpc-rule' }] }],
+            },
+          },
+        ],
+      } as unknown as NetworkConfig;
+
+      validator['validateForwardRuleNames'](values, helpers, errors);
+
+      expect(errors).toHaveLength(0);
+    });
+  });
 });

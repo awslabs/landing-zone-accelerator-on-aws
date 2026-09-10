@@ -824,6 +824,12 @@ export class Route53ResolverValidator {
     values.centralNetworkServices?.route53Resolver?.endpoints?.forEach(endpoint => {
       endpoint.rules?.forEach(rule => ruleNames.push(rule.name));
     });
+    // Include FORWARD rules defined at the VPC level under vpcRoute53Resolver.endpoints[]
+    values.vpcs?.forEach(vpc => {
+      vpc.vpcRoute53Resolver?.endpoints?.forEach(endpoint => {
+        endpoint.rules?.forEach(rule => ruleNames.push(rule.name));
+      });
+    });
 
     // Validate rule names are unique
     if (helpers.hasDuplicates(ruleNames)) {

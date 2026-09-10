@@ -149,6 +149,15 @@ export class NetworkVpcDnsStack extends NetworkStack {
           }
         }
       }
+
+      // FORWARD rules defined at the VPC level under vpcRoute53Resolver.endpoints[]
+      if ('vpcRoute53Resolver' in vpcItem) {
+        for (const endpointItem of vpcItem.vpcRoute53Resolver?.endpoints ?? []) {
+          if (endpointItem.type === 'OUTBOUND') {
+            this.createForwardRules(vpcItem, endpointItem, maps.resolver);
+          }
+        }
+      }
     }
   }
 
@@ -425,10 +434,17 @@ export class NetworkVpcDnsStack extends NetworkStack {
    * @returns
    */
   private createManagedADResolverRuleUpdateRole(ruleName: string, ruleArn: string) {
+    // The Managed AD resolver-rule update role is created in the centralNetworkServices
+    // delegated admin account. Without centralNetworkServices there is no delegated admin
+    // account to target, so there is nothing to create (e.g. VPC-level rules in a config
+    // that does not define centralNetworkServices).
+    if (!this.props.networkConfig.centralNetworkServices) {
+      return;
+    }
     for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
       const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
-        this.props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+        this.props.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
       if (madAccountId === delegatedAdminAccountId) {

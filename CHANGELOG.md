@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - fix(logging): grant the log delivery service principal account-wide `s3:PutObject` on the VPC flow logs bucket so every VPC's S3 flow logs deliver; previously LZA relied on the VPC Flow Logs service to auto-attach the write permission per flow log, and concurrent creation of multiple VPCs' S3 flow logs in one account raced on the bucket policy and silently dropped some VPC path prefixes, causing AccessDenied on delivery (issue #3604)
+- fix(networking): synthesize Route 53 Resolver forward rules defined under `vpcRoute53Resolver.endpoints[].rules` at the VPC level, matching the existing `centralNetworkServices.route53Resolver` behavior
 - fix(tagging): apply global-config tags as overridable defaults so a resource-level tag with the same key (e.g. on a VPC or route table) takes precedence
 - fix(asea): import ASEA-created Customer Gateways and Site-to-Site VPN connections so their Transit Gateway VPN attachments can be referenced for route table association and propagation in network-config
 - fix(prepare): defer stack-resources-retention for disabled opt-in Regions instead of failing the Prepare stage with `InvalidClientTokenId` when an added account has not yet enabled an opt-in Region listed in `enabledRegions`; the affected account/Region is skipped without persisting a terminal retention state and is retried on a later run once the Region is enabled

@@ -3068,6 +3068,70 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "Custom::GetNetworkFirewallEndpoint",
       "UpdateReplacePolicy": "Delete",
     },
+    "OutboundEndpointLocalEpSecurityGroup454A30CC": {
+      "Properties": {
+        "GroupDescription": "AWS Route 53 Resolver endpoint - outbound-endpoint-local",
+        "GroupName": "ep_outbound-endpoint-local_sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 53,
+            "IpProtocol": "tcp",
+            "ToPort": 53,
+          },
+          {
+            "CidrIp": "0.0.0.0/0",
+            "FromPort": 53,
+            "IpProtocol": "udp",
+            "ToPort": 53,
+          },
+        ],
+        "SecurityGroupIngress": [],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ep_outbound-endpoint-local_sg",
+          },
+        ],
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "OutboundEndpointLocalResolverEndpoint5365D6EF": {
+      "Properties": {
+        "Direction": "OUTBOUND",
+        "IpAddresses": [
+          {
+            "SubnetId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+          {
+            "SubnetId": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+        ],
+        "Name": "outbound-endpoint-local",
+        "Protocols": [
+          "Do53",
+        ],
+        "SecurityGroupIds": [
+          {
+            "Ref": "OutboundEndpointLocalEpSecurityGroup454A30CC",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "outbound-endpoint-local",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::ResolverEndpoint",
+    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcEndpointsStack-555555555555-us-east-1/version",
@@ -4691,6 +4755,22 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
         "Value": {
           "Fn::GetAtt": [
             "InboundEndpointLocalResolverEndpointB3CA66C8",
+            "ResolverEndpointId",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamoutboundEndpointLocalResolverEndpointE4A58AEE": {
+      "DependsOn": [
+        "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/route53Resolver/endpoints/outbound-endpoint-local/id",
+        "Type": "String",
+        "Value": {
+          "Fn::GetAtt": [
+            "OutboundEndpointLocalResolverEndpoint5365D6EF",
             "ResolverEndpointId",
           ],
         },
