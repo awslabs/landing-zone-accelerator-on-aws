@@ -998,6 +998,35 @@ export class LoggingStack extends AcceleratorStack {
         }),
       );
 
+      // Deterministically grant the log delivery service write access for all VPC flow logs
+      // in this account+region. LZA otherwise relies on the VPC Flow Logs service to auto-attach
+      // the AWSLogDeliveryWrite (s3:PutObject) statement on flow log creation, which performs a
+      // read-modify-write of the bucket policy. When multiple VPCs in the same account+region
+      // target this bucket, CloudFormation creates the flow logs in parallel and those concurrent
+      // PutBucketPolicy calls race (lost update), silently dropping some per-VPC path prefixes and
+      // causing AccessDenied on flow log delivery. A single account-scoped grant removes the
+      // per-VPC enumeration entirely, so coverage no longer depends on the service's race.
+      vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow write access for VPC flow log delivery service principal',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          principals: [new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com')],
+          actions: ['s3:PutObject'],
+          resources: [`${vpcFlowLogsBucket.getS3Bucket().bucketArn}/*`],
+          conditions: {
+            StringEquals: {
+              'aws:SourceAccount': cdk.Stack.of(this).account,
+              's3:x-amz-acl': 'bucket-owner-full-control',
+            },
+            ArnLike: {
+              'aws:SourceArn': `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
+                cdk.Stack.of(this).account
+              }:*`,
+            },
+          },
+        }),
+      );
+
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
       this.nagSuppressionInputs.push({
         id: NagSuppressionRuleIds.IAM5,
