@@ -127,6 +127,7 @@ import {
   manageOrganizationsApiDelegatedAdmin,
 } from '../../../lib/common/security/delegated-admin-manager';
 import { SecurityServiceContextBuilder } from '../../../lib/common/security/security-service-context-builder';
+import { MODULE_SESSION_POLICIES } from '../../../lib/common/module-session-policies';
 import { SecurityServiceModuleResponseBuilder } from '../../../lib/common/security/security-service-module-response-builder';
 import { getCredentials } from '../../../lib/common/sts-functions';
 import { MODULE_STATE_CODE, SecurityModuleOperationAction } from '../../../lib/common/types';
@@ -645,6 +646,72 @@ describe('guardDutyAccountSetup', () => {
       accessKeyId: 'assumed-key',
       secretAccessKey: 'assumed-secret',
       sessionToken: 'assumed-token',
+    });
+  });
+
+  describe('findings-export session policy scoping', () => {
+    const targetAccount: Account = { Id: '111111111111', Name: 'DelegatedAdmin' };
+
+    const appliedPolicy = (): string =>
+      (getCredentials as ReturnType<typeof vi.fn>).mock.calls[0][0].sessionPolicy as string;
+    const statementFor = (policy: string, sid: string) =>
+      JSON.parse(policy).Statement.find((s: { Sid?: string }) => s.Sid === sid);
+
+    const requestWith = (exportDestination?: Record<string, unknown>): IGuardDutyModuleRequest =>
+      ({
+        ...baseRequest,
+        sessionPolicy: MODULE_SESSION_POLICIES['guardduty'].policy,
+        configuration: { ...baseRequest.configuration, exportDestination },
+      }) as IGuardDutyModuleRequest;
+
+    it('should scope s3 object actions to the findings-export destination', async () => {
+      await guardDutyAccountSetup(
+        targetAccount,
+        '123456789012',
+        requestWith({
+          destinationArn: 'arn:aws:s3:::aws-accelerator-central-logs-111111111111-us-east-1/guardduty',
+          kmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/test',
+          destinationType: 'S3',
+        }),
+      );
+
+      const policy = appliedPolicy();
+      expect(statementFor(policy, 'GuardDutyFindingsExportObjects')).toEqual({
+        Sid: 'GuardDutyFindingsExportObjects',
+        Effect: 'Allow',
+        Action: ['s3:PutObject', 's3:GetObject'],
+        Resource: 'arn:aws:s3:::aws-accelerator-central-logs-111111111111-us-east-1/guardduty/*',
+      });
+      // The wildcard statement must no longer carry object-level S3 access
+      expect(statementFor(policy, 'ModuleSpecificActions').Action).not.toContain('s3:PutObject');
+      expect(statementFor(policy, 'ModuleSpecificActions').Action).not.toContain('s3:GetObject');
+    });
+
+    it('should normalise a trailing slash on the destination ARN', async () => {
+      await guardDutyAccountSetup(
+        targetAccount,
+        '123456789012',
+        requestWith({
+          destinationArn: 'arn:aws:s3:::bucket/guardduty/',
+          kmsKeyArn: 'arn:aws:kms:us-east-1:111111111111:key/test',
+          destinationType: 'S3',
+        }),
+      );
+
+      expect(statementFor(appliedPolicy(), 'GuardDutyFindingsExportObjects').Resource).toEqual(
+        'arn:aws:s3:::bucket/guardduty/*',
+      );
+    });
+
+    it('should pass the policy through unchanged when findings export is not configured', async () => {
+      const request = requestWith();
+      // Precondition: this exercises the empty-resource branch, not the scoping branch
+      expect(request.configuration.exportDestination).toBeUndefined();
+
+      await guardDutyAccountSetup(targetAccount, '123456789012', request);
+
+      expect(appliedPolicy()).toEqual(MODULE_SESSION_POLICIES['guardduty'].policy);
+      expect(statementFor(appliedPolicy(), 'GuardDutyFindingsExportObjects')).toBeUndefined();
     });
   });
 });

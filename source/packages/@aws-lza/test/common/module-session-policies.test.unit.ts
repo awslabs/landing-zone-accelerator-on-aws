@@ -12,7 +12,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { MODULE_SESSION_POLICIES, getModuleSessionPolicy } from '../../lib/common/module-session-policies';
+import {
+  MODULE_SESSION_POLICIES,
+  getModuleSessionPolicy,
+  scopeActionsToResource,
+} from '../../lib/common/module-session-policies';
 
 describe('ModuleSessionPolicies', () => {
   describe('Registry completeness', () => {
@@ -204,6 +208,131 @@ describe('ModuleSessionPolicies', () => {
           expect(actions, `Unexpected ssm:GetParameters in ${name}`).not.toContain('ssm:GetParameters');
         }
       }
+    });
+  });
+
+  describe('scopeActionsToResource', () => {
+    const S3_OBJECT_ACTIONS = ['s3:PutObject', 's3:GetObject'];
+    const SID = 'GuardDutyFindingsExportObjects';
+
+    const wildcardActions = (policy: string): string[] =>
+      JSON.parse(policy).Statement.find((s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions')?.Action ?? [];
+    const scopedStatement = (policy: string) =>
+      JSON.parse(policy).Statement.find((s: { Sid?: string }) => s.Sid === SID);
+
+    it('should move object actions to a statement scoped to the given resource', () => {
+      const result = scopeActionsToResource(
+        MODULE_SESSION_POLICIES['guardduty'].policy,
+        S3_OBJECT_ACTIONS,
+        'arn:aws:s3:::aws-accelerator-central-logs-111111111111-us-east-1/guardduty/*',
+        SID,
+      );
+
+      expect(wildcardActions(result)).not.toContain('s3:PutObject');
+      expect(wildcardActions(result)).not.toContain('s3:GetObject');
+      expect(scopedStatement(result)).toEqual({
+        Sid: SID,
+        Effect: 'Allow',
+        Action: ['s3:PutObject', 's3:GetObject'],
+        Resource: 'arn:aws:s3:::aws-accelerator-central-logs-111111111111-us-east-1/guardduty/*',
+      });
+    });
+
+    it('should leave non-targeted actions on the wildcard statement', () => {
+      const result = scopeActionsToResource(
+        MODULE_SESSION_POLICIES['guardduty'].policy,
+        S3_OBJECT_ACTIONS,
+        'arn:aws:s3:::bucket/guardduty/*',
+        SID,
+      );
+
+      // Bucket-level S3 and all guardduty/iam actions must be untouched
+      expect(wildcardActions(result)).toContain('s3:GetBucketLocation');
+      expect(wildcardActions(result)).toContain('s3:ListBucket');
+      expect(wildcardActions(result)).toContain('guardduty:*Detector*');
+      expect(wildcardActions(result)).toContain('iam:CreateServiceLinkedRole');
+      expect(wildcardActions(result)).toContain('iam:GetRole');
+    });
+
+    it('should preserve the base state-table and SSM statements', () => {
+      const original = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const result = JSON.parse(
+        scopeActionsToResource(
+          MODULE_SESSION_POLICIES['guardduty'].policy,
+          S3_OBJECT_ACTIONS,
+          'arn:aws:s3:::bucket/guardduty/*',
+          SID,
+        ),
+      );
+
+      for (const sid of ['LzaModuleStateTable', 'LzaModuleSsmParameters']) {
+        expect(result.Statement.find((s: { Sid?: string }) => s.Sid === sid)).toEqual(
+          original.Statement.find((s: { Sid?: string }) => s.Sid === sid),
+        );
+      }
+      expect(result.Version).toEqual(original.Version);
+    });
+
+    it('should return the policy unchanged when no resource is supplied', () => {
+      const policy = MODULE_SESSION_POLICIES['guardduty'].policy;
+      expect(scopeActionsToResource(policy, S3_OBJECT_ACTIONS, '', SID)).toEqual(policy);
+    });
+
+    it('should return the policy unchanged when none of the actions are present', () => {
+      const policy = MODULE_SESSION_POLICIES['macie'].policy;
+      expect(scopeActionsToResource(policy, ['s3:PutObject', 's3:GetObject'], 'arn:aws:s3:::bucket/*', SID)).toEqual(
+        policy,
+      );
+    });
+
+    it('should stay within the STS 2048 character limit', () => {
+      const result = scopeActionsToResource(
+        MODULE_SESSION_POLICIES['guardduty'].policy,
+        S3_OBJECT_ACTIONS,
+        'arn:aws-us-gov:s3:::aws-accelerator-central-logs-111111111111-us-gov-west-1/guardduty/*',
+        SID,
+      );
+      expect(result.length).toBeLessThanOrEqual(2048);
+    });
+
+    it('should produce valid JSON with a non-empty wildcard statement', () => {
+      const result = scopeActionsToResource(
+        MODULE_SESSION_POLICIES['guardduty'].policy,
+        S3_OBJECT_ACTIONS,
+        'arn:aws:s3:::bucket/guardduty/*',
+        SID,
+      );
+      expect(() => JSON.parse(result)).not.toThrow();
+      expect(wildcardActions(result).length).toBeGreaterThan(0);
+    });
+
+    it('should drop the wildcard statement if every action is scoped away', () => {
+      const single = JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [{ Sid: 'ModuleSpecificActions', Effect: 'Allow', Action: ['s3:PutObject'], Resource: '*' }],
+      });
+      const result = JSON.parse(scopeActionsToResource(single, ['s3:PutObject'], 'arn:aws:s3:::bucket/*', SID));
+
+      expect(result.Statement.find((s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions')).toBeUndefined();
+      expect(result.Statement).toHaveLength(1);
+      expect(result.Statement[0].Resource).toEqual('arn:aws:s3:::bucket/*');
+    });
+
+    it('should throw if the narrowed policy exceeds the STS limit', () => {
+      const long = JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Sid: 'ModuleSpecificActions',
+            Effect: 'Allow',
+            Action: ['s3:PutObject', ...Array.from({ length: 60 }, (_, i) => `service:LongishActionName${i}`)],
+            Resource: '*',
+          },
+        ],
+      });
+      expect(() => scopeActionsToResource(long, ['s3:PutObject'], `arn:aws:s3:::${'b'.repeat(300)}/*`, SID)).toThrow(
+        /exceeds STS 2048 character limit/,
+      );
     });
   });
 });

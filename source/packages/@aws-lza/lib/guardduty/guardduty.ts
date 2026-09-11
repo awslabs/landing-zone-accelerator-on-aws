@@ -60,6 +60,7 @@ import {
   OrganizationAdminResponseHandler,
   SecurityServiceResponseBuilder,
 } from '../common/security/security-service-response-builder';
+import { scopeActionsToResource } from '../common/module-session-policies';
 import { getCredentials } from '../common/sts-functions';
 import { MODULE_EXCEPTIONS, SecurityModuleOperationAction, SecurityModuleOperationType } from '../common/types';
 import { setRetryStrategy } from '../common/utility';
@@ -411,6 +412,20 @@ export const guardDutyAccountSetup: AccountSetupHandler<IGuardDutyModuleRequest>
     return props;
   }
 
+  // The findings-export bucket ARN is only known at runtime, so s3:PutObject / s3:GetObject
+  // cannot be resource-scoped in the static module policy. Narrow them here to the export
+  // destination rather than leaving them on `Resource: "*"`. When findings export is not
+  // configured the policy is returned unchanged.
+  const destinationArn = props.configuration.exportDestination?.destinationArn;
+  const sessionPolicy = props.sessionPolicy
+    ? scopeActionsToResource(
+        props.sessionPolicy,
+        ['s3:PutObject', 's3:GetObject'],
+        destinationArn ? `${destinationArn.replace(/\/+$/, '')}/*` : '',
+        'GuardDutyFindingsExportObjects',
+      )
+    : props.sessionPolicy;
+
   // Assume role for target accounts (called only once per account)
   const credentials = await getCredentials({
     partition: props.partition,
@@ -420,8 +435,8 @@ export const guardDutyAccountSetup: AccountSetupHandler<IGuardDutyModuleRequest>
     solutionId: props.solutionId,
     assumeRoleName: props.configuration.accountAccessRoleName,
     credentials: props.credentials,
-    sessionPolicy: props.sessionPolicy,
-    requireSessionPolicy: !!props.sessionPolicy,
+    sessionPolicy,
+    requireSessionPolicy: !!sessionPolicy,
   });
 
   return { ...props, credentials }; // Return props with target account credentials

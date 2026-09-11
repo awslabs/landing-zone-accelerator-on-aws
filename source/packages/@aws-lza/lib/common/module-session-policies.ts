@@ -104,6 +104,72 @@ function createModulePolicy(moduleName: string, actions: string[]): IModuleSessi
   };
 }
 
+/**
+ * Moves the given actions out of the wildcard `ModuleSpecificActions` statement into a
+ * new statement scoped to a specific resource.
+ *
+ * Used where a module needs an action only against a resource whose ARN is not known
+ * until runtime (for example the GuardDuty findings-export bucket), so the action cannot
+ * be resource-scoped in the static policy above.
+ *
+ * Returns the policy unchanged if `resource` is empty or none of `actions` are present,
+ * so callers do not need to special-case unconfigured modules.
+ *
+ * @param policy - Session policy JSON string to narrow
+ * @param actions - Actions to move out of the wildcard statement
+ * @param resource - Resource ARN the moved actions are scoped to
+ * @param sid - Sid for the new scoped statement
+ * @returns Narrowed session policy JSON string
+ * @throws Error if the resulting policy exceeds the STS 2048 character limit
+ */
+export function scopeActionsToResource(policy: string, actions: string[], resource: string, sid: string): string {
+  if (!resource || actions.length === 0) {
+    return policy;
+  }
+
+  const parsed = JSON.parse(policy);
+  const wildcardStatement = parsed.Statement.find(
+    (statement: { Sid?: string }) => statement.Sid === 'ModuleSpecificActions',
+  );
+  if (!wildcardStatement) {
+    return policy;
+  }
+
+  const moved = wildcardStatement.Action.filter((action: string) => actions.includes(action));
+  if (moved.length === 0) {
+    return policy;
+  }
+
+  wildcardStatement.Action = wildcardStatement.Action.filter((action: string) => !actions.includes(action));
+
+  const scopedStatement = {
+    Sid: sid,
+    Effect: 'Allow',
+    Action: moved,
+    Resource: resource,
+  };
+
+  // Drop the wildcard statement entirely if every action was scoped away, otherwise an
+  // empty Action array would make the policy invalid.
+  const statements =
+    wildcardStatement.Action.length > 0
+      ? parsed.Statement
+      : parsed.Statement.filter((statement: { Sid?: string }) => statement.Sid !== 'ModuleSpecificActions');
+
+  const narrowed = JSON.stringify({
+    ...parsed,
+    Statement: [...statements, scopedStatement],
+  });
+
+  if (narrowed.length > 2048) {
+    throw new Error(
+      `Session policy exceeds STS 2048 character limit after scoping ${sid} (${narrowed.length} chars). ` +
+        `Reduce actions or use managed session policy ARNs.`,
+    );
+  }
+  return narrowed;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Module Session Policies
 //
