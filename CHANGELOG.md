@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.3] - 2026-09-11
+
+### Fixed
+
+- fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
+- fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
+
 ## [1.16.2] - 2026-08-31
 
 ### Fixed

@@ -25,6 +25,7 @@ import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-clo
 import { SSMClient, GetParameterCommand, ParameterNotFound, PutParameterCommand } from '@aws-sdk/client-ssm';
 import {
   Account,
+  DescribeAccountCommand,
   ListAccountsForParentCommand,
   ListChildrenCommand,
   ListOrganizationalUnitsForParentCommand,
@@ -93,23 +94,104 @@ type AwsOrganizationalUnitKeys = {
 };
 
 /**
- * Returns an account validation error when its AWS Organizations lifecycle state is not ACTIVE.
+ * Poll cadence for waiting on a PENDING_ACTIVATION account to reach ACTIVE.
+ *
+ * The validate-environment custom resource is an onEvent-only provider with a hard 15-minute Lambda
+ * timeout, and the poll blocks the invocation. Because several accounts can be PENDING_ACTIVATION at
+ * once (batch onboarding), the total time spent sleeping is bounded by a single shared wall-clock
+ * deadline (ACCOUNT_ACTIVATION_TOTAL_BUDGET_MS) computed once per invocation and passed to every
+ * call, so N sequential per-account polls can never accumulate past the Lambda timeout. The
+ * per-account maxAttempts is a secondary safety bound.
+ */
+const ACCOUNT_ACTIVATION_POLL_INTERVAL_MS = 30_000;
+const ACCOUNT_ACTIVATION_MAX_ATTEMPTS = 10;
+const ACCOUNT_ACTIVATION_TOTAL_BUDGET_MS = 600_000; // 10 minutes shared across all accounts (< 15-min Lambda timeout)
+
+function sleep(milliseconds: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+/**
+ * Computes the shared activation deadline for one handler invocation. Pass the result to every
+ * getAccountStateValidationError call so the aggregate poll time stays within the Lambda timeout.
+ */
+export function getAccountActivationDeadlineEpochMs(): number {
+  return Date.now() + ACCOUNT_ACTIVATION_TOTAL_BUDGET_MS;
+}
+
+/**
+ * Returns an account validation error when its AWS Organizations lifecycle state is not usable.
+ *
+ * ACTIVE passes immediately. A newly created account can sit in the transient PENDING_ACTIVATION
+ * state for several minutes (notably in isolated/air-gapped partitions). Rather than failing Prepare
+ * outright OR letting it proceed while it is not yet assumable (which would make a downstream stage
+ * fail to assume-role into it), we poll DescribeAccount until it becomes ACTIVE. Polling stops at the
+ * first of: ACTIVE (pass), a terminal non-ACTIVE state (fail), maxAttempts, or the shared deadline —
+ * so the sequential per-account waits across a whole invocation cannot exceed the Lambda timeout. If
+ * it does not activate within the window it is reported as an error so the pipeline fails fast. Every
+ * other non-ACTIVE state (e.g. SUSPENDED, PENDING_CLOSURE) is reported immediately without polling.
+ * Lifecycle state is resolved as State ?? Status to stay correct across the Organizations
+ * Status->State field migration.
  *
  * @param accountType Configured account category used in the validation message
  * @param email Configured account email
  * @param account AWS Organizations account response
- * @returns Validation error text, or undefined for an ACTIVE account
+ * @param orgClient Organizations client used to poll DescribeAccount
+ * @param options Optional poll interval / attempt / shared-deadline overrides (deadline is shared
+ *   across accounts in production; interval and maxAttempts are primarily for tests)
+ * @returns Validation error text, or undefined once the account is ACTIVE
  */
-export function getAccountStateValidationError(
+export async function getAccountStateValidationError(
   accountType: 'Mandatory' | 'Workload',
   email: string,
   account: Account,
-): string | undefined {
-  const state = account.State ?? account.Status;
+  orgClient: OrganizationsClient,
+  options: { pollIntervalMs?: number; maxAttempts?: number; deadlineEpochMs?: number } = {},
+): Promise<string | undefined> {
+  const pollIntervalMs = options.pollIntervalMs ?? ACCOUNT_ACTIVATION_POLL_INTERVAL_MS;
+  const maxAttempts = options.maxAttempts ?? ACCOUNT_ACTIVATION_MAX_ATTEMPTS;
+  const deadlineEpochMs = options.deadlineEpochMs ?? getAccountActivationDeadlineEpochMs();
+
+  let state: string | undefined = account.State ?? account.Status;
   if (state === 'ACTIVE') {
     return undefined;
   }
-  return `${accountType} account ${email} is in ${state}`;
+  if (state !== 'PENDING_ACTIVATION') {
+    return `${accountType} account ${email} is in ${state}`;
+  }
+
+  const accountId = account.Id;
+  if (!accountId) {
+    return `${accountType} account ${email} is in PENDING_ACTIVATION and has no account id to poll`;
+  }
+
+  console.warn(
+    `${accountType} account ${email} (${accountId}) is in PENDING_ACTIVATION; polling for it to become ACTIVE (up to ${maxAttempts} attempts, bounded by the shared activation deadline) before allowing the pipeline to proceed.`,
+  );
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Fresh authoritative check (the ListAccountsForParent snapshot may be stale).
+    const describeAccountResponse = await throttlingBackOff(() =>
+      orgClient.send(new DescribeAccountCommand({ AccountId: accountId })),
+    );
+    state = describeAccountResponse.Account?.State ?? describeAccountResponse.Account?.Status;
+    console.log(`${accountType} account ${email} lifecycle state after attempt ${attempt}/${maxAttempts}: ${state}`);
+    if (state === 'ACTIVE') {
+      return undefined;
+    }
+    if (state !== 'PENDING_ACTIVATION') {
+      // Transitioned to a terminal non-ACTIVE state (e.g. SUSPENDED) while we were waiting.
+      return `${accountType} account ${email} is in ${state}`;
+    }
+    // Stop before sleeping again if we are out of attempts or the shared invocation budget is spent.
+    const remainingMs = deadlineEpochMs - Date.now();
+    if (attempt >= maxAttempts || remainingMs <= 0) {
+      break;
+    }
+    await sleep(Math.min(pollIntervalMs, remainingMs));
+  }
+
+  return `${accountType} account ${email} did not reach ACTIVE within the activation wait window (last state: ${state})`;
 }
 
 type DDBItem = {
@@ -239,6 +321,9 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       validationErrors.push(...validateAllAwsAccountsAreInConfig);
 
       // find organization accounts that need to be created
+      // Single shared deadline so the per-account PENDING_ACTIVATION polls below cannot accumulate
+      // past the validate-environment Lambda's 15-minute timeout, even with many accounts activating.
+      const accountActivationDeadlineEpochMs = getAccountActivationDeadlineEpochMs();
       if (mandatoryAccounts) {
         for (const mandatoryAccount of mandatoryAccounts) {
           const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === mandatoryAccount['ouName']);
@@ -247,10 +332,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               item => item.Email?.toLocaleLowerCase() == mandatoryAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (mandatoryOrganizationAccount) {
-              const accountStateError = getAccountStateValidationError(
+              const accountStateError = await getAccountStateValidationError(
                 'Mandatory',
                 mandatoryAccount['acceleratorKey'],
                 mandatoryOrganizationAccount,
+                organizationsClient,
+                { deadlineEpochMs: accountActivationDeadlineEpochMs },
               );
               if (accountStateError) {
                 validationErrors.push(accountStateError);
@@ -269,10 +356,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
               item => item.Email?.toLocaleLowerCase() == workloadAccount['acceleratorKey'].toLocaleLowerCase(),
             );
             if (organizationAccount) {
-              const accountStateError = getAccountStateValidationError(
+              const accountStateError = await getAccountStateValidationError(
                 'Workload',
                 workloadAccount['acceleratorKey'],
                 organizationAccount,
+                organizationsClient,
+                { deadlineEpochMs: accountActivationDeadlineEpochMs },
               );
               if (accountStateError) {
                 validationErrors.push(accountStateError);

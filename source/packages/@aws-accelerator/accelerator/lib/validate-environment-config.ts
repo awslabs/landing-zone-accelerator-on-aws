@@ -73,6 +73,7 @@ export class ValidateEnvironmentConfig extends Construct {
       sid: 'OrganizationsLookup',
       actions: [
         'organizations:ListAccounts',
+        'organizations:DescribeAccount',
         'servicecatalog:SearchProvisionedProducts',
         'organizations:ListChildren',
         'organizations:ListPoliciesForTarget',
