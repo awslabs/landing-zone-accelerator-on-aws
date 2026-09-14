@@ -13,6 +13,9 @@
   "bin": {
     "aws-lza": "bin/aws-lza"
   },
+  "resolutions": {
+    "js-yaml": "4.3.2"
+  },
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",

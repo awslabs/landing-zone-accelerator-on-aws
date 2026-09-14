@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
 - fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
+- fix(deps): remediate HIGH CVEs (js-yaml, fast-uri, smol-toml)
 
 ## [1.16.2] - 2026-08-31
 
