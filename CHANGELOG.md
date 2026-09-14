@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide
 - chore(organizations): drop unread account status and name fields in move-account handler
 
+### Fixed
+
+- fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
+- fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded by a shared per-invocation deadline) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
+
 ## [1.17.0] - 
 
 ### Added
