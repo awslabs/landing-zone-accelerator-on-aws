@@ -88,7 +88,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
@@ -350,7 +350,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -455,7 +455,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -585,7 +585,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -673,7 +673,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -781,7 +781,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1223,7 +1223,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.16.2",
+        "Value": "1.16.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1329,7 +1329,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
@@ -1616,7 +1616,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1721,7 +1721,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1851,7 +1851,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1939,7 +1939,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2057,7 +2057,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2165,7 +2165,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -2607,7 +2607,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.16.2",
+        "Value": "1.16.3",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2717,7 +2717,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
             "PARTITION": {
               "Ref": "AWS::Partition",
             },
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
@@ -2979,7 +2979,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3081,7 +3081,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3211,7 +3211,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3299,7 +3299,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3407,7 +3407,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -3668,7 +3668,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.16.2",
+        "Value": "1.16.3",
       },
       "Type": "AWS::SSM::Parameter",
     },

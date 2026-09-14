@@ -76,7 +76,7 @@ exports[`NetworkVpcV2FlowLogs > Construct(VpcStack-Network-us-east-1-Network-Flo
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-VpcStack-Network-FlowLogsS3Only-V2-555555555555-us-east-1/version",
         "Type": "String",
-        "Value": "1.16.2",
+        "Value": "1.16.3",
       },
       "Type": "AWS::SSM::Parameter",
     },

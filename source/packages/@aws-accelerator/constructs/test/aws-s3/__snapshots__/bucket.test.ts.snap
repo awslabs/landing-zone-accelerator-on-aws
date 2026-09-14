@@ -3090,7 +3090,7 @@ exports[`Bucket > Construct(Bucket):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.3",
           },
         },
         "Handler": "__entrypoint__.handler",
