@@ -344,6 +344,15 @@ export abstract class TgwAssociationsAndPropagations {
 
     return {
       ...params.runnerParameters.sessionContext,
+      // In external deployments the pipeline account (sessionContext.invokingAccountId) differs from
+      // the account that owns the supplied credentials (management account). The aws-lza lookup layer
+      // skips cross-account AssumeRole when targetAccountId === invokingAccountId, so invokingAccountId
+      // must describe the CREDENTIAL account. Otherwise a TGW-attached VPC owned by the pipeline account
+      // is read with management-account credentials and its SSM attachment parameter resolves as
+      // not found.
+      invokingAccountId: params.moduleRunnerParameters.managementAccountCredentials
+        ? accountsConfig.getManagementAccountId()
+        : params.runnerParameters.sessionContext.invokingAccountId,
       operation: 'setup',
       moduleName: params.moduleItem.name,
       solutionId: params.runnerParameters.solutionId,

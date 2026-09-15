@@ -21,14 +21,15 @@ import { TgwAssociationsAndPropagations } from '../../../../lib/actions/network/
 import { AcceleratorModules, ModuleExecutionPhase, ModuleParams } from '../../../../lib/types';
 import { AcceleratorResourcePrefixes } from '../../../../utils/app-utils';
 
-vi.mock('path', () => ({
-  default: {
-    parse: vi.fn(function () {
-      return { name: 'tgw-associations-and-propagations' };
-    }),
-    basename: vi.fn(() => 'tgw-associations-and-propagations.ts'),
-  },
-}));
+vi.mock('path', () => {
+  const parse = vi.fn(function () {
+    return { name: 'tgw-associations-and-propagations' };
+  });
+  const basename = vi.fn(() => 'tgw-associations-and-propagations.ts');
+  // Expose both default and named exports: consumers in the import chain use both
+  // `import path from 'path'` and namespace access to `parse`/`basename`.
+  return { default: { parse, basename }, parse, basename };
+});
 
 vi.mock('aws-lza', () => {
   const mockLogger = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
@@ -148,6 +149,7 @@ describe('TgwAssociationsAndPropagations', () => {
               return accountMap[accountName] ?? 'ZZZZZZZZZZZZ';
             }),
             getAccountIdsFromDeploymentTarget: vi.fn(() => ['ZZZZZZZZZZZZ']),
+            getManagementAccountId: vi.fn(() => 'MGMT00000000'),
           } as any,
           globalConfig: {
             managementAccountAccessRole: 'AWSControlTowerExecution',
@@ -1500,6 +1502,66 @@ describe('TgwAssociationsAndPropagations', () => {
       expect(callArgs.configuration.connectAttachments).toHaveLength(1);
       expect(callArgs.configuration.connectAttachments[0].routeTableAssociations).toEqual([]);
       expect(callArgs.configuration.connectAttachments[0].routeTablePropagations).toEqual([]);
+    });
+  });
+
+  describe('configure - external deployment invoking account', () => {
+    const tgwNetworkConfig = {
+      transitGateways: [
+        { name: 'main-tgw', account: 'Network', region: 'us-east-1', routeTables: [{ name: 'core-rt' }] },
+      ],
+      vpcs: [
+        {
+          name: 'pipeline-vpc',
+          account: 'Pipeline',
+          transitGatewayAttachments: [
+            {
+              name: 'pipeline-vpc-tgw-attach',
+              transitGateway: { name: 'main-tgw' },
+              routeTableAssociations: ['core-rt'],
+              routeTablePropagations: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    it('external deployment: request invokingAccountId is the management (credential) account, not the pipeline account', async () => {
+      const { configureTgw } = await import('aws-lza');
+
+      const params = createMockParams(tgwNetworkConfig);
+      // External deployment: management account credentials are supplied and differ from the
+      // CodeBuild (pipeline) account recorded in sessionContext.invokingAccountId.
+      (params.moduleRunnerParameters as any).managementAccountCredentials = {
+        accessKeyId: 'AKIA-MOCK',
+        secretAccessKey: 'mock',
+        sessionToken: 'mock',
+      };
+
+      await TgwAssociationsAndPropagations.configure(params);
+
+      const callArgs = vi.mocked(configureTgw).mock.calls[0][0] as any;
+      // The lookup layer skips AssumeRole when targetAccountId === invokingAccountId, so
+      // invokingAccountId must describe the credential (management) account. Otherwise a
+      // pipeline-account VPC attachment is read with management credentials and its SSM
+      // parameter resolves as not found.
+      expect(callArgs.invokingAccountId).toBe('MGMT00000000');
+      expect(callArgs.invokingAccountId).not.toBe(params.runnerParameters.sessionContext.invokingAccountId);
+      expect(params.moduleRunnerParameters.configs.accountsConfig.getManagementAccountId).toHaveBeenCalled();
+    });
+
+    it('internal deployment: request invokingAccountId is unchanged from sessionContext', async () => {
+      const { configureTgw } = await import('aws-lza');
+
+      const params = createMockParams(tgwNetworkConfig);
+      // Internal deployment: no management account credentials (CodeBuild runs in the management account).
+      (params.moduleRunnerParameters as any).managementAccountCredentials = undefined;
+
+      await TgwAssociationsAndPropagations.configure(params);
+
+      const callArgs = vi.mocked(configureTgw).mock.calls[0][0] as any;
+      expect(callArgs.invokingAccountId).toBe(params.runnerParameters.sessionContext.invokingAccountId);
+      expect(params.moduleRunnerParameters.configs.accountsConfig.getManagementAccountId).not.toHaveBeenCalled();
     });
   });
 });

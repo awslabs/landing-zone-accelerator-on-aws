@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(iam): add `accessAnalyzer.accountAnalyzer` to create an account level IAM Access Analyzer external access analyzer in every account and enabled region. Optional `accountAnalyzer.deploymentTargets` scopes which accounts and regions receive the analyzer
 
 ### Fixed
+- fix(networking): in external deployments, resolve Transit Gateway attachment SSM parameters for VPCs owned by the pipeline account by assuming into that account instead of reading with management-account credentials; previously the tgw-associations-and-propagations module failed with `SSM parameter not found` for any TGW-attached VPC owned by the account the pipeline runs in
 - fix(logging): grant the log delivery service principal account-wide `s3:PutObject` on the VPC flow logs bucket so every VPC's S3 flow logs deliver; previously LZA relied on the VPC Flow Logs service to auto-attach the write permission per flow log, and concurrent creation of multiple VPCs' S3 flow logs in one account raced on the bucket policy and silently dropped some VPC path prefixes, causing AccessDenied on delivery (issue #3604)
 - fix(networking): synthesize Route 53 Resolver forward rules defined under `vpcRoute53Resolver.endpoints[].rules` at the VPC level, matching the existing `centralNetworkServices.route53Resolver` behavior
 - fix(tagging): apply global-config tags as overridable defaults so a resource-level tag with the same key (e.g. on a VPC or route table) takes precedence
