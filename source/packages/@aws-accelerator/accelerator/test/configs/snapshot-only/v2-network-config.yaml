@@ -2654,6 +2654,9 @@ vpcs:
         availabilityZone: b
         routeTable: Network-Secondary-B-Rt
         ipv6CidrBlock: fd01::/64
+        shareTargets:
+          accounts:
+            - SharedServices
       - name:  Network-Secondary-Share
         availabilityZone: a
         routeTable: Network-Secondary-A-Rt

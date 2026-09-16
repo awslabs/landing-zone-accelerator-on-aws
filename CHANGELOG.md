@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(networking): create the subnet IPv4 CIDR SSM parameter in share-target accounts for IPAM-allocated subnets when useV2Stacks is enabled, restoring V1 behavior
 - fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
 - fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded by a shared per-invocation deadline) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
 

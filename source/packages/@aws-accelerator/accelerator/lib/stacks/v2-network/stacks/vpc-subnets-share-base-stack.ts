@@ -183,6 +183,16 @@ export class VpcSubnetsShareBaseStack extends AcceleratorStack {
         name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
         value: subnetConfig.ipv4CidrBlock,
       });
+    } else if (!subnetConfig.ipv6CidrBlock) {
+      // IPAM-allocated subnet: the CIDR is not in config, but the subnets stack
+      // writes the resolved CIDR to SSM in the owner account, so look it up there
+      subnetParameters.push({
+        name: this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
+        value: cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.SUBNET_IPV4_CIDR_BLOCK, [this.vpcDetails.name, subnetConfig.name]),
+        ),
+      });
     }
 
     // Put per-subnet SSM parameters for share target accounts

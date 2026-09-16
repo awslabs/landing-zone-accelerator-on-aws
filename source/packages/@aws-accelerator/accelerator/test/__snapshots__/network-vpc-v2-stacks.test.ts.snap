@@ -3387,6 +3387,14 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryIpv6OnlyidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Ipv6-Only/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondarySharecidripv4C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/cidr/ipv4",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -3508,6 +3516,39 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
       },
       "Type": "AWS::IAM::Role",
     },
+    "NetworkSecondaryIpv6OnlySubnetShareResourceShare6D2BFE57": {
+      "Metadata": {
+        "lzaLookup": {
+          "resourceType": "subnet-share",
+          "subnetName": "Network-Secondary-Ipv6-Only",
+          "vpcName": "Network-Secondary-V2",
+        },
+      },
+      "Properties": {
+        "Name": "Network-Secondary-Ipv6-Only_SubnetShare",
+        "Principals": [
+          "444444444444",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:555555555555:subnet/",
+                {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryIpv6OnlyidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
     "NetworkSecondaryShareSubnetShareResourceShare7960C54A": {
       "Metadata": {
         "lzaLookup": {
@@ -3542,6 +3583,38 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
       },
       "Type": "AWS::RAM::ResourceShare",
     },
+    "NetworkSecondaryV2NetworkSecondaryIpv6OnlyVpcSharedSubnetParameters8DA6F7E7": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+        "NetworkSecondaryIpv6OnlySubnetShareResourceShare6D2BFE57",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Ipv6-Only/id",
+            "value": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryIpv6OnlyidC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkSecondaryV2NetworkSecondaryShareVpcSharedSubnetParameters0AE0C402": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -3566,6 +3639,12 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondaryShareidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
           },
+          {
+            "name": "/accelerator/network/vpc/Network-Secondary-V2/subnet/Network-Secondary-Share/cidr/ipv4",
+            "value": {
+              "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryV2subnetNetworkSecondarySharecidripv4C96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+          },
         ],
         "region": "us-east-1",
         "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
@@ -3578,7 +3657,9 @@ exports[`NetworkVpcV2Stacks > Construct(SubnetShareStack-Network-us-east-1-Netwo
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+        "NetworkSecondaryIpv6OnlySubnetShareResourceShare6D2BFE57",
         "NetworkSecondaryShareSubnetShareResourceShare7960C54A",
+        "NetworkSecondaryV2NetworkSecondaryIpv6OnlyVpcSharedSubnetParameters8DA6F7E7",
         "NetworkSecondaryV2NetworkSecondaryShareVpcSharedSubnetParameters0AE0C402",
       ],
       "Properties": {
