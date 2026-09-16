@@ -1,0 +1,3648 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Landing Zone Accelerator on AWS">
+      
+      
+        <meta name="author" content="Amazon Web Services">
+      
+      
+        <link rel="canonical" href="https://awslabs.github.io/landing-zone-accelerator-on-aws/v1.16.3/user-guide/diff-viewer/">
+      
+      
+        <link rel="prev" href="../aft-integration/">
+      
+      
+        <link rel="next" href="../update/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.32">
+    
+    
+      
+        <title>CDK Diff Viewer - Landing Zone Accelerator on AWS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cdk-diff-viewer" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Landing Zone Accelerator on AWS" class="md-header__button md-logo" aria-label="Landing Zone Accelerator on AWS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27l-2.77 6.1M5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83-.78.78-2.05.78-2.83 0m-5.66 7.07-1.41-1.41 1.41 1.41M6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22h1.41M2 22h1.41l4.77-4.76-1.42-1.41L2 20.59V22m0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76v1.41Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Landing Zone Accelerator on AWS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CDK Diff Viewer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7M9 21v-1h6v1a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1m3-17a5 5 0 0 0-5 5c0 2.05 1.23 3.81 3 4.58V16h4v-2.42c1.77-.77 3-2.53 3-4.58a5 5 0 0 0-5-5Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/awslabs/landing-zone-accelerator-on-aws/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Landing Zone Accelerator on AWS" class="md-nav__button md-logo" aria-label="Landing Zone Accelerator on AWS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m13.13 22.19-1.63-3.83c1.57-.58 3.04-1.36 4.4-2.27l-2.77 6.1M5.64 12.5l-3.83-1.63 6.1-2.77C7 9.46 6.22 10.93 5.64 12.5M21.61 2.39S16.66.269 11 5.93c-2.19 2.19-3.5 4.6-4.35 6.71-.28.75-.09 1.57.46 2.13l2.13 2.12c.55.56 1.37.74 2.12.46A19.1 19.1 0 0 0 18.07 13c5.66-5.66 3.54-10.61 3.54-10.61m-7.07 7.07c-.78-.78-.78-2.05 0-2.83s2.05-.78 2.83 0c.77.78.78 2.05 0 2.83-.78.78-2.05.78-2.83 0m-5.66 7.07-1.41-1.41 1.41 1.41M6.24 22l3.64-3.64c-.34-.09-.67-.24-.97-.45L4.83 22h1.41M2 22h1.41l4.77-4.76-1.42-1.41L2 20.59V22m0-2.83 4.09-4.08c-.21-.3-.36-.62-.45-.97L2 17.76v1.41Z"/></svg>
+
+    </a>
+    Landing Zone Accelerator on AWS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/awslabs/landing-zone-accelerator-on-aws/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Services, Features, and Configuration References
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Centralized Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../securityhub-findings/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SecurityHub Findings
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replacement-variables/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Replacement Variables
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration-include/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration File Includes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stack-policy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CloudFormation Stack Policy Protection
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../v2-stacks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    V2 Network Stack Usage
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aft-integration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AFT Integration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    CDK Diff Viewer
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    CDK Diff Viewer
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How it works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-the-diff-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing the diff viewer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#impact-report-cloudformation-diff-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Impact report (CloudFormation Diff Summary)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-networking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Critical Networking Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Critical Networking Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tracked-networking-resource-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tracked networking resource types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stack-diff-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stack diff view
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stacks-requiring-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacks Requiring Review
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stacks Requiring Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filters-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filters block
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sidebar-collapse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sidebar collapse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stack-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stack navigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering-and-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filtering and search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Review tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-and-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export and share
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-coded-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color-coded diffs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#noise-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Noise filtering
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Noise filtering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#noise-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Noise types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-noise-is-handled" class="md-nav__link">
+    <span class="md-ellipsis">
+      How noise is handled
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security properties
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Local usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#region-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Region parsing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-and-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance and scaling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limitations
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../update/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Updating the Solution
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uninstall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Uninstalling the Solution
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cost-and-quotas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Cost and Quotas
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline-diagnostics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pipeline Diagnostics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modules/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security Service Modules
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer-guide/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Developer Guide
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Developer Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/dependencies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development Dependencies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/package-dependencies.generated/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Package Dependencies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/scripts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command Line Interface and Package Scripts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture and Design Philosophy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/features/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Feature Development
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/commits/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commit Messages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/doc-guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/json-schema/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JSON Schema
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_10" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer-guide/module-development/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Module Development
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
+            <span class="md-nav__icon md-icon"></span>
+            Module Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/module-development/project-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Structure
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/module-development/module-naming-and-scope/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Module Naming and Scope
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/module-development/module-development-guidelines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development Guidelines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/module-development/integration-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Integration Guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/container-build/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Building the Container Image Locally
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_12" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer-guide/stacks/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Stack Walkthroughs
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_12" id="__nav_4_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            Stack Walkthroughs
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pipeline and Execution Flow
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/prepare/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Prepare
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/accounts/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Accounts
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/bootstrap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bootstrap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/key/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Key
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/organizations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Organizations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/security-resources/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security Resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/security-audit/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security Audit
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/operations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/identity-center/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Identity Center
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/network-prep/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Network Prep
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/network-vpc/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Network VPC
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/network-vpc-endpoints/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Network VPC Endpoints
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/network-associations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Network Associations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/network-associations-gwlb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Network Associations GWLB
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/customizations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Customizations and Applications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/finalize/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Finalize
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/stacks/asea-import/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ASEA Import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_13" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../developer-guide/cross-cutting/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Cross-Cutting References
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_13" id="__nav_4_13_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_13">
+            <span class="md-nav__icon md-icon"></span>
+            Cross-Cutting References
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/ssm-parameters/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SSM Parameter Conventions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/cdk-aspects/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    CDK Aspects
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/accelerator-stack-base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AcceleratorStack Base Class
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/resource-naming/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Resource Naming Conventions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/config-stack-mapping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Config-to-Stack Mapping
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/cross-cutting/deployment-order/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stack Deployment Order
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Sample Configurations
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Sample Configurations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/standard/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Standard
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            Standard
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/org-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Organization and Account Structure
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/authn-authz/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication and Authorization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/logging-monitoring/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging and Monitoring
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/standard/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../sample-configurations/govcloud-us/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    GovCloud (US)
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            GovCloud (US)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/org-structure/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Organization and Account Structure
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/security-controls/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security Controls
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/networking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sample-configurations/govcloud-us/considerations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Additional Considerations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../faq/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    FAQ
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            FAQ
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/general/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    General
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/architecture/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Architecture
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/ct-cfct/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Control Tower and Customizations for Control Tower
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/customizations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Customizations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/operations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Operations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Networking
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            Networking
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/general/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    General
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/dpi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deep Packet Inspection
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/direct-connect/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Direct Connect
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/network-firewall/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Network Firewall
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/networking/gwlb/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    AWS Gateway Load Balancer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_9" id="__nav_6_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_9">
+            <span class="md-nav__icon md-icon"></span>
+            Logging
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../faq/logging/cwl/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Amazon CloudWatch Log Group
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../typedocs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TypeDocs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How it works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-the-diff-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing the diff viewer
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#impact-report-cloudformation-diff-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      Impact report (CloudFormation Diff Summary)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#critical-networking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Critical Networking Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Critical Networking Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tracked-networking-resource-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tracked networking resource types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stack-diff-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stack diff view
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stacks-requiring-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacks Requiring Review
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stacks Requiring Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#filters-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filters block
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sidebar-collapse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sidebar collapse
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stack-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stack navigation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering-and-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      Filtering and search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Review tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#export-and-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      Export and share
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-coded-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color-coded diffs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#noise-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Noise filtering
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Noise filtering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#noise-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Noise types
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-noise-is-handled" class="md-nav__link">
+    <span class="md-ellipsis">
+      How noise is handled
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security properties
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Local usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#region-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Region parsing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-and-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance and scaling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limitations
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="cdk-diff-viewer">CDK Diff Viewer<a class="headerlink" href="#cdk-diff-viewer" title="Permanent link">⚓︎</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Experimental</p>
+<p>This feature is experimental and may change in future releases. Feedback and bug reports are welcome.</p>
+</div>
+<p>The CDK Diff Viewer is a self-contained HTML page generated during the pipeline's Review stage. It provides a consolidated view of all CloudFormation stack diffs across your entire LZA environment, replacing the need to download and inspect individual <code>.diff</code> files from S3.</p>
+<div class="admonition info">
+<p class="admonition-title">Authoritative previews come from change sets</p>
+<p>The viewer flags <strong>likely-destructive changes inferred from the synthesized CloudFormation templates</strong>. For a precise, deploy-time preview of what CloudFormation will actually do, create a <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets-create.html">CloudFormation change set</a> against each target stack. The viewer helps you find <em>where</em> to look; change sets tell you exactly <em>what</em> will change.</p>
+</div>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">⚓︎</a></h2>
+<p>When the approval stage is enabled (<code>enableApprovalStage: true</code> in the installer), the pipeline's <code>pre-approval</code> action:</p>
+<ol>
+<li>Collects all <code>.diff.json</code> files produced during the Bootstrap stage from S3.</li>
+<li>Runs <code>generate-diff-viewer-cli.ts</code> to produce a single <code>diff-viewer.html</code> file.</li>
+<li>Uploads the HTML file to the pipeline S3 bucket alongside the raw diffs.</li>
+</ol>
+<p>The HTML is entirely self-contained — no external scripts, fonts, images, or network requests. All diff content is embedded as a gzip-compressed, base64-encoded blob and decompressed client-side via the browser's <code>DecompressionStream</code> API.</p>
+<h2 id="accessing-the-diff-viewer">Accessing the diff viewer<a class="headerlink" href="#accessing-the-diff-viewer" title="Permanent link">⚓︎</a></h2>
+<p>After the pipeline reaches the Review stage, download the HTML file from S3:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>s3://&lt;pipeline-bucket&gt;/AWSAccelerator-Pipel/Diffs/&lt;execution-id&gt;/diff-viewer.html<span class="w"> </span>./diff-viewer.html
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>open<span class="w"> </span>diff-viewer.html
+</span></code></pre></div>
+<p>The S3 path and a download command are printed in the CodeBuild logs for the <code>pre-approval</code> action.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">⚓︎</a></h2>
+<p>Click the <strong>?</strong> button in the top-left of the sidebar at any time for a condensed in-app help panel.</p>
+<h3 id="impact-report-cloudformation-diff-summary">Impact report (CloudFormation Diff Summary)<a class="headerlink" href="#impact-report-cloudformation-diff-summary" title="Permanent link">⚓︎</a></h3>
+<p>The viewer opens to a <strong>CloudFormation Diff Summary</strong> page with two collapsible cards (both expanded by default — click a title to collapse/expand):</p>
+<ol>
+<li><strong>Report header</strong> — title and export actions (Markdown, JSON).</li>
+<li><strong>Critical Networking Changes</strong> — the top-priority signal. See <a href="#critical-networking-changes">below</a>.</li>
+<li><strong>Stacks Requiring Review</strong> — paginated list of stacks that touch a tracked resource type. Includes an embedded <strong>Filters</strong> block (see <a href="#stacks-requiring-review">below</a>).</li>
+<li><strong>Scope</strong> — total accounts and regions affected.</li>
+</ol>
+<p>If you collapse the Critical Networking Changes section while changes exist, an inline <span style="color:#c93c37">⚠️ Critical networking changes exist — expand to review</span> warning remains next to the title so nothing slips past unreviewed.</p>
+<h3 id="critical-networking-changes">Critical Networking Changes<a class="headerlink" href="#critical-networking-changes" title="Permanent link">⚓︎</a></h3>
+<p>The Critical Networking Changes section is the headline feature. It surfaces every networking resource that this deployment will <strong>delete, replace, conditionally replace, or orphan</strong> — the kinds of changes that carry real blast radius.</p>
+<p><strong>What counts as a critical networking change.</strong> A resource must meet <em>both</em> conditions:</p>
+<ul>
+<li>It is a networking resource type (VPC, Subnet, Route, Route Table, Security Group / rules, NACL / entries, TGW and TGW attachments / routes / route tables, VPN, VPC peering, VPC endpoints, Network Firewall, DirectConnect, Global Accelerator, Network Manager, Route53, Route53 Resolver, RAM resource shares, and related — see <a href="#tracked-networking-resource-types">below</a> for the full list).</li>
+<li>
+<p>Its change is destructive, where destructive means one of:</p>
+<table>
+<thead>
+<tr>
+<th>Impact</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WILL_DESTROY</code></td>
+<td>Resource will be deleted. Any data or state tied to it is lost.</td>
+</tr>
+<tr>
+<td><code>WILL_REPLACE</code></td>
+<td>Resource will be deleted and recreated. Physical identity (ARN, IP, endpoints) changes.</td>
+</tr>
+<tr>
+<td><code>MAY_REPLACE</code></td>
+<td>CDK cannot determine statically — may cause replacement at deploy time.</td>
+</tr>
+<tr>
+<td><code>WILL_ORPHAN</code></td>
+<td>Resource will be removed from stack management but not deleted. No longer tracked by LZA.</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p><strong>Layout.</strong> A two-column table — <strong>Stack</strong> and <strong>Reviewed</strong> — with one row per stack that contains any critical networking change.</p>
+<ul>
+<li>The whole section is <strong>collapsible</strong> via the section title. When collapsed with changes still present, an inline <span style="color:#c93c37">⚠️ Critical networking changes exist — expand to review</span> warning stays next to the title.</li>
+<li>Each row has a chevron (<code>▾</code>/<code>▸</code>) to expand or collapse the per-resource detail. Rows are <strong>expanded by default</strong> so nothing is hidden on first load.</li>
+<li>Expanded detail lists each destructive resource with a red badge (<code>Will Destroy</code> / <code>Will Replace</code> / <code>May Replace</code> / <code>Will Orphan</code>), the short resource type, the logical ID, and — for replace impacts — the property names that triggered the replacement.</li>
+<li>Click a stack name to drill into the full diff for that stack.</li>
+<li>Tick the <strong>Reviewed</strong> checkbox to dim and strike through the stack; the detail row auto-collapses at the same time. The sidebar updates in sync.</li>
+<li>If the list grows large (many stacks), it paginates at 25 per page with a filter box to search by stack name.</li>
+</ul>
+<p>If the deployment contains <strong>no</strong> critical networking changes, the section shows a single green "✅ No critical networking changes detected" line.</p>
+<h4 id="tracked-networking-resource-types">Tracked networking resource types<a class="headerlink" href="#tracked-networking-resource-types" title="Permanent link">⚓︎</a></h4>
+<p>The complete set of resource types considered networking (and therefore eligible for the Critical Networking Changes section) is:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Resource types</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DirectConnect</td>
+<td><code>AWS::DirectConnect::Connection</code>, <code>Gateway</code>, <code>GatewayAssociation</code>, <code>VirtualInterface</code></td>
+</tr>
+<tr>
+<td>EC2 — core VPC &amp; routing</td>
+<td><code>ClientVpnEndpoint</code>, <code>CustomerGateway</code>, <code>EIP</code>, <code>FlowLog</code>, <code>InternetGateway</code>, <code>NatGateway</code>, <code>NetworkAcl</code>, <code>NetworkAclEntry</code>, <code>PrefixList</code>, <code>Route</code>, <code>RouteTable</code>, <code>SecurityGroup</code>, <code>SecurityGroupEgress</code>, <code>SecurityGroupIngress</code>, <code>Subnet</code>, <code>SubnetRouteTableAssociation</code></td>
+</tr>
+<tr>
+<td>EC2 — transit gateway</td>
+<td><code>TransitGateway</code>, <code>TransitGatewayAttachment</code>, <code>TransitGatewayConnect</code>, <code>TransitGatewayMulticastDomain</code>, <code>TransitGatewayPeeringAttachment</code>, <code>TransitGatewayRoute</code>, <code>TransitGatewayRouteTable</code>, <code>TransitGatewayRouteTableAssociation</code>, <code>TransitGatewayRouteTablePropagation</code>, <code>TransitGatewayVpcAttachment</code></td>
+</tr>
+<tr>
+<td>EC2 — VPC peering / endpoints / VPN</td>
+<td><code>VPC</code>, <code>VPCCidrBlock</code>, <code>VPCEndpoint</code>, <code>VPCEndpointService</code>, <code>VPCEndpointServicePermissions</code>, <code>VPCGatewayAttachment</code>, <code>VPCPeeringConnection</code>, <code>VPNConnection</code>, <code>VPNConnectionRoute</code>, <code>VPNGateway</code>, <code>VPNGatewayRoutePropagation</code></td>
+</tr>
+<tr>
+<td>ELB</td>
+<td><code>ElasticLoadBalancing::LoadBalancer</code>, <code>ElasticLoadBalancingV2::LoadBalancer</code>, <code>Listener</code>, <code>TargetGroup</code></td>
+</tr>
+<tr>
+<td>Global Accelerator</td>
+<td><code>Accelerator</code>, <code>EndpointGroup</code>, <code>Listener</code></td>
+</tr>
+<tr>
+<td>Network Firewall</td>
+<td><code>Firewall</code>, <code>FirewallPolicy</code>, <code>LoggingConfiguration</code>, <code>RuleGroup</code></td>
+</tr>
+<tr>
+<td>Network Manager</td>
+<td><code>CoreNetwork</code>, <code>GlobalNetwork</code>, <code>SiteToSiteVpnAttachment</code>, <code>TransitGatewayPeering</code>, <code>TransitGatewayRegistration</code>, <code>VpcAttachment</code></td>
+</tr>
+<tr>
+<td>RAM</td>
+<td><code>ResourceShare</code></td>
+</tr>
+<tr>
+<td>Route53 / Route53Resolver</td>
+<td><code>HostedZone</code>, <code>RecordSet</code>, <code>FirewallDomainList</code>, <code>FirewallRuleGroup</code>, <code>FirewallRuleGroupAssociation</code>, <code>ResolverEndpoint</code>, <code>ResolverQueryLoggingConfig</code>, <code>ResolverQueryLoggingConfigAssociation</code>, <code>ResolverRule</code>, <code>ResolverRuleAssociation</code></td>
+</tr>
+</tbody>
+</table>
+<p>You can also toggle which resource types are tracked by the <strong>Stacks Requiring Review</strong> table using the checkboxes in the Resource Types to Track section. Your selections are persisted in <code>localStorage</code>.</p>
+<h3 id="stack-diff-view">Stack diff view<a class="headerlink" href="#stack-diff-view" title="Permanent link">⚓︎</a></h3>
+<p>Click a stack name anywhere in the viewer (sidebar, Critical Networking Changes, or Stacks Requiring Review) to open the full stack diff. Sections are collapsible (<code>▼</code>/<code>▶</code>):</p>
+<ul>
+<li><strong>Parameters</strong> — template parameter changes.</li>
+<li><strong>Conditions</strong> — CloudFormation condition changes.</li>
+<li><strong>IAM Statement Changes</strong> — IAM policy additions and removals in a colorized table. Full rows are highlighted for additions/removals including continuation rows.</li>
+<li><strong>Security Group Rule Changes</strong> — SG ingress/egress additions and removals.</li>
+<li><strong>Resources</strong> — per-resource diff cards. See below for the destructive callout.</li>
+<li><strong>Outputs</strong> — stack output changes.</li>
+<li><strong>Noise</strong> — collapsed by default. Contains low-signal churn (see <a href="#noise-filtering">Noise filtering</a>).</li>
+</ul>
+<p><strong>Destructive resource cards are outlined in red.</strong> A 2 px red border on a resource card indicates the change will delete, replace (definitely or conditionally), or orphan the resource. Inside the card:</p>
+<ul>
+<li>An action badge (<code>Create</code>, <code>Update</code>, <code>Delete</code>, <code>Replace</code>, <code>May Replace</code>, <code>Orphan</code>, <code>Import</code>).</li>
+<li>A replacement banner explaining the impact and listing the triggering properties (for replace-type changes only).</li>
+<li>Per-property diffs — each changed property shows old value, new value, and an expandable full JSON diff with <strong>📋 Old</strong> / <strong>📋 New</strong> buttons to copy the raw JSON to your clipboard.</li>
+</ul>
+<h3 id="stacks-requiring-review">Stacks Requiring Review<a class="headerlink" href="#stacks-requiring-review" title="Permanent link">⚓︎</a></h3>
+<p>Every stack that touches at least one tracked resource type appears here. Layout mirrors Critical Networking Changes — a two-column table (Stack | Reviewed) where each row expands to show the per-resource detail (badge + resource type + logical ID).</p>
+<p>Ticking the <strong>Reviewed</strong> checkbox also collapses that stack's detail row so the summary page stays compact as you work through a deployment.</p>
+<h4 id="filters-block">Filters block<a class="headerlink" href="#filters-block" title="Permanent link">⚓︎</a></h4>
+<p>At the top of the Stacks Requiring Review card, the <strong>Filters</strong> block groups every control that narrows what the table shows:</p>
+<ul>
+<li><strong>Stack search</strong> — substring match against the stack name</li>
+<li><strong>Reviewed filter</strong> — <code>Unreviewed</code> (default) / <code>Reviewed</code> / <code>All</code></li>
+<li><strong>Resource Types to Track</strong> — a collapsible chevron (closed by default). Expand to see:<ul>
+<li>A <strong>Select all</strong> button that ticks every type</li>
+<li>A <strong>Clear all</strong> button that unticks every type</li>
+<li>One checkbox per resource type discovered in the diff</li>
+</ul>
+</li>
+</ul>
+<p>Default selection is <strong>every</strong> resource type. Toggling any checkbox updates the table immediately; selection is persisted per-origin in <code>localStorage</code>.</p>
+<h3 id="sidebar-collapse">Sidebar collapse<a class="headerlink" href="#sidebar-collapse" title="Permanent link">⚓︎</a></h3>
+<p>Click the <strong>◀</strong> button in the sidebar header (next to the <code>?</code> help and ☀️ theme buttons) to collapse the entire sidebar. A floating <strong>▶</strong> button then appears in the top-left corner of the viewport — click it to restore the sidebar. The collapse state is persisted in <code>localStorage</code> so the preference survives reload.</p>
+<h3 id="stack-navigation">Stack navigation<a class="headerlink" href="#stack-navigation" title="Permanent link">⚓︎</a></h3>
+<p>Stacks are grouped by section (Logging, Security, NetworkVpc, etc.) in a collapsible sidebar on the left. Click a section header (<code>▼</code>/<code>▶</code>) to expand or collapse it. Click a stack name to view its diff.</p>
+<p>The <strong>CloudFormation Diff Summary</strong> link at the top of the sidebar returns to the impact report. Its indentation matches the section headers below it and it underlines on hover to indicate it is a link.</p>
+<h3 id="filtering-and-search">Filtering and search<a class="headerlink" href="#filtering-and-search" title="Permanent link">⚓︎</a></h3>
+<p>Use the <strong>Filter</strong> button to show stacks by status:</p>
+<ul>
+<li><strong>Unreviewed</strong> (default) — stacks you haven't reviewed yet. Unchanged stacks are auto-reviewed, so this view surfaces only the stacks that warrant attention.</li>
+<li><strong>Changed</strong> — stacks with meaningful resource changes.</li>
+<li><strong>Unchanged</strong> — stacks with no differences (or noise-only changes).</li>
+<li><strong>Reviewed</strong> — stacks you've marked as reviewed.</li>
+<li><strong>All</strong> — every stack.</li>
+</ul>
+<p>The search bar filters by stack name or section name.</p>
+<h3 id="review-tracking">Review tracking<a class="headerlink" href="#review-tracking" title="Permanent link">⚓︎</a></h3>
+<p>Each stack has a checkbox to mark it as reviewed. Reviewed stacks appear with strikethrough text and reduced opacity. Checkboxes appear in three places (sidebar, Critical Networking Changes, Stacks Requiring Review) and all stay in sync.</p>
+<p>Unchanged stacks — including stacks whose only changes are noise — are automatically marked as reviewed on load.</p>
+<div class="admonition note">
+<p class="admonition-title">In-memory state</p>
+<p>Review state lives in the browser's memory and is not written to <code>localStorage</code>. Closing or refreshing the HTML file resets manual review progress. Unchanged stacks are re-marked automatically. See <a href="#export-and-share">Export and share</a> below for how to hand off review progress to another reviewer.</p>
+</div>
+<h3 id="export-and-share">Export and share<a class="headerlink" href="#export-and-share" title="Permanent link">⚓︎</a></h3>
+<p>The impact report header provides two download actions:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>⬇️ Markdown</strong></td>
+<td>Downloads a formatted summary (<code>lza-diff-summary_&lt;timestamp&gt;.md</code>) with tables of totals, resource actions, destructive changes (including trigger properties), and networking changes. Suitable for change-approval tickets or COE docs.</td>
+</tr>
+<tr>
+<td><strong>⬇️ JSON</strong></td>
+<td>Downloads the full structured <code>ImpactReport</code> as <code>lza-diff-summary_&lt;timestamp&gt;.json</code> for programmatic consumption (diff comparison across pipeline runs, automated gating, etc.).</td>
+</tr>
+</tbody>
+</table>
+<p>To share review progress with another reviewer, open the viewer with a <code>#r=&lt;indices&gt;</code> URL fragment. Each index is the position of a stack in the sorted <code>stacks[]</code> array. Out-of-range or malformed values are silently ignored. This is the low-tech collaboration path — the viewer honors the fragment on load.</p>
+<h3 id="color-coded-diffs">Color-coded diffs<a class="headerlink" href="#color-coded-diffs" title="Permanent link">⚓︎</a></h3>
+<p>Diff content is color-coded to be accessible for color-vision deficiency — a left border and leading symbol accompany each color so the signal is not colour-only:</p>
+<ul>
+<li><span style="color:#e06c75"><strong>Red</strong></span> with <code>-</code> prefix and red left border — removals.</li>
+<li><span style="color:#89b4fa"><strong>Blue</strong></span> with <code>+</code> prefix and blue left border — additions.</li>
+<li><span style="color:#6c7086"><strong>Muted italic</strong></span> — context lines and identity markers.</li>
+</ul>
+<p>Both dark and light themes are available. Toggle with the ☀️ / 🌙 button in the sidebar header; preference is persisted in <code>localStorage</code>.</p>
+<h2 id="noise-filtering">Noise filtering<a class="headerlink" href="#noise-filtering" title="Permanent link">⚓︎</a></h2>
+<p>The viewer detects and separates common no-op changes that appear on every pipeline run but represent no functional difference. Noise detection runs on the structured CDK diff output (<code>StructuredStackDiff</code>) — the same classification logic is applied server-side and client-side.</p>
+<h3 id="noise-types">Noise types<a class="headerlink" href="#noise-types" title="Permanent link">⚓︎</a></h3>
+<table>
+<thead>
+<tr>
+<th>Change type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lambda <code>S3Key</code> / <code>Code</code></td>
+<td>Asset hash changes when Lambda code is rebuilt. The hash bump alone doesn't indicate what changed in the function code.</td>
+</tr>
+<tr>
+<td>Lambda <code>SOLUTION_ID</code> / <code>Environment</code> / <code>Variables</code></td>
+<td>Version string bump in Lambda environment variables.</td>
+</tr>
+<tr>
+<td>SSM <code>AcceleratorVersion</code></td>
+<td><code>AcceleratorVersion</code> SSM parameter value update — one per release.</td>
+</tr>
+<tr>
+<td><code>Custom::*</code> uuid rotation</td>
+<td>UUID-only change on CDK custom resources. Forces a re-invocation at deploy time but doesn't change behaviour.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-noise-is-handled">How noise is handled<a class="headerlink" href="#how-noise-is-handled" title="Permanent link">⚓︎</a></h3>
+<p>Noise is handled at two levels:</p>
+<ol>
+<li><strong>Stack classification</strong> — stacks where <em>all</em> resource changes are noise (and there are no parameter / output / condition changes) are classified as <strong>Unchanged</strong>. They are hidden from the Unreviewed filter and auto-marked as reviewed.</li>
+<li>
+<p><strong>Section separation</strong> — within stacks that have <em>both</em> real changes and noise, the stack diff view splits content into:</p>
+<ul>
+<li><strong>Resources</strong> — meaningful changes, visible by default.</li>
+<li><strong>Noise</strong> — collapsed by default with a muted header showing the noise resource count. Click to expand.</li>
+</ul>
+</li>
+</ol>
+<p>Noise detection does not affect delete / create actions — only <code>modify</code> can be classified as noise.</p>
+<h2 id="security-properties">Security properties<a class="headerlink" href="#security-properties" title="Permanent link">⚓︎</a></h2>
+<p>The generated HTML is distributed to reviewers and opened in a browser, so it is hardened:</p>
+<ul>
+<li><strong>Strict Content Security Policy</strong>: <code>default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'none'; connect-src 'none'; font-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';</code>. The only loosened directives are the <code>unsafe-inline</code> for the embedded script and style — required because the viewer is a single-file artifact.</li>
+<li><strong>No network access</strong>. All data is embedded; the viewer never makes outbound requests.</li>
+<li><strong>No third-party code</strong>. No frameworks, no CDN scripts, no fonts.</li>
+<li><strong>Offline-capable</strong>. The file works over <code>file://</code> with no server.</li>
+<li><strong>All dynamic content escaped</strong>. HTML-construction paths escape <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>"</code> before concatenation, and CSS selector constructions use <code>CSS.escape()</code>.</li>
+<li><strong>URL fragment is validated</strong>. Review-state indices are parsed with <code>parseInt(, 10)</code> and range-checked against the loaded stack list; malformed or out-of-range values are silently ignored.</li>
+</ul>
+<h2 id="local-usage">Local usage<a class="headerlink" href="#local-usage" title="Permanent link">⚓︎</a></h2>
+<p>You can generate the diff viewer locally without running the full pipeline. After synthesizing your stacks:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>source/packages/@aws-accelerator/accelerator
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Collect diff JSON files from cdk.out</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>rawDiff
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>find<span class="w"> </span>cdk.out<span class="w"> </span>-name<span class="w"> </span><span class="s2">"*.diff.json"</span><span class="w"> </span>-print0<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>-0<span class="w"> </span>-J<span class="w"> </span><span class="o">{}</span><span class="w"> </span>cp<span class="w"> </span><span class="o">{}</span><span class="w"> </span>rawDiff/
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Generate the viewer</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>yarn<span class="w"> </span>run<span class="w"> </span>ts-node<span class="w"> </span>--cwdMode<span class="w"> </span>--transpile-only<span class="w"> </span>generate-diff-viewer-cli.ts<span class="w"> </span>rawDiff<span class="w"> </span>diff-viewer.html
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>open<span class="w"> </span>diff-viewer.html
+</span></code></pre></div>
+<p>The CLI accepts two arguments: the directory containing <code>.diff.json</code> files and the output HTML file path.</p>
+<h2 id="region-parsing">Region parsing<a class="headerlink" href="#region-parsing" title="Permanent link">⚓︎</a></h2>
+<p>The viewer extracts <code>{account, region}</code> from each stack name. The parser supports every AWS region family:</p>
+<ul>
+<li>Commercial: <code>us-east-1</code>, <code>ap-southeast-2</code>, etc.</li>
+<li>GovCloud: <code>us-gov-east-1</code>, <code>us-gov-west-1</code>.</li>
+<li>Secret / Top-Secret: <code>us-iso-east-1</code>, <code>us-isob-east-1</code>.</li>
+<li>China: <code>cn-north-1</code>, <code>cn-northwest-1</code>.</li>
+<li>Stack names with suffixes appended after the region (e.g., from customizations) are tolerated.</li>
+</ul>
+<p>Availability-zone suffixes (<code>us-east-1b</code>) are not mis-parsed as regions — they fail to match.</p>
+<h2 id="performance-and-scaling">Performance and scaling<a class="headerlink" href="#performance-and-scaling" title="Permanent link">⚓︎</a></h2>
+<p>The pipeline has been validated against synthetic workloads well beyond realistic LZA deployments:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Scale</th>
+<th style="text-align: right;">HTML size</th>
+<th style="text-align: right;">End-to-end generation</th>
+<th style="text-align: right;">Browser load (Chromium)</th>
+<th style="text-align: right;">JS heap (peak)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1,000 stacks</td>
+<td style="text-align: right;">100 KB</td>
+<td style="text-align: right;">4 ms</td>
+<td style="text-align: right;">&lt;100 ms</td>
+<td style="text-align: right;">&lt; 50 MB</td>
+</tr>
+<tr>
+<td style="text-align: right;">100,000 stacks</td>
+<td style="text-align: right;">2 MB</td>
+<td style="text-align: right;">170 ms</td>
+<td style="text-align: right;">~400 ms</td>
+<td style="text-align: right;">~150 MB</td>
+</tr>
+<tr>
+<td style="text-align: right;">600,000 stacks</td>
+<td style="text-align: right;">11 MB</td>
+<td style="text-align: right;">1 s</td>
+<td style="text-align: right;">~1 s</td>
+<td style="text-align: right;">~750 MB</td>
+</tr>
+</tbody>
+</table>
+<p>For realistic LZA deployments (typically 200–1,000 stacks), both generation and browser load are well under one second. The architecture relies on:</p>
+<ul>
+<li><strong>Gzip + base64</strong> data transport in a single HTML file — 600K stacks compresses from ~55 MB JSON to 11 MB HTML.</li>
+<li><strong>Paginated sidebar and tables</strong> — 500 items per section initially with "Load more" buttons; 25 per page in the impact-report tables.</li>
+<li><strong>Unreviewed-by-default filter</strong> — auto-reviewed unchanged stacks are hidden from the default view, so the initial render only costs the count of <em>actually</em> changed stacks.</li>
+<li><strong>Card cache</strong> — each stack's detail card is built on demand and reused on subsequent visits.</li>
+</ul>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">⚓︎</a></h2>
+<ul>
+<li><strong>Review state is not persisted.</strong> Manual review progress lives in memory only. Use <strong>🔗 Copy Link</strong> to share progress with another reviewer via URL fragment, or export Markdown/JSON for an archived snapshot. Resource-type filter selections and theme preference <em>are</em> persisted in <code>localStorage</code>.</li>
+<li><strong>Inferred, not authoritative.</strong> The viewer reports changes from the synthesized templates. For deploy-time certainty, use <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-changesets-create.html">CloudFormation change sets</a> against each target stack.</li>
+<li><strong>Browser compatibility.</strong> The viewer requires a browser that supports <code>DecompressionStream</code> (gzip). This includes Chrome 80+, Edge 80+, Firefox 113+, and Safari 16.4+. Internet Explorer is not supported.</li>
+<li><strong>No cross-execution comparison.</strong> The viewer shows diffs from a single pipeline execution. It does not compare diffs across multiple executions or show historical trends. The JSON export is suitable for external tools that want to diff successive runs.</li>
+<li><strong>Large-scale caveats.</strong> At extreme scale (hundreds of thousands of stacks), the sidebar DOM grows as sections are expanded. For practical LZA deployments this is not a concern.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.tracking", "navigation.instant", "navigation.indexes", "navigation.top"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.471ce7a9.min.js"></script>
+      
+    
+  </body>
+</html>
