@@ -42,7 +42,7 @@
     "@aws-sdk/client-sts": "3.1041.0",
     "@aws-sdk/client-ec2": "3.1041.0",
     "@types/js-yaml": "4.0.9",
-    "adm-zip": "0.6.0",
+    "adm-zip": "0.6.1",
     "change-case": "4.1.2",
     "fp-ts": "2.13.1",
     "fs-extra": "11.1.0",
