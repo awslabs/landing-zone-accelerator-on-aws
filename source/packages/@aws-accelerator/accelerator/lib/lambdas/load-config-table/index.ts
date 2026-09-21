@@ -55,6 +55,19 @@ let cloudformationClient: CloudFormationClient;
 let s3Client: S3Client;
 
 /**
+ * Returns the shared DynamoDB document client, lazily initializing it if the handler has not run yet.
+ * This keeps the exported helpers usable in isolation (e.g. unit tests) while the handler continues to
+ * initialize the module-scoped clients as before.
+ */
+function getDocumentClient(): DynamoDBDocumentClient {
+  if (!documentClient) {
+    dynamodbClient = new DynamoDBClient({ customUserAgent: process.env['SOLUTION_ID'] });
+    documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
+  }
+  return documentClient;
+}
+
+/**
  * load-config-table - lambda handler
  *
  * @param event
@@ -151,13 +164,14 @@ async function streamToBuffer(stream: Readable): Promise<Buffer> {
   });
 }
 
-async function putOrganizationConfigInTable(
+export async function putOrganizationConfigInTable(
   configData: OrganizationalUnitConfig,
   configTableName: string,
   awsKey: string,
   commitId: string,
   orgInfo: OrganizationalUnitIdConfig,
 ): Promise<void> {
+  const documentClient = getDocumentClient();
   if (awsKey != '') {
     const params: UpdateCommandInput = {
       TableName: configTableName,
@@ -182,14 +196,20 @@ async function putOrganizationConfigInTable(
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
   } else {
+    // The organizational unit was not found in live AWS Organizations (awsKey === ''). Actively clear
+    // any awsKey previously recorded on this row. Otherwise a stale awsKey (for example, the ID of an
+    // OU that was deleted and is being recreated with the same name) survives this upsert. Downstream,
+    // create-organizational-units treats the truthy awsKey as "already exists" and skips recreation;
+    // validate-environment can then call AWS Organizations with an ID that no longer exists.
     const params: UpdateCommandInput = {
       TableName: configTableName,
       Key: {
         dataType: 'organization',
         acceleratorKey: configData.name,
       },
-      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId, #orgInfo = :v_orgInfo',
+      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId, #orgInfo = :v_orgInfo remove #awsKey',
       ExpressionAttributeNames: {
+        '#awsKey': 'awsKey',
         '#dataBag': 'dataBag',
         '#commitId': 'commitId',
         '#orgInfo': 'orgInfo',
@@ -415,6 +435,8 @@ async function onCreateUpdateFunction(
   }
   // Delete accounts that are not in the config
   await cleanupNotInUseAccounts(configTableName, accountsConfig);
+  // Delete organizational units that are not in the config
+  await cleanupNotInUseOrganizationalUnits(configTableName, organizationConfig);
   await putCommitIdInTable(configTableName, commitId);
 
   return {
@@ -506,6 +528,102 @@ async function cleanupNotInUseAccounts(configTableName: string, accountsConfig: 
     console.log('Successfully removed accounts from the DynamoDB table that are not in the accounts-config.yaml file');
   } else {
     console.log('No accounts to remove from DynamoDB, all accounts in the table are in the accounts-config.yaml file');
+  }
+}
+
+/**
+ * Deletes organizational unit entries from the DynamoDB table that are not present in the config
+ *
+ * @remarks
+ * Mirrors {@link cleanupNotInUseAccounts} for `dataType='organization'` rows. Without this, an OU
+ * removed from organization-config.yaml leaves an orphaned row in the config table (OU rows are only
+ * ever upserted, never deleted), which can block recreating an OU of the same name. The synthetic
+ * `Root` row (written separately by {@link onCreateUpdateFunction}) is preserved because it is never
+ * part of `organizationConfig.organizationalUnits`.
+ *
+ * @param configTableName The name of the DynamoDB table
+ * @param organizationConfig The OrganizationConfig object containing all valid organizational units
+ */
+export async function cleanupNotInUseOrganizationalUnits(
+  configTableName: string,
+  organizationConfig: OrganizationConfig,
+): Promise<void> {
+  const documentClient = getDocumentClient();
+  console.log('Checking for organizational units to remove from the DynamoDB table that are not in the config..');
+
+  const configOuNames = new Set<string>();
+
+  for (const organizationalUnit of organizationConfig.organizationalUnits) {
+    configOuNames.add(organizationalUnit.name);
+  }
+  // The Root row is written separately by onCreateUpdateFunction and is not part of the
+  // organizationalUnits list; keep it so it is never treated as orphaned.
+  configOuNames.add('Root');
+
+  const organizationalUnitsToDelete: Array<{ dataType: string; acceleratorKey: string }> = [];
+  let lastEvaluatedKey: Record<string, NativeAttributeValue> | undefined = undefined;
+
+  do {
+    const scanParams: {
+      TableName: string;
+      FilterExpression: string;
+      ExpressionAttributeValues: Record<string, string>;
+      ExclusiveStartKey?: Record<string, NativeAttributeValue>;
+    } = {
+      TableName: configTableName,
+      FilterExpression: 'dataType = :dataType',
+      ExpressionAttributeValues: {
+        ':dataType': 'organization',
+      },
+      ExclusiveStartKey: lastEvaluatedKey,
+    };
+
+    const response = await throttlingBackOff(() => documentClient.send(new ScanCommand(scanParams)));
+
+    if (response.Items) {
+      for (const item of response.Items) {
+        const dataType = item['dataType'] as string;
+        const acceleratorKey = item['acceleratorKey'] as string;
+
+        if (!configOuNames.has(acceleratorKey)) {
+          organizationalUnitsToDelete.push({
+            dataType,
+            acceleratorKey,
+          });
+        }
+      }
+    }
+
+    lastEvaluatedKey = response.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
+  if (organizationalUnitsToDelete.length > 0) {
+    console.log(
+      `Found ${organizationalUnitsToDelete.length} organizational units to delete from DynamoDB that are not in the organization-config.yaml file`,
+    );
+
+    await Promise.all(
+      organizationalUnitsToDelete.map(async key => {
+        const deleteParams = {
+          TableName: configTableName,
+          Key: {
+            dataType: key.dataType,
+            acceleratorKey: key.acceleratorKey,
+          },
+        };
+
+        console.log(`Removing organizational unit: ${key.acceleratorKey} (${key.dataType}) from DynamoDB table`);
+        await throttlingBackOff(() => documentClient.send(new DeleteCommand(deleteParams)));
+      }),
+    );
+
+    console.log(
+      'Successfully removed organizational units from the DynamoDB table that are not in the organization-config.yaml file',
+    );
+  } else {
+    console.log(
+      'No organizational units to remove from DynamoDB, all organizational units in the table are in the organization-config.yaml file',
+    );
   }
 }
 
