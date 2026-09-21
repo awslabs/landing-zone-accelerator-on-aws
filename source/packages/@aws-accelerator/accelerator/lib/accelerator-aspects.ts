@@ -80,11 +80,6 @@ class IsofOverrides implements cdk.IAspect {
  */
 class IsobOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
-    if (node instanceof cdk.aws_ec2.CfnFlowLog) {
-      node.addPropertyDeletionOverride('LogFormat');
-      node.addPropertyDeletionOverride('Tags');
-      node.addPropertyDeletionOverride('MaxAggregationInterval');
-    }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('Tags');
     }
@@ -114,11 +109,6 @@ class IsobOverrides implements cdk.IAspect {
  */
 class IsoOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
-    if (node instanceof cdk.aws_ec2.CfnFlowLog) {
-      node.addPropertyDeletionOverride('LogFormat');
-      node.addPropertyDeletionOverride('Tags');
-      node.addPropertyDeletionOverride('MaxAggregationInterval');
-    }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('Tags');
     }

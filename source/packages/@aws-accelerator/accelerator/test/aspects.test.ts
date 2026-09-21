@@ -508,24 +508,28 @@ describe('AcceleratorAspects', () => {
   describe('IsoOverrides', () => {
     describe('IsoOverrides', () => {
       const partition = 'aws-iso';
-      test('should remove properties from EC2 FlowLog', () => {
-        // GIVEN
+      test('should preserve custom format properties on EC2 FlowLog', () => {
+        // GIVEN a flow log configured with a custom LogFormat, MaxAggregationInterval, and Tags
         const vpc = new cdk.aws_ec2.Vpc(stack, 'TestVpc');
-        new cdk.aws_ec2.FlowLog(stack, 'TestFlowLog', {
-          destination: cdk.aws_ec2.FlowLogDestination.toCloudWatchLogs(),
-          resourceType: cdk.aws_ec2.FlowLogResourceType.fromVpc(vpc),
+        new cdk.aws_ec2.CfnFlowLog(stack, 'TestFlowLog', {
+          resourceType: 'VPC',
+          resourceId: vpc.vpcId,
+          trafficType: 'ALL',
+          logDestinationType: 'cloud-watch-logs',
+          logFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
+          maxAggregationInterval: 60,
+          tags: [{ key: 'Name', value: 'test-flow-log' }],
         });
 
         // WHEN
         new AcceleratorAspects(stack, partition, false);
 
-        // THEN
+        // THEN the ADC override no longer strips these properties (issue #4997)
         template = Template.fromStack(stack);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        template.hasResource('AWS::EC2::FlowLog', (resource: any) => {
-          return (
-            !resource.Properties.LogFormat && !resource.Properties.Tags && !resource.Properties.MaxAggregationInterval
-          );
+        template.hasResourceProperties('AWS::EC2::FlowLog', {
+          LogFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
+          MaxAggregationInterval: 60,
+          Tags: Match.arrayWith([{ Key: 'Name', Value: 'test-flow-log' }]),
         });
       });
 
@@ -619,24 +623,28 @@ describe('AcceleratorAspects', () => {
 
     describe('IsobOverrides', () => {
       const partition = 'aws-iso-b';
-      test('should remove properties from EC2 FlowLog', () => {
-        // GIVEN
+      test('should preserve custom format properties on EC2 FlowLog', () => {
+        // GIVEN a flow log configured with a custom LogFormat, MaxAggregationInterval, and Tags
         const vpc = new cdk.aws_ec2.Vpc(stack, 'TestVpc');
-        new cdk.aws_ec2.FlowLog(stack, 'TestFlowLog', {
-          destination: cdk.aws_ec2.FlowLogDestination.toCloudWatchLogs(),
-          resourceType: cdk.aws_ec2.FlowLogResourceType.fromVpc(vpc),
+        new cdk.aws_ec2.CfnFlowLog(stack, 'TestFlowLog', {
+          resourceType: 'VPC',
+          resourceId: vpc.vpcId,
+          trafficType: 'ALL',
+          logDestinationType: 'cloud-watch-logs',
+          logFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
+          maxAggregationInterval: 60,
+          tags: [{ key: 'Name', value: 'test-flow-log' }],
         });
 
         // WHEN
         new AcceleratorAspects(stack, partition, false);
 
-        // THEN
+        // THEN the ADC override no longer strips these properties (issue #4997)
         template = Template.fromStack(stack);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        template.hasResource('AWS::EC2::FlowLog', (resource: any) => {
-          return (
-            !resource.Properties.LogFormat && !resource.Properties.Tags && !resource.Properties.MaxAggregationInterval
-          );
+        template.hasResourceProperties('AWS::EC2::FlowLog', {
+          LogFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
+          MaxAggregationInterval: 60,
+          Tags: Match.arrayWith([{ Key: 'Name', Value: 'test-flow-log' }]),
         });
       });
 
