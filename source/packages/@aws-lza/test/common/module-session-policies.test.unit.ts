@@ -181,6 +181,17 @@ describe('ModuleSessionPolicies', () => {
       expect(actions).toContain('iam:CreateServiceLinkedRole');
     });
 
+    it('GuardDuty module should grant Organizations trusted-access actions for EBS malware protection', () => {
+      // ensureOrganizationsTrustedAccess enables malware-protection.guardduty.amazonaws.com trusted access
+      // before regional EC2 Malware Protection configuration.
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions).toContain('organizations:ListAWSServiceAccessForOrganization');
+      expect(actions).toContain('organizations:EnableAWSServiceAccess');
+    });
+
     it('Config rule tagging should use least-privilege Config actions', () => {
       const parsed = JSON.parse(MODULE_SESSION_POLICIES['config-rule-tagging'].policy);
       const actions: string[] = parsed.Statement.find(

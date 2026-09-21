@@ -1,6 +1,6 @@
 {
     "name": "enable-with-deployment-targets",
-    "description": "Enable GuardDuty with deploymentTargets that omit Management and Audit \u2014 verifies the module auto-includes the management and delegated-admin accounts instead of failing",
+    "description": "Enable GuardDuty with deploymentTargets scoped to Network (omits Management and Audit) \u2014 verifies the module auto-includes the management and delegated-admin accounts, enrolls only the boundary accounts as members (Management + Network), and does NOT enroll out-of-boundary accounts (LogArchive)",
     "order": 8,
     "moduleConfig": {
         "enable": true,
@@ -37,6 +37,10 @@
         "exportDestinationConfigured": true,
         "protectionsEnabled": {
             "s3Protection": true
+        },
+        "memberBoundary": {
+            "members": ["Management", "Network"],
+            "excluded": ["LogArchive"]
         }
     },
     "skipCleanup": true

@@ -29,6 +29,7 @@ import {
   getOrganizationAccountsFromSourceTable,
   getOrganizationDetails,
   isManagementAccount,
+  ensureOrganizationsTrustedAccess,
 } from '../../../lib/common/organizations-functions';
 import { MODULE_EXCEPTIONS } from '../../../lib/common/types';
 
@@ -40,6 +41,8 @@ vi.mock('@aws-sdk/client-organizations', () => {
   return {
     OrganizationsClient: vi.fn(),
     DescribeOrganizationCommand: vi.fn(),
+    EnableAWSServiceAccessCommand: vi.fn(),
+    ListAWSServiceAccessForOrganizationCommand: vi.fn(),
     ListDelegatedAdministratorsCommand: vi.fn(),
     DeregisterDelegatedAdministratorCommand: vi.fn(),
     paginateListAccounts: vi.fn(),
@@ -65,6 +68,7 @@ vi.mock('../../../lib/common/utility', () => ({
   setRetryStrategy: vi.fn(function () {
     return {};
   }),
+  waitUntil: vi.fn(),
 }));
 
 vi.mock('../../../lib/common/logger', () => ({
@@ -155,6 +159,7 @@ const MOCK_CONSTANTS = {
 
 describe('organizations-functions', () => {
   let mockExecuteApi: ReturnType<typeof vi.fn>;
+  let mockWaitUntil: ReturnType<typeof vi.fn>;
   let mockQueryDynamoDBTable: ReturnType<typeof vi.fn>;
   let mockPaginateListAccounts: ReturnType<typeof vi.fn>;
 
@@ -166,6 +171,8 @@ describe('organizations-functions', () => {
     const organizations = await import('@aws-sdk/client-organizations');
 
     mockExecuteApi = vi.mocked(utility.executeApi);
+    mockWaitUntil = vi.mocked(utility.waitUntil);
+    mockWaitUntil.mockResolvedValue(undefined);
     mockQueryDynamoDBTable = vi.mocked(dynamodbFunctions.queryDynamoDBTable);
     mockPaginateListAccounts = vi.mocked(organizations.paginateListAccounts);
   });
@@ -895,6 +902,127 @@ describe('organizations-functions', () => {
           logPrefix: MOCK_CONSTANTS.logPrefix,
         }),
       ).rejects.toThrow("Missing required field 'awsKey' for account item in source table, unable to get account id");
+    });
+  });
+
+  describe('ensureOrganizationsTrustedAccess', () => {
+    const servicePrincipal = 'malware-protection.guardduty.amazonaws.com';
+    const mockOrganizationsClient = new OrganizationsClient({});
+
+    test('should skip enablement when trusted access is already enabled', async () => {
+      mockExecuteApi.mockResolvedValue({
+        EnabledServicePrincipals: [{ ServicePrincipal: servicePrincipal }],
+      });
+
+      await ensureOrganizationsTrustedAccess(
+        mockOrganizationsClient,
+        servicePrincipal,
+        false,
+        MOCK_CONSTANTS.logPrefix,
+      );
+
+      expect(mockExecuteApi).toHaveBeenCalledTimes(1);
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'ListAWSServiceAccessForOrganizationCommand',
+        {},
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockWaitUntil).not.toHaveBeenCalled();
+    });
+
+    test('should find trusted access on a later service-access page', async () => {
+      mockExecuteApi
+        .mockResolvedValueOnce({
+          EnabledServicePrincipals: [{ ServicePrincipal: 'example.amazonaws.com' }],
+          NextToken: 'next-page',
+        })
+        .mockResolvedValueOnce({
+          EnabledServicePrincipals: [{ ServicePrincipal: servicePrincipal }],
+        });
+
+      await ensureOrganizationsTrustedAccess(
+        mockOrganizationsClient,
+        servicePrincipal,
+        false,
+        MOCK_CONSTANTS.logPrefix,
+      );
+
+      expect(mockExecuteApi).toHaveBeenNthCalledWith(
+        1,
+        'ListAWSServiceAccessForOrganizationCommand',
+        {},
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockExecuteApi).toHaveBeenNthCalledWith(
+        2,
+        'ListAWSServiceAccessForOrganizationCommand',
+        { NextToken: 'next-page' },
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockWaitUntil).not.toHaveBeenCalled();
+    });
+
+    test('should enable trusted access and wait for confirmation when it is missing', async () => {
+      mockExecuteApi.mockResolvedValueOnce({ EnabledServicePrincipals: [] }).mockResolvedValueOnce({});
+      mockWaitUntil.mockImplementation(async predicate => {
+        mockExecuteApi.mockResolvedValueOnce({
+          EnabledServicePrincipals: [{ ServicePrincipal: servicePrincipal }],
+        });
+        await predicate();
+      });
+
+      await ensureOrganizationsTrustedAccess(
+        mockOrganizationsClient,
+        servicePrincipal,
+        false,
+        MOCK_CONSTANTS.logPrefix,
+      );
+
+      expect(mockExecuteApi).toHaveBeenNthCalledWith(
+        1,
+        'ListAWSServiceAccessForOrganizationCommand',
+        {},
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockExecuteApi).toHaveBeenNthCalledWith(
+        2,
+        'EnableAWSServiceAccessCommand',
+        { ServicePrincipal: servicePrincipal },
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockWaitUntil).toHaveBeenCalledWith(
+        expect.any(Function),
+        `Organizations trusted access for ${servicePrincipal} did not settle after enablement`,
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockExecuteApi).toHaveBeenCalledTimes(3);
+    });
+
+    test('should not enable or wait in dry-run mode', async () => {
+      mockExecuteApi.mockResolvedValue({ EnabledServicePrincipals: [] });
+
+      await ensureOrganizationsTrustedAccess(mockOrganizationsClient, servicePrincipal, true, MOCK_CONSTANTS.logPrefix);
+
+      expect(mockExecuteApi).toHaveBeenCalledTimes(1);
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'ListAWSServiceAccessForOrganizationCommand',
+        {},
+        expect.any(Function),
+        expect.anything(),
+        MOCK_CONSTANTS.logPrefix,
+      );
+      expect(mockWaitUntil).not.toHaveBeenCalled();
     });
   });
 

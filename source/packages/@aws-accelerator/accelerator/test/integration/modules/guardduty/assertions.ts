@@ -23,9 +23,11 @@ import {
   GetDetectorCommand,
   GuardDutyClient,
   ListDetectorsCommand,
+  ListMembersCommand,
   ListOrganizationAdminAccountsCommand,
   ListPublishingDestinationsCommand,
 } from '@aws-sdk/client-guardduty';
+import { ListAWSServiceAccessForOrganizationCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
 import { createLogger, executeApi, getCredentials } from 'aws-lza';
 import path from 'node:path';
 import { assertStateTableEntry } from '../../framework/state-table-assertion';
@@ -49,9 +51,13 @@ const ASSERTION_REGISTRY: Record<string, AssertionFn> = {
   exportDestinationConfigured: assertExportDestination,
   regionIgnored: assertRegionIgnored,
   protectionsEnabled: assertProtectionsEnabled,
+  malwareProtectionTrustedAccess: assertMalwareProtectionTrustedAccess,
+  memberBoundary: assertMemberBoundary,
 };
 
 const LOG_PREFIX = 'GuardDutyAssertions';
+
+const GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL = 'malware-protection.guardduty.amazonaws.com';
 
 /**
  * Create a GuardDutyClient with management account credentials.
@@ -571,6 +577,185 @@ async function assertProtectionsEnabled(
         name: 'protectionsEnabled',
         passed: false,
         message: `Failed to get detector for protections check: ${msg}`,
+      },
+    ];
+  }
+}
+
+/**
+ * Assert AWS Organizations trusted access is enabled for GuardDuty Malware Protection.
+ *
+ * EBS Malware Protection requires the management account to enable trusted access for
+ * malware-protection.guardduty.amazonaws.com. The module establishes this prerequisite
+ * (ensureOrganizationsTrustedAccess) before regional EC2 Protection configuration. This
+ * verifies the principal is present in ListAWSServiceAccessForOrganization.
+ */
+async function assertMalwareProtectionTrustedAccess(
+  _manifest: TestManifest,
+  environment: ResolvedEnvironment,
+): Promise<AssertionResult[]> {
+  const name = 'malwareProtectionTrustedAccess';
+  try {
+    const client = new OrganizationsClient({
+      region: environment.region,
+      credentials: environment.managementAccountCredentials
+        ? {
+            accessKeyId: environment.managementAccountCredentials.accessKeyId,
+            secretAccessKey: environment.managementAccountCredentials.secretAccessKey,
+            sessionToken: environment.managementAccountCredentials.sessionToken,
+          }
+        : undefined,
+    });
+
+    let nextToken: string | undefined;
+    let enabled = false;
+    do {
+      const response = await executeApi(
+        'ListAWSServiceAccessForOrganizationCommand',
+        nextToken ? { NextToken: nextToken } : {},
+        () => client.send(new ListAWSServiceAccessForOrganizationCommand(nextToken ? { NextToken: nextToken } : {})),
+        logger,
+        LOG_PREFIX,
+      );
+      if (
+        (response.EnabledServicePrincipals ?? []).some(
+          service => service.ServicePrincipal === GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL,
+        )
+      ) {
+        enabled = true;
+        break;
+      }
+      nextToken = response.NextToken;
+    } while (nextToken);
+
+    return [
+      {
+        name,
+        passed: enabled,
+        actual: enabled ? 'ENABLED' : 'NOT_ENABLED',
+        expected: 'ENABLED',
+        message: enabled
+          ? `Organizations trusted access enabled for ${GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL}`
+          : `Organizations trusted access NOT enabled for ${GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL}`,
+      },
+    ];
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return [{ name, passed: false, message: `Failed to verify malware-protection trusted access: ${msg}` }];
+  }
+}
+
+/**
+ * Assert GuardDuty membership is scoped to the deploymentTargets account boundary.
+ *
+ * This is the assertion that guards against the deploymentTargets regression: members
+ * enrolled under the delegated admin must be exactly the resolved boundary set, and
+ * accounts outside the boundary must NOT be members.
+ *
+ * expectedAssertions.memberBoundary shape (all values are logical account names):
+ *   {
+ *     "members": ["Management", "Network"],   // accounts that MUST be enrolled members
+ *     "excluded": ["LogArchive", "..."]        // accounts that MUST NOT be members
+ *   }
+ * Both keys are optional; provide whichever the manifest wants to enforce. The delegated
+ * admin account is never a member of itself and should not be listed under `members`.
+ */
+async function assertMemberBoundary(
+  manifest: TestManifest,
+  environment: ResolvedEnvironment,
+): Promise<AssertionResult[]> {
+  const expected = manifest.expectedAssertions['memberBoundary'] as {
+    members?: string[];
+    excluded?: string[];
+  };
+
+  const resolveIds = (names: string[] | undefined): { name: string; id: string }[] =>
+    (names ?? []).map(name => {
+      const id = environment.accounts.get(name);
+      if (!id) {
+        throw new Error(
+          `memberBoundary: cannot resolve account "${name}". ` +
+            `Available accounts: ${[...environment.accounts.keys()].join(', ')}`,
+        );
+      }
+      return { name, id };
+    });
+
+  try {
+    const client = await createDelegatedAdminGuardDutyClient(manifest, environment);
+    const detectorId = await getDetectorId(client);
+
+    if (!detectorId) {
+      return [
+        {
+          name: 'memberBoundary',
+          passed: false,
+          message: 'No detector found on delegated admin account — cannot verify member boundary',
+        },
+      ];
+    }
+
+    // Collect the full set of enrolled member account IDs (paginated).
+    const memberIds = new Set<string>();
+    let nextToken: string | undefined;
+    do {
+      const response = await executeApi(
+        'ListMembersCommand',
+        { DetectorId: detectorId, OnlyAssociated: 'false' },
+        () =>
+          client.send(
+            new ListMembersCommand({ DetectorId: detectorId, OnlyAssociated: 'false', NextToken: nextToken }),
+          ),
+        logger,
+        LOG_PREFIX,
+      );
+      for (const member of response.Members ?? []) {
+        if (member.AccountId) {
+          memberIds.add(member.AccountId);
+        }
+      }
+      nextToken = response.NextToken;
+    } while (nextToken);
+
+    const results: AssertionResult[] = [];
+    const actualDisplay = [...memberIds].join(', ') || 'none';
+
+    // Each expected member must be present.
+    for (const { name, id } of resolveIds(expected.members)) {
+      const present = memberIds.has(id);
+      results.push({
+        name: `memberBoundary:member:${name}`,
+        passed: present,
+        actual: actualDisplay,
+        expected: `${id} present`,
+        message: present
+          ? `In-boundary account ${name} (${id}) is an enrolled member`
+          : `In-boundary account ${name} (${id}) is NOT an enrolled member`,
+      });
+    }
+
+    // Each excluded account must be absent.
+    for (const { name, id } of resolveIds(expected.excluded)) {
+      const absent = !memberIds.has(id);
+      results.push({
+        name: `memberBoundary:excluded:${name}`,
+        passed: absent,
+        actual: actualDisplay,
+        expected: `${id} absent`,
+        message: absent
+          ? `Out-of-boundary account ${name} (${id}) is correctly NOT a member`
+          : `Out-of-boundary account ${name} (${id}) is unexpectedly enrolled as a member`,
+      });
+    }
+
+    return results;
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return [
+      {
+        name: 'memberBoundary',
+        passed: false,
+        message: `Failed to verify member boundary: ${msg}`,
       },
     ];
   }

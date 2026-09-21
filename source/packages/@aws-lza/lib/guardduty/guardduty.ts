@@ -29,7 +29,7 @@
  * - Comprehensive response tracking and reporting
  */
 
-import { AccountDetail, GuardDutyClient } from '@aws-sdk/client-guardduty';
+import { AccountDetail, GuardDutyClient, OrgFeatureStatus } from '@aws-sdk/client-guardduty';
 import { Account, OrganizationsClient } from '@aws-sdk/client-organizations';
 import path from 'node:path';
 import {
@@ -62,6 +62,7 @@ import {
 } from '../common/security/security-service-response-builder';
 import { scopeActionsToResource } from '../common/module-session-policies';
 import { getCredentials } from '../common/sts-functions';
+import { ensureOrganizationsTrustedAccess } from '../common/organizations-functions';
 import { MODULE_EXCEPTIONS, SecurityModuleOperationAction, SecurityModuleOperationType } from '../common/types';
 import { setRetryStrategy } from '../common/utility';
 import { FindingsExportConfiguration } from './findings-export-configuration';
@@ -90,6 +91,7 @@ const logger = createLogger([path.parse(path.basename(__filename)).name]);
  * GuardDuty service name constant used for Organizations API calls
  */
 const GUARDDUTY_SERVICE_NAME = 'guardduty.amazonaws.com';
+const GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL = 'malware-protection.guardduty.amazonaws.com';
 
 /**
  * GuardDuty detector configuration data
@@ -241,6 +243,29 @@ export async function configureGuardDuty(
       logPrefix,
       logger,
     );
+
+    // EBS Malware Protection requires Organizations trusted access. This is a global management-account
+    // prerequisite, so confirm it once before regional GuardDuty operations fan out. Do not enable it when
+    // EC2 Protection is disabled or excluded from every region the module will configure.
+    const ec2Protection = props.configuration.protectionsConfiguration?.ec2Protection;
+    const ec2ProtectionEnabledInAnyRegion =
+      ec2Protection?.enable === true &&
+      context.enabledRegions.some(region => !ec2Protection.excludedRegions?.includes(region));
+
+    if (ec2ProtectionEnabledInAnyRegion) {
+      await ensureOrganizationsTrustedAccess(
+        organizationsClient,
+        GUARDDUTY_MALWARE_PROTECTION_SERVICE_PRINCIPAL,
+        dryRun,
+        logPrefix,
+      );
+    }
+    // Trusted access is only ever enabled here, never disabled. This intentionally matches the legacy
+    // custom resource, which likewise never called DisableAWSServiceAccess (not on EC2 Protection removal,
+    // nor on full teardown). Leaving trusted access in place when EC2 Protection is later disabled is the
+    // safer choice: it is a harmless org-level grant, other tooling may rely on it, and disabling it could
+    // disrupt an unrelated malware-protection consumer. Hence the module policy grants only
+    // ListAWSServiceAccessForOrganization and EnableAWSServiceAccess.
 
     // Pass response collection array through props
     const propsWithResponses = { ...props, collectedResponses };
@@ -448,10 +473,21 @@ export const guardDutyAccountSetup: AccountSetupHandler<IGuardDutyModuleRequest>
  * @param excludeAccountId - Account ID to exclude from the list
  * @returns Array of AccountDetail objects for GuardDuty API calls
  */
-function toAccountDetails(accounts: Account[], excludeAccountId: string): AccountDetail[] {
+function toAccountDetails(
+  accounts: Account[],
+  excludeAccountId: string,
+  boundaryAccountIds?: string[],
+): AccountDetail[] {
+  // When boundaryAccountIds is provided and non-empty, restrict the result to those accounts
+  // (the resolved deploymentTargets allow-list). Undefined or empty means no account boundary —
+  // all accounts are in scope.
+  const hasBoundary = boundaryAccountIds !== undefined && boundaryAccountIds.length > 0;
+  const boundarySet = hasBoundary ? new Set(boundaryAccountIds) : undefined;
+
   return accounts
     .filter(
-      (acc): acc is Account & { Id: string; Email: string } => acc.Id !== excludeAccountId && !!acc.Id && !!acc.Email,
+      (acc): acc is Account & { Id: string; Email: string } =>
+        acc.Id !== excludeAccountId && !!acc.Id && !!acc.Email && (!boundarySet || boundarySet.has(acc.Id)),
     )
     .map(acc => ({
       AccountId: acc.Id,
@@ -683,9 +719,39 @@ async function enableService(
 
   // Process Delegated Admin Account
   if (targetAccount.Id === props.configuration.delegatedAdminAccountId) {
-    const enableAccounts = toAccountDetails(organizationAccounts, targetAccount.Id);
-    // For disable, we pass an empty array since we're in the enable flow
-    const disableAccounts: AccountDetail[] = [];
+    // Account boundary resolved from deploymentTargets (management + delegated admin always included by
+    // the accelerator). Undefined/empty = no boundary → all organization accounts are members.
+    const boundaryAccountIds = props.configuration.boundary?.accounts;
+
+    // Members LZA should enroll = organization accounts (minus the admin itself) scoped to the boundary.
+    const enableAccounts = toAccountDetails(organizationAccounts, targetAccount.Id, boundaryAccountIds);
+
+    let disableAccounts: AccountDetail[] = [];
+    if (boundaryAccountIds !== undefined && boundaryAccountIds.length > 0) {
+      const enableIds = new Set(enableAccounts.map(account => account.AccountId));
+      disableAccounts = toAccountDetails(organizationAccounts, targetAccount.Id).filter(
+        // Never prune the management account. The accelerator always includes it in the boundary
+        // (management and delegated admin are always in scope), but guard here so a non-accelerator
+        // caller passing a boundary that omits it can never disassociate/delete the management account.
+        // The delegated admin is already excluded via toAccountDetails(excludeAccountId=targetAccount.Id).
+        account => !enableIds.has(account.AccountId) && account.AccountId !== managementAccountId,
+      );
+
+      // Fail fast on a contradictory combination before any mutating API call — but ONLY when the boundary
+      // would actually prune something (disableAccounts non-empty). A boundary that already covers the whole
+      // organization (e.g. deploymentTargets targeting the Root OU) prunes nothing, so autoEnableOrgMembers=
+      // ALL/NEW is not contradictory there and must keep working: Root-OU targets are exempt from the
+      // accelerator validator's NONE requirement and default to ALL. When the boundary IS a proper subset,
+      // autoEnableOrgMembers=ALL would auto-re-enroll pruned accounts and GuardDuty rejects DisassociateMembers
+      // for org members under ALL, so the prune would throw mid-run after CreateMembers already landed.
+      if (disableAccounts.length > 0 && props.configuration.autoEnableOrgMembers !== OrgFeatureStatus.NONE) {
+        throw new Error(
+          `${MODULE_EXCEPTIONS.INVALID_INPUT}: boundary.accounts (deploymentTargets) that excludes organization ` +
+            `accounts requires autoEnableOrgMembers=NONE, but got ${props.configuration.autoEnableOrgMembers}. ` +
+            `Pruning out-of-boundary members is incompatible with auto-enrolling all organization members.`,
+        );
+      }
+    }
 
     await GuardDutyMembers.enable(
       client,
@@ -723,9 +789,8 @@ async function enableService(
 
     response.delegatedAdmin = {
       adminAccountId: targetAccount.Id,
-      memberAccountIds: organizationAccounts
-        .map(acc => acc.Id)
-        .filter((id): id is string => id !== targetAccount.Id && !!id),
+      // Report the accounts actually enrolled as members (boundary-scoped), not the full organization.
+      memberAccountIds: enableAccounts.map(account => account.AccountId).filter((id): id is string => !!id),
     };
 
     response.detector = {

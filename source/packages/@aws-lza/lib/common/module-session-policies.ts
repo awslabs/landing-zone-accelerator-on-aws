@@ -247,6 +247,11 @@ const GUARDDUTY = createModulePolicy('guardduty', [
   // See: https://docs.aws.amazon.com/guardduty/latest/ug/troubleshooting-guardduty-malware-protection-issues.html
   'iam:CreateServiceLinkedRole',
   'iam:GetRole',
+  // EBS Malware Protection requires AWS Organizations trusted access for
+  // malware-protection.guardduty.amazonaws.com. ensureOrganizationsTrustedAccess lists the enabled
+  // service principals and enables trusted access when missing (management account, before regional ops).
+  'organizations:ListAWSServiceAccessForOrganization',
+  'organizations:EnableAWSServiceAccess',
 ]);
 
 const CONFIG_RULE_TAGGING = createModulePolicy('config-rule-tagging', [

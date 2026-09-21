@@ -127,7 +127,14 @@ export interface IGuardDutyConfiguration extends ISecurityBaseConfig {
   readonly enableKeepMalwareSnapshots?: boolean;
   /** Optional regional filtering configuration */
   readonly regionFilters?: IModuleRegionFilters;
-  /** Optional boundary configuration for operation scope */
+  /**
+   * Optional boundary configuration for operation scope.
+   *
+   * When `boundary.accounts` is non-empty, member enrollment is scoped to those accounts and
+   * out-of-boundary accounts are pruned (disassociated/removed). This REQUIRES
+   * `autoEnableOrgMembers: NONE` — combining an account boundary with `NEW`/`ALL` is contradictory
+   * (GuardDuty would auto-enroll pruned accounts and reject the disassociation) and the module throws.
+   */
   readonly boundary?: IModuleBoundary;
   /** Concurrency settings for batch operations */
   readonly batchOperationSettings: IRequiredBatchOperationSettings;

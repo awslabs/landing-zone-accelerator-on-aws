@@ -36,6 +36,8 @@ import {
   AWSOrganizationsNotInUseException,
   DeregisterDelegatedAdministratorCommand,
   DescribeOrganizationCommand,
+  EnableAWSServiceAccessCommand,
+  ListAWSServiceAccessForOrganizationCommand,
   ListDelegatedAdministratorsCommand,
   Organization,
   OrganizationsClient,
@@ -46,7 +48,7 @@ import { queryDynamoDBTable } from './dynamodb-table-functions';
 import { IModuleOrganizationsDataSource } from './interfaces';
 import { createLogger } from './logger';
 import { MODULE_EXCEPTIONS, SdkClientPropsType } from './types';
-import { executeApi, setRetryStrategy } from './utility';
+import { executeApi, setRetryStrategy, waitUntil } from './utility';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
@@ -353,6 +355,82 @@ export async function getOrganizationAccountsFromSourceTable(options: {
 
   logger.info(`Retrieved ${accounts.length} accounts from source table`, options.logPrefix);
   return accounts;
+}
+
+/**
+ * Ensures AWS Organizations trusted access is enabled for a service principal.
+ *
+ * Trusted access is an Organizations-global prerequisite for services that perform
+ * organization-level configuration. The caller must provide management-account
+ * credentials and invoke this helper before dependent service operations begin.
+ *
+ * @param client - Organizations client using management-account credentials
+ * @param servicePrincipal - AWS service principal to enable (for example, `service.amazonaws.com`)
+ * @param dryRun - Whether to log the enable operation without making changes
+ * @param logPrefix - Prefix for logging messages
+ * @returns Promise that resolves after trusted access is confirmed enabled
+ * @throws Error when trusted access cannot be confirmed after enablement, or when an underlying
+ * Organizations API call fails
+ */
+export async function ensureOrganizationsTrustedAccess(
+  client: OrganizationsClient,
+  servicePrincipal: string,
+  dryRun: boolean,
+  logPrefix: string,
+): Promise<void> {
+  const listServiceAccess = async (): Promise<boolean> => {
+    let nextToken: string | undefined;
+
+    do {
+      const commandName = 'ListAWSServiceAccessForOrganizationCommand';
+      const parameters = nextToken ? { NextToken: nextToken } : {};
+      const response = await executeApi(
+        commandName,
+        parameters,
+        () => client.send(new ListAWSServiceAccessForOrganizationCommand(parameters)),
+        logger,
+        logPrefix,
+      );
+
+      if ((response.EnabledServicePrincipals ?? []).some(service => service.ServicePrincipal === servicePrincipal)) {
+        return true;
+      }
+
+      nextToken = response.NextToken;
+    } while (nextToken);
+
+    return false;
+  };
+
+  if (await listServiceAccess()) {
+    logger.info(`Organizations trusted access is already enabled for ${servicePrincipal}`, logPrefix);
+    return;
+  }
+
+  const commandName = 'EnableAWSServiceAccessCommand';
+  const parameters = { ServicePrincipal: servicePrincipal };
+
+  if (dryRun) {
+    logger.dryRun(commandName, parameters, logPrefix);
+    return;
+  }
+
+  await executeApi(
+    commandName,
+    parameters,
+    () => client.send(new EnableAWSServiceAccessCommand(parameters)),
+    logger,
+    logPrefix,
+  );
+
+  await waitUntil(
+    listServiceAccess,
+    `Organizations trusted access for ${servicePrincipal} did not settle after enablement`,
+    logger,
+    logPrefix,
+  );
+
+  logger.info(`Organizations trusted access enabled and confirmed for ${servicePrincipal}`, logPrefix);
 }
 
 /**

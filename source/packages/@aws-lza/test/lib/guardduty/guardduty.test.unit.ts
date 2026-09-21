@@ -44,6 +44,10 @@ vi.mock('../../../lib/common/sts-functions', () => ({
   getCredentials: vi.fn(),
 }));
 
+vi.mock('../../../lib/common/organizations-functions', () => ({
+  ensureOrganizationsTrustedAccess: vi.fn(),
+}));
+
 vi.mock('../../../lib/common/security/delegated-admin-manager', () => ({
   DelegatedAdminManager: vi.fn().mockImplementation(function () {
     return {
@@ -116,6 +120,7 @@ vi.mock('@aws-sdk/client-organizations', () => ({
 }));
 
 vi.mock('@aws-sdk/client-guardduty', () => ({
+  OrgFeatureStatus: { NEW: 'NEW', ALL: 'ALL', NONE: 'NONE' },
   GuardDutyClient: vi.fn(),
 }));
 
@@ -130,6 +135,7 @@ import { SecurityServiceContextBuilder } from '../../../lib/common/security/secu
 import { MODULE_SESSION_POLICIES } from '../../../lib/common/module-session-policies';
 import { SecurityServiceModuleResponseBuilder } from '../../../lib/common/security/security-service-module-response-builder';
 import { getCredentials } from '../../../lib/common/sts-functions';
+import { ensureOrganizationsTrustedAccess } from '../../../lib/common/organizations-functions';
 import { MODULE_STATE_CODE, SecurityModuleOperationAction } from '../../../lib/common/types';
 import { FindingsExportConfiguration } from '../../../lib/guardduty/findings-export-configuration';
 import { createDetector, getDetectorId, getOrganizationAdminAccountId } from '../../../lib/guardduty/functions';
@@ -281,6 +287,7 @@ describe('configureGuardDuty', () => {
     (processEnableOperations as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     (processDisableOperations as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     (manageOrganizationsApiDelegatedAdmin as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (ensureOrganizationsTrustedAccess as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (getCredentials as ReturnType<typeof vi.fn>).mockResolvedValue(mockCredentials);
     (getOrganizationAdminAccountId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     (getDetectorId as ReturnType<typeof vi.fn>).mockResolvedValue('detector-123');
@@ -329,6 +336,69 @@ describe('configureGuardDuty', () => {
         .invocationCallOrder[0];
       const enableOpsCallOrder = (processEnableOperations as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
       expect(orgApiCallOrder).toBeLessThan(enableOpsCallOrder);
+    });
+
+    it('should ensure Malware Protection trusted access before regional operations when EC2 Protection is enabled', async () => {
+      await configureGuardDuty(baseRequest);
+
+      expect(ensureOrganizationsTrustedAccess).toHaveBeenCalledWith(
+        expect.any(Object),
+        'malware-protection.guardduty.amazonaws.com',
+        false,
+        '123456789012:us-east-1',
+      );
+
+      const trustedAccessCallOrder = (ensureOrganizationsTrustedAccess as ReturnType<typeof vi.fn>).mock
+        .invocationCallOrder[0];
+      const enableOpsCallOrder = (processEnableOperations as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
+      expect(trustedAccessCallOrder).toBeLessThan(enableOpsCallOrder);
+    });
+
+    it('should not ensure trusted access when EC2 Protection is disabled', async () => {
+      const request = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          protectionsConfiguration: {
+            ...baseRequest.configuration.protectionsConfiguration!,
+            ec2Protection: { enable: false, keepSnapshots: false },
+          },
+        },
+      };
+
+      await configureGuardDuty(request);
+
+      expect(ensureOrganizationsTrustedAccess).not.toHaveBeenCalled();
+    });
+
+    it('should not ensure trusted access when EC2 Protection is excluded from every enabled region', async () => {
+      const request = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          protectionsConfiguration: {
+            ...baseRequest.configuration.protectionsConfiguration!,
+            ec2Protection: { enable: true, keepSnapshots: false, excludedRegions: ['us-east-1'] },
+          },
+        },
+      };
+
+      await configureGuardDuty(request);
+
+      expect(ensureOrganizationsTrustedAccess).not.toHaveBeenCalled();
+    });
+
+    it('should stop before regional operations when trusted access cannot be confirmed', async () => {
+      (ensureOrganizationsTrustedAccess as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+        new Error('Trusted access did not settle'),
+      );
+
+      const result = await configureGuardDuty(baseRequest);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.FAILED);
+      expect(result.error?.message).toBe('Trusted access did not settle');
+      expect(processEnableOperations).not.toHaveBeenCalled();
+      expect(processDisableOperations).not.toHaveBeenCalled();
     });
 
     it('should handle dry run mode', async () => {
@@ -957,6 +1027,232 @@ describe('Handler Functions', () => {
       );
 
       // enableDelegatedAdminAccount should detect the mismatch and disable the old admin
+    });
+  });
+
+  describe('guardDutyEnableHandler deploymentTargets account boundary', () => {
+    // Organization accounts WITH emails so toAccountDetails produces AccountDetail entries.
+    // (The shared mockOrganizationAccounts intentionally omit Email.)
+    const MGMT = '123456789012';
+    const DELEGATED_ADMIN = '111111111111';
+    const WORKLOAD_1 = '222222222222';
+    const WORKLOAD_2 = '333333333333';
+    const orgAccountsWithEmail: Account[] = [
+      { Id: MGMT, Name: 'Management', Email: 'management@example.com' },
+      { Id: DELEGATED_ADMIN, Name: 'DelegatedAdmin', Email: 'delegated-admin@example.com' },
+      { Id: WORKLOAD_1, Name: 'Workload1', Email: 'workload1@example.com' },
+      { Id: WORKLOAD_2, Name: 'Workload2', Email: 'workload2@example.com' },
+    ];
+    const delegatedAdminAccount = orgAccountsWithEmail[1];
+
+    const getEnableCallArgs = () => {
+      const call = (GuardDutyMembers.enable as ReturnType<typeof vi.fn>).mock.calls[0];
+      return {
+        enableAccounts: call[1] as { AccountId: string; Email: string }[],
+        disableAccounts: call[2] as { AccountId: string; Email: string }[],
+      };
+    };
+
+    it('enables only boundary accounts and prunes out-of-boundary accounts when boundary is set', async () => {
+      // Boundary limits scope to management + delegated admin + workload 1 (workload 2 is out of scope).
+      const requestWithBoundary = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'NONE' as OrgFeatureStatus,
+          boundary: { accounts: [MGMT, DELEGATED_ADMIN, WORKLOAD_1] },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestWithBoundary,
+        orgAccountsWithEmail,
+      );
+
+      expect(GuardDutyMembers.enable).toHaveBeenCalledTimes(1);
+      const { enableAccounts, disableAccounts } = getEnableCallArgs();
+
+      // enableAccounts = boundary minus the delegated admin itself → management + workload 1.
+      expect(enableAccounts.map(a => a.AccountId).sort()).toEqual([MGMT, WORKLOAD_1].sort());
+
+      // disableAccounts = org (minus admin) − boundary → only the out-of-boundary workload 2.
+      expect(disableAccounts.map(a => a.AccountId)).toEqual([WORKLOAD_2]);
+    });
+
+    it('never places the management account in disableAccounts even if boundary omits it', async () => {
+      // Boundary omits the management account entirely (non-accelerator style caller).
+      const requestWithBoundary = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'NONE' as OrgFeatureStatus,
+          boundary: { accounts: [DELEGATED_ADMIN, WORKLOAD_1] },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestWithBoundary,
+        orgAccountsWithEmail,
+      );
+
+      const { enableAccounts, disableAccounts } = getEnableCallArgs();
+      const disableIds = disableAccounts.map(a => a.AccountId);
+
+      // Management account must never be pruned, and delegated admin is never a member of itself.
+      expect(disableIds).not.toContain(MGMT);
+      expect(disableIds).not.toContain(DELEGATED_ADMIN);
+      // Out-of-boundary workload 2 is still pruned.
+      expect(disableIds).toEqual([WORKLOAD_2]);
+      // enableAccounts scoped to the boundary (minus admin) → only workload 1.
+      expect(enableAccounts.map(a => a.AccountId)).toEqual([WORKLOAD_1]);
+    });
+
+    it('throws before any mutating call when a SUBSET boundary is combined with autoEnableOrgMembers != NONE', async () => {
+      const requestWithBoundaryAndAll = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'ALL' as OrgFeatureStatus,
+          // Proper subset: WORKLOAD_2 is out of boundary → prune non-empty → contradictory with ALL.
+          boundary: { accounts: [MGMT, DELEGATED_ADMIN, WORKLOAD_1] },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await expect(
+        guardDutyEnableHandler(
+          MGMT,
+          delegatedAdminAccount,
+          'us-east-1',
+          false,
+          'test',
+          requestWithBoundaryAndAll,
+          orgAccountsWithEmail,
+        ),
+      ).rejects.toThrow('requires autoEnableOrgMembers=NONE');
+
+      // Must fail fast before enrolling/pruning any members.
+      expect(GuardDutyMembers.enable).not.toHaveBeenCalled();
+    });
+
+    it('does NOT throw for a full-organization boundary with autoEnableOrgMembers=ALL (Root-OU case)', async () => {
+      const requestFullOrgBoundaryAll = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'ALL' as OrgFeatureStatus,
+          // Boundary covers every org account (e.g. deploymentTargets: Root OU) → nothing to prune,
+          // so ALL is not contradictory and the module must not reject this (pre-MR behavior preserved).
+          boundary: { accounts: [MGMT, DELEGATED_ADMIN, WORKLOAD_1, WORKLOAD_2] },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestFullOrgBoundaryAll,
+        orgAccountsWithEmail,
+      );
+
+      // No prune, no throw — enrollment proceeds normally.
+      expect(GuardDutyMembers.enable).toHaveBeenCalledTimes(1);
+      const { enableAccounts, disableAccounts } = getEnableCallArgs();
+      expect(enableAccounts.map(a => a.AccountId).sort()).toEqual([MGMT, WORKLOAD_1, WORKLOAD_2].sort());
+      expect(disableAccounts).toEqual([]);
+    });
+
+    it('enables all organization accounts and prunes nothing when no boundary is set', async () => {
+      const requestNoBoundary = {
+        ...baseRequest,
+        configuration: { ...baseRequest.configuration, boundary: undefined },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestNoBoundary,
+        orgAccountsWithEmail,
+      );
+
+      const { enableAccounts, disableAccounts } = getEnableCallArgs();
+
+      // No boundary → all org accounts minus the delegated admin are enabled.
+      expect(enableAccounts.map(a => a.AccountId).sort()).toEqual([MGMT, WORKLOAD_1, WORKLOAD_2].sort());
+      // No prune when there is no boundary.
+      expect(disableAccounts).toEqual([]);
+    });
+
+    it('prunes nothing when boundary is set but empty (empty = no boundary)', async () => {
+      const requestEmptyBoundary = {
+        ...baseRequest,
+        configuration: { ...baseRequest.configuration, boundary: { accounts: [] } },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestEmptyBoundary,
+        orgAccountsWithEmail,
+      );
+
+      const { enableAccounts, disableAccounts } = getEnableCallArgs();
+
+      // Empty boundary is treated as "no boundary": enable all org accounts minus admin, prune nothing.
+      expect(enableAccounts.map(a => a.AccountId).sort()).toEqual([MGMT, WORKLOAD_1, WORKLOAD_2].sort());
+      expect(disableAccounts).toEqual([]);
+    });
+
+    it('reports boundary-scoped memberAccountIds in the collected response', async () => {
+      const requestWithBoundary = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'NONE' as OrgFeatureStatus,
+          boundary: { accounts: [MGMT, DELEGATED_ADMIN, WORKLOAD_1] },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestWithBoundary,
+        orgAccountsWithEmail,
+      );
+
+      const collected = requestWithBoundary.collectedResponses[0] as unknown as {
+        response: { delegatedAdmin?: { adminAccountId?: string; memberAccountIds?: string[] } };
+      };
+      expect(collected.response.delegatedAdmin?.adminAccountId).toBe(DELEGATED_ADMIN);
+      // memberAccountIds reflects the boundary-scoped enrolled set, not the full organization.
+      expect(collected.response.delegatedAdmin?.memberAccountIds?.slice().sort()).toEqual([MGMT, WORKLOAD_1].sort());
     });
   });
 
