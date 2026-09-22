@@ -80,6 +80,11 @@ class IsofOverrides implements cdk.IAspect {
  */
 class IsobOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_ec2.CfnFlowLog) {
+      // MaxAggregationInterval is not supported on AWS::EC2::FlowLog in this partition.
+      // LogFormat and Tags are supported and intentionally left to flow through (issue #4997).
+      node.addPropertyDeletionOverride('MaxAggregationInterval');
+    }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('Tags');
     }
@@ -109,6 +114,11 @@ class IsobOverrides implements cdk.IAspect {
  */
 class IsoOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_ec2.CfnFlowLog) {
+      // MaxAggregationInterval is not supported on AWS::EC2::FlowLog in this partition.
+      // LogFormat and Tags are supported and intentionally left to flow through (issue #4997).
+      node.addPropertyDeletionOverride('MaxAggregationInterval');
+    }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('Tags');
     }

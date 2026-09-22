@@ -508,7 +508,7 @@ describe('AcceleratorAspects', () => {
   describe('IsoOverrides', () => {
     describe('IsoOverrides', () => {
       const partition = 'aws-iso';
-      test('should preserve custom format properties on EC2 FlowLog', () => {
+      test('should preserve custom format properties but strip MaxAggregationInterval on EC2 FlowLog', () => {
         // GIVEN a flow log configured with a custom LogFormat, MaxAggregationInterval, and Tags
         const vpc = new cdk.aws_ec2.Vpc(stack, 'TestVpc');
         new cdk.aws_ec2.CfnFlowLog(stack, 'TestFlowLog', {
@@ -524,12 +524,13 @@ describe('AcceleratorAspects', () => {
         // WHEN
         new AcceleratorAspects(stack, partition, false);
 
-        // THEN the ADC override no longer strips these properties (issue #4997)
+        // THEN LogFormat and Tags flow through (issue #4997), but MaxAggregationInterval
+        // is stripped because the property is not supported in this partition
         template = Template.fromStack(stack);
         template.hasResourceProperties('AWS::EC2::FlowLog', {
           LogFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
-          MaxAggregationInterval: 60,
           Tags: Match.arrayWith([{ Key: 'Name', Value: 'test-flow-log' }]),
+          MaxAggregationInterval: Match.absent(),
         });
       });
 
@@ -623,7 +624,7 @@ describe('AcceleratorAspects', () => {
 
     describe('IsobOverrides', () => {
       const partition = 'aws-iso-b';
-      test('should preserve custom format properties on EC2 FlowLog', () => {
+      test('should preserve custom format properties but strip MaxAggregationInterval on EC2 FlowLog', () => {
         // GIVEN a flow log configured with a custom LogFormat, MaxAggregationInterval, and Tags
         const vpc = new cdk.aws_ec2.Vpc(stack, 'TestVpc');
         new cdk.aws_ec2.CfnFlowLog(stack, 'TestFlowLog', {
@@ -639,12 +640,13 @@ describe('AcceleratorAspects', () => {
         // WHEN
         new AcceleratorAspects(stack, partition, false);
 
-        // THEN the ADC override no longer strips these properties (issue #4997)
+        // THEN LogFormat and Tags flow through (issue #4997), but MaxAggregationInterval
+        // is stripped because the property is not supported in this partition
         template = Template.fromStack(stack);
         template.hasResourceProperties('AWS::EC2::FlowLog', {
           LogFormat: '${version} ${account-id} ${srcaddr} ${dstaddr}',
-          MaxAggregationInterval: 60,
           Tags: Match.arrayWith([{ Key: 'Name', Value: 'test-flow-log' }]),
+          MaxAggregationInterval: Match.absent(),
         });
       });
 
