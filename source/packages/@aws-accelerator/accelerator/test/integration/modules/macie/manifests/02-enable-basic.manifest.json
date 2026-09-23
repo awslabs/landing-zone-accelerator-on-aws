@@ -1,6 +1,6 @@
 {
     "name": "enable-basic",
-    "description": "Enable Macie with default settings — baseline enable, no scope exclusions (inventory needs time to populate)",
+    "description": "Enable Macie with default settings — baseline enable, no scope exclusions (inventory needs time to populate); automatedDiscoveryEnabled omitted, so it must default to false (opt-in)",
     "order": 2,
     "moduleConfig": {
         "enable": true,
@@ -27,7 +27,7 @@
         "findingsPublishingConfigured": true,
         "publishingFrequency": "FIFTEEN_MINUTES",
         "regionIgnored": "eu-west-1",
-        "automatedDiscoveryEnabled": true
+        "automatedDiscoveryEnabled": false
     },
     "skipCleanup": true
 }

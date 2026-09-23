@@ -503,9 +503,9 @@ export interface IMacieConfig {
    * @description
    * When true, automated discovery continuously samples and analyzes S3 objects across
    * member accounts to detect sensitive data without requiring manual job creation.
-   * When false, explicitly disables automated discovery.
+   * When false, explicitly disables automated discovery. This is opt-in.
    *
-   * @default true
+   * @default false
    */
   readonly automatedDiscoveryEnabled?: boolean;
   /**

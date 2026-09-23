@@ -287,7 +287,7 @@ export abstract class AmazonMacie {
         bucketName: params.moduleRunnerParameters.logging.bucketName!,
         kmsKeyArn: params.moduleRunnerParameters.logging.bucketKeyArn!,
       },
-      automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? true,
+      automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? false,
       classificationScopeExcludedBuckets: macieConfig.classificationScopeExcludedBuckets ?? [],
       ...securityMetadata,
     };
@@ -343,7 +343,7 @@ export abstract class AmazonMacie {
           kmsKeyArn: params.moduleRunnerParameters.logging.bucketKeyArn!,
           keyPrefix: 'macie',
         },
-        automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? true,
+        automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? false,
         classificationScopeExclusion: macieConfig.classificationScopeExcludedBuckets?.length
           ? {
               buckets: macieConfig.classificationScopeExcludedBuckets.flatMap(entry =>

@@ -186,10 +186,11 @@ export class MacieConfig implements i.IMacieConfig {
    * @remarks
    * When true, automated discovery continuously samples and analyzes S3 objects across
    * member accounts to detect sensitive data without requiring manual job creation.
+   * This is opt-in: set this to `true` explicitly to enable it.
    *
-   * @defaultValue true
+   * @defaultValue false
    */
-  readonly automatedDiscoveryEnabled: boolean = true;
+  readonly automatedDiscoveryEnabled: boolean = false;
 
   /**
    * S3 buckets to exclude from automated sensitive data discovery.

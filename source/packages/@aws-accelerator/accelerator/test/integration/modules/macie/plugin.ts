@@ -83,7 +83,7 @@ export const maciePlugin: ModuleTestPlugin = {
               policyFindingsPublishingFrequency: macieConfig.policyFindingsPublishingFrequency,
               publishSensitiveDataFindings: macieConfig.publishSensitiveDataFindings,
               publishPolicyFindings: macieConfig.publishPolicyFindings,
-              automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? true,
+              automatedDiscoveryEnabled: macieConfig.automatedDiscoveryEnabled ?? false,
               classificationScopeExcludedBuckets: macieConfig.classificationScopeExcludedBuckets,
               overrideExisting: true,
             },

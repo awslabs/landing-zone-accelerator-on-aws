@@ -456,7 +456,7 @@ describe('AmazonMacie', () => {
             regions: ['us-east-1', 'us-west-2'],
           },
           dataSources: undefined,
-          automatedDiscoveryEnabled: true,
+          automatedDiscoveryEnabled: false,
           classificationScopeExclusion: undefined,
         },
       });
@@ -525,6 +525,9 @@ describe('AmazonMacie', () => {
             policyFindingsPublishingFrequency: 'FIFTEEN_MINUTES',
             publishSensitiveDataFindings: true,
             publishPolicyFindings: true,
+            // Saved state must record the opt-in default (false) when the config omits the field,
+            // matching the value actually applied — otherwise change detection would diverge.
+            automatedDiscoveryEnabled: false,
           }),
           status: MODULE_STATE_CODE.COMPLETED,
           dryRun: false,
@@ -789,7 +792,7 @@ describe('AmazonMacie', () => {
       expect(result).toBe(mockResponse);
     });
 
-    it('should default automatedDiscoveryEnabled to true when undefined', async () => {
+    it('should default automatedDiscoveryEnabled to false when undefined', async () => {
       const { configureMacie } = await import('aws-lza');
       const mockResponse = {
         status: MODULE_STATE_CODE.COMPLETED,
@@ -826,7 +829,7 @@ describe('AmazonMacie', () => {
       expect(configureMacie).toHaveBeenCalledWith(
         expect.objectContaining({
           configuration: expect.objectContaining({
-            automatedDiscoveryEnabled: true,
+            automatedDiscoveryEnabled: false,
           }),
         }),
       );

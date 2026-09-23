@@ -1270,8 +1270,8 @@
       "description": "Configuration for Amazon Macie, a data security service that discovers, classifies, and protects sensitive data.\nUse this configuration to enable Amazon Macie within your AWS Organization along with it's reporting configuration.",
       "properties": {
         "automatedDiscoveryEnabled": {
-          "default": true,
-          "description": "When true, automated discovery continuously samples and analyzes S3 objects across\nmember accounts to detect sensitive data without requiring manual job creation.\nWhen false, explicitly disables automated discovery.",
+          "default": false,
+          "description": "When true, automated discovery continuously samples and analyzes S3 objects across\nmember accounts to detect sensitive data without requiring manual job creation.\nWhen false, explicitly disables automated discovery. This is opt-in.",
           "type": "boolean"
         },
         "classificationScopeExcludedBuckets": {

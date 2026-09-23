@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(networking): look up a RAM-shared VPC's ID consumed and reconcile shared SSM parameters against live state
 - fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
+- fix(macie): default `automatedDiscoveryEnabled` to `false` so Amazon Macie automated sensitive data discovery is opt-in. It defaulted to on in the SDK Macie module across the 1.16.x releases (1.16.0 through the last 1.16.x before 1.17.0); deployments on those versions that left the field unset had discovery enabled and it will be turned off on the first pipeline run after upgrading to 1.17.0. Set `centralSecurityServices.macie.automatedDiscoveryEnabled: true` to keep it enabled (also required when `classificationScopeExcludedBuckets` is set, otherwise config validation fails). Deployments before 1.16.0 are unaffected — the earlier Macie custom resource never enabled automated discovery
 - fix(config): preserve Config rule tag ownership and exclude ignored OU accounts from tag validation
 - fix(config): preserve commas in String remediation parameters
 - fix(organizations): preserve external policy attachments, use create-only reconciliation after failed executions, and reseed ownership after success
@@ -91,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(sts): stop hardcoding the STS endpoint in the accelerator pipeline/CLI execution environment and the `@aws-lza` modules, so the AWS SDK resolves the regional endpoint natively and honors the standard `AWS_ENDPOINT_URL_STS` / `AWS_ENDPOINT_URL` and `AWS_USE_FIPS_ENDPOINT` overrides where those variables are present. This does not cover STS clients invoked inside Lambda custom resources, which do not receive these environment variables at runtime (issue #1183)
 - fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later (issue #4188)
 - fix(deps): remediate HIGH CVEs (brace-expansion, fast-uri, js-yaml, nanoid, postcss, ip-address, undici)
+
 ## [1.16.2] - 2026-08-31
 
 ### Fixed

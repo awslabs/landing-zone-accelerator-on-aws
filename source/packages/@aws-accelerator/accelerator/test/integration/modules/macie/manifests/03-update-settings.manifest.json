@@ -20,6 +20,7 @@
         "policyFindingsPublishingFrequency": "ONE_HOUR",
         "publishSensitiveDataFindings": false,
         "publishPolicyFindings": true,
+        "automatedDiscoveryEnabled": true,
         "classificationScopeExcludedBuckets": [
             {
                 "names": [
