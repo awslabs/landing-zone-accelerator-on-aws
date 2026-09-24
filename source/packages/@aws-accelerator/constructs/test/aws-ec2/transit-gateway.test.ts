@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
 import {
   TransitGatewayRouteTableAssociation,
   TransitGatewayAttachment,
@@ -20,7 +21,7 @@ import {
   TransitGatewayAttachmentType,
 } from '../../lib/aws-ec2/transit-gateway';
 import { snapShotTest } from '../snapshot-test';
-import { describe, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 const testNamePrefix = 'Construct(TransitGatewayRouteTableAssociation): ';
 
@@ -121,6 +122,98 @@ describe('TransitGatewayAttachment', () => {
       attachmentId: 'transitGatewayAttachmentId',
       attachmentName: 'name',
     });
+  });
+  it('iso partition tgw attachment emits options block', () => {
+    // Options were silently dropped for partitions other than aws / aws-us-gov (e.g. aws-iso),
+    // so applianceModeSupport never reached the attachment. This asserts they now emit.
+    const isoStack = new cdk.Stack();
+    new TransitGatewayAttachment(isoStack, 'TransitGatewayAttachmentIso', {
+      name: 'name',
+      partition: 'aws-iso',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'enable',
+        ipv6Support: 'disable',
+      },
+    });
+    const template = Template.fromStack(isoStack);
+    template.hasResourceProperties('AWS::EC2::TransitGatewayAttachment', {
+      Options: {
+        ApplianceModeSupport: 'enable',
+        DnsSupport: 'enable',
+        Ipv6Support: 'disable',
+      },
+    });
+    // SecurityGroupReferencingSupport must NOT be injected when it is not configured, since
+    // isolated partitions may not accept the property.
+    const options = Object.values(template.findResources('AWS::EC2::TransitGatewayAttachment'))[0].Properties.Options;
+    expect(options.SecurityGroupReferencingSupport).toBeUndefined();
+  });
+  it('iso partition tgw attachment emits securityGroupReferencingSupport only when configured', () => {
+    const isoStack = new cdk.Stack();
+    new TransitGatewayAttachment(isoStack, 'TransitGatewayAttachmentIsoSgRef', {
+      name: 'name',
+      partition: 'aws-iso',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        securityGroupReferencingSupport: 'enable',
+      },
+    });
+    Template.fromStack(isoStack).hasResourceProperties('AWS::EC2::TransitGatewayAttachment', {
+      Options: {
+        ApplianceModeSupport: 'enable',
+        SecurityGroupReferencingSupport: 'enable',
+      },
+    });
+  });
+  it('iso partition tgw attachment omits unset options instead of defaulting them', () => {
+    // The default-partition branch emits only options explicitly set in config; unset options
+    // are omitted rather than defaulted. This keeps the fix opt-in: a partition that does not
+    // accept a key only sees it when the deployment set it. Here applianceModeSupport/dnsSupport/
+    // ipv6Support are omitted, so only SecurityGroupReferencingSupport is rendered.
+    const isoStack = new cdk.Stack();
+    new TransitGatewayAttachment(isoStack, 'TransitGatewayAttachmentIsoPartial', {
+      name: 'name',
+      partition: 'aws-iso',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        securityGroupReferencingSupport: 'enable',
+      },
+    });
+    const template = Template.fromStack(isoStack);
+    template.hasResourceProperties('AWS::EC2::TransitGatewayAttachment', {
+      Options: {
+        SecurityGroupReferencingSupport: 'enable',
+      },
+    });
+    const options = Object.values(template.findResources('AWS::EC2::TransitGatewayAttachment'))[0].Properties.Options;
+    expect(options.ApplianceModeSupport).toBeUndefined();
+    expect(options.DnsSupport).toBeUndefined();
+    expect(options.Ipv6Support).toBeUndefined();
+  });
+  it('iso partition tgw attachment emits no options block when none are configured', () => {
+    // With no options set in config, the attachment renders no Options block at all, byte-identical
+    // to the pre-fix template. This guarantees the fix cannot alter an attachment that never opted in,
+    // in this or any future default-case partition.
+    const isoStack = new cdk.Stack();
+    new TransitGatewayAttachment(isoStack, 'TransitGatewayAttachmentIsoNoOptions', {
+      name: 'name',
+      partition: 'aws-iso',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+    });
+    const template = Template.fromStack(isoStack);
+    const properties = Object.values(template.findResources('AWS::EC2::TransitGatewayAttachment'))[0].Properties;
+    expect(properties.Options).toBeUndefined();
   });
   it('tgw attachment with security group referencing', () => {
     new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentWithSgRef', {

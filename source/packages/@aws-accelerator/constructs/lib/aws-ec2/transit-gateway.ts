@@ -379,14 +379,37 @@ export class TransitGatewayAttachment extends TransitGatewayAttachmentBase {
           tags: props.tags,
         });
         break;
-      default:
+      default: {
+        // All partitions other than `aws` and `aws-us-gov` (e.g. `aws-iso`, `aws-iso-b`,
+        // `aws-iso-e`, `aws-iso-f`, `aws-cn`, `aws-eusc`) use the generic CfnTransitGatewayAttachment.
+        // Previously the `options` block was omitted here entirely, so `applianceModeSupport`,
+        // `dnsSupport` and `ipv6Support` from config were silently dropped and the attachment
+        // was created with EC2 API defaults (ApplianceModeSupport: disable). This broke
+        // multi-AZ Network Firewall inspection VPCs, where appliance mode is required.
+        //
+        // Only options explicitly set in config are emitted, and the block is dropped entirely
+        // when none are set. This keeps the synthesized template byte-identical for deployments
+        // that do not use `options` in any partition (including future partitions that inherit
+        // this catch-all), so the fix cannot alter an attachment that never opted in. A partition
+        // that does not accept a given key rejects it by name at deploy time only for the
+        // deployment that set it, where the property can be backed out.
+        const attachmentOptions = {
+          ...(props.options?.applianceModeSupport && { ApplianceModeSupport: props.options.applianceModeSupport }),
+          ...(props.options?.dnsSupport && { DnsSupport: props.options.dnsSupport }),
+          ...(props.options?.ipv6Support && { Ipv6Support: props.options.ipv6Support }),
+          ...(props.options?.securityGroupReferencingSupport && {
+            SecurityGroupReferencingSupport: props.options.securityGroupReferencingSupport,
+          }),
+        };
         resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
           vpcId: props.vpcId,
           transitGatewayId: props.transitGatewayId,
           subnetIds: props.subnetIds,
+          options: Object.keys(attachmentOptions).length > 0 ? attachmentOptions : undefined,
           tags: props.tags,
         });
         break;
+      }
     }
     // Add name tag
     cdk.Tags.of(this).add('Name', props.name);

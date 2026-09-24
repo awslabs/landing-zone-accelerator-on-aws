@@ -200,6 +200,11 @@ exports[`ImportTransitGateway > Construct(ImportTransitGateway):  Snapshot Test 
     },
     "TransitGatewayAttachment610A3027": {
       "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
         "SubnetIds": [
           "one",
           "two",
@@ -980,6 +985,11 @@ exports[`TransitGateway > Construct(TransitGateway):  Snapshot Test 1`] = `
     },
     "TransitGatewayAttachment610A3027": {
       "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
         "SubnetIds": [
           "one",
           "two",
@@ -1760,6 +1770,11 @@ exports[`TransitGatewayAttachment > Construct(TransitGatewayAttachment):  Snapsh
     },
     "TransitGatewayAttachment610A3027": {
       "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
         "SubnetIds": [
           "one",
           "two",
@@ -2961,6 +2976,11 @@ exports[`TransitGatewayRouteTablePropagation > Construct(TransitGatewayRouteTabl
     },
     "TransitGatewayAttachment610A3027": {
       "Properties": {
+        "Options": {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
         "SubnetIds": [
           "one",
           "two",

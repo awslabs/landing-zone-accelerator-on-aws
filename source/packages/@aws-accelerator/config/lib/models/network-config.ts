@@ -1935,6 +1935,13 @@ export interface ITransitGatewayAttachmentTargetConfig {
  * @description
  * Used to specify advanced options for the VPC attachment.
  *
+ * @remarks
+ * In the `aws` and `aws-us-gov` partitions all options below are realized on the attachment.
+ * In other partitions (`aws-iso`, `aws-iso-b`, `aws-iso-e`, `aws-iso-f`, `aws-cn`, `aws-eusc`) only the
+ * options you explicitly set are emitted on the attachment, and no options block is rendered when none are
+ * set; an option a given partition does not accept is rejected at deploy time only for the deployment that
+ * set it.
+ *
  * @example
  * ```
  * applianceModeSupport: enable
