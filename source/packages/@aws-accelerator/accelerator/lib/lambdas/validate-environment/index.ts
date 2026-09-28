@@ -30,11 +30,11 @@ import {
   ListChildrenCommand,
   ListOrganizationalUnitsForParentCommand,
   ListParentsCommand,
-  ListPoliciesCommand,
   ListRootsCommand,
+  ListPoliciesForTargetCommand,
   ListTagsForResourceCommand,
   OrganizationsClient,
-  paginateListPoliciesForTarget,
+  PolicySummary,
 } from '@aws-sdk/client-organizations';
 import { throttlingBackOff } from '@aws-accelerator/utils/lib/throttle';
 import { CloudFormationCustomResourceEvent } from '@aws-accelerator/utils/lib/common-types';
@@ -42,6 +42,11 @@ import { getGlobalRegion, setRetryStrategy } from '@aws-accelerator/utils/lib/co
 import { IIpamAllocationConfig } from '@aws-accelerator/config';
 
 type scpTargetType = 'ou' | 'account';
+
+/**
+ * The only AWS managed service control policy id.
+ */
+const FULL_AWS_ACCESS_POLICY_ID = 'p-FullAWSAccess';
 
 type serviceControlPolicyType = {
   name: string;
@@ -409,13 +414,14 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       // Validate SCP count
       //
       if (skipScpValidation.toLowerCase() === 'no') {
-        await validateServiceControlPolicyCount(
+        const scpCountErrors = await validateServiceControlPolicyCount(
           organizationsClient,
           serviceControlPolicies,
           policyTagKey,
           maxOuAttachedScps,
           maxAccountAttachedScps,
         );
+        validationErrors.push(...scpCountErrors);
       } else {
         console.log('Skipping SCP count validation');
       }
@@ -454,98 +460,144 @@ function exceedsMaxScpLimit(
 }
 
 /**
- * Function to validate number of SCPs attached to ou and account does not exceed the configured limit
+ * Function to validate number of SCPs attached to ou and account does not exceed the configured limit.
+ *
+ * Performance notes (see LZA-1735): this runs inside a Lambda with a hard 15 minute ceiling against the
+ * AWS Organizations API, which is aggressively throttled. To keep call volume proportional to the number
+ * of *distinct* targets and policies rather than targets x attached policies x org policy pages:
+ *  - the attached-policy summaries returned by ListPoliciesForTarget are used directly (they already carry
+ *    Id, Name and AwsManaged), so ListPolicies over the whole organization is never called;
+ *  - ListTagsForResource results are cached per policy id for the whole invocation, since the same LZA
+ *    managed SCP is typically attached to many targets.
+ *
  * @param organizationsClient
  * @param serviceControlPolicies
+ * @param policyTagKey
+ * @param maxOuAttachedScps
+ * @param maxAccountAttachedScps
+ * @returns list of validation error messages (empty when all targets are within limits)
  */
-async function validateServiceControlPolicyCount(
+export async function validateServiceControlPolicyCount(
   organizationsClient: OrganizationsClient,
   serviceControlPolicies: serviceControlPolicyType[],
   policyTagKey: string,
   maxOuAttachedScps: number,
   maxAccountAttachedScps: number,
-) {
-  const processedTargets: string[] = [];
+): Promise<string[]> {
+  const errors: string[] = [];
+  const phaseStart = Date.now();
+  const processedTargets = new Set<string>();
+  const lzaManagedCache = new Map<string, Promise<boolean>>();
+  // Targets are keyed by type as well as name, because an OU and an account are allowed to share a name and
+  // each needs its own validation against its own limit.
+  const targetCount = new Set(
+    serviceControlPolicies.flatMap(item => (item.targets ?? []).map(t => `${item.targetType}:${t.name}`)),
+  ).size;
+
+  console.log(`Scp count validation phase started for ${targetCount} distinct target(s)`);
+
   for (const scpItem of serviceControlPolicies) {
     for (const target of scpItem.targets ?? []) {
-      const existingAttachedScps: string[] = [];
-      if (processedTargets.indexOf(target.name) === -1) {
-        const paginator = paginateListPoliciesForTarget(
-          { client: organizationsClient },
-          {
-            Filter: 'SERVICE_CONTROL_POLICY',
-            TargetId: target.id,
-          },
+      const targetKey = `${scpItem.targetType}:${target.name}`;
+      if (processedTargets.has(targetKey)) {
+        continue;
+      }
+      processedTargets.add(targetKey);
+      const targetStart = Date.now();
+
+      const existingAttachedPolicies: PolicySummary[] = [];
+      let policiesNextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.send(
+            new ListPoliciesForTargetCommand({
+              Filter: 'SERVICE_CONTROL_POLICY',
+              TargetId: target.id,
+              NextToken: policiesNextToken,
+            }),
+          ),
         );
-        for await (const page of paginator) {
-          if (page.Policies && page.Policies.length > 0) {
-            page.Policies.forEach(item => existingAttachedScps.push(item.Name!));
-          }
-        }
+        existingAttachedPolicies.push(...(page.Policies ?? []));
+        policiesNextToken = page.NextToken;
+      } while (policiesNextToken);
+      const existingAttachedScps = existingAttachedPolicies.map(item => item.Name!);
 
-        const [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag] = await getTotalScps(
-          target.name,
-          scpItem.targetType,
-          existingAttachedScps,
-          serviceControlPolicies,
-          policyTagKey,
+      const [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag] = await getTotalScps(
+        organizationsClient,
+        target.name,
+        scpItem.targetType,
+        existingAttachedPolicies,
+        serviceControlPolicies,
+        policyTagKey,
+        lzaManagedCache,
+      );
+
+      let totalScpCount = totalScps.length;
+
+      console.log(
+        `Scp count validation started for target ${target.name}, target type is ${scpItem.targetType} (${
+          processedTargets.size
+        }/${targetCount}, phase elapsed ${Math.round((Date.now() - phaseStart) / 1000)}s)`,
+      );
+      console.log(`${target.name} ${scpItem.targetType} existing attached scps are - ${existingAttachedScps}`);
+      console.log(`${target.name} ${scpItem.targetType} updated list of scps for attachment - ${totalScps}`);
+      console.log(`${target.name} ${scpItem.targetType} total scp count is ${totalScpCount}`);
+
+      if (allowListStrategyAndFullAWSAccessPolicyFlag) {
+        console.log(
+          `Since the provided SCPs for ${scpItem.targetType} "${target.name}" has ${scpItem.strategy} strategy, the totalSCP count will be reduced by 1 because for ${scpItem.strategy} strategy 'FullAWSAccess' policy is detached`,
         );
+        totalScpCount = totalScpCount - 1;
+        console.log(`${target.name} ${scpItem.targetType} new total scp count is ${totalScpCount}`);
+      }
 
-        let totalScpCount = totalScps.length;
-
-        console.log(`Scp count validation started for target ${target.name}, target type is ${scpItem.targetType}`);
-        console.log(`${target.name} ${scpItem.targetType} existing attached scps are - ${existingAttachedScps}`);
-        console.log(`${target.name} ${scpItem.targetType} updated list of scps for attachment - ${totalScps}`);
-        console.log(`${target.name} ${scpItem.targetType} total scp count is ${totalScpCount}`);
-
-        if (allowListStrategyAndFullAWSAccessPolicyFlag) {
-          console.log(
-            `Since the provided SCPs for ${scpItem.targetType} "${target.name}" has ${scpItem.strategy} strategy, the totalSCP count will be reduced by 1 because for ${scpItem.strategy} strategy 'FullAWSAccess' policy is detached`,
-          );
-          totalScpCount = totalScpCount - 1;
-          console.log(`${target.name} ${scpItem.targetType} new total scp count is ${totalScpCount}`);
-        }
-
-        if (exceedsMaxScpLimit(scpItem.targetType, totalScpCount, maxOuAttachedScps, maxAccountAttachedScps)) {
-          console.log(
-            `${target.name} ${scpItem.targetType} scp count validation failed, total scp count is ${totalScpCount}`,
-          );
-          let maxScps: number;
-          if (scpItem.targetType === 'ou') {
-            maxScps = maxOuAttachedScps;
-          } else {
-            maxScps = maxAccountAttachedScps;
-          }
-          validationErrors.push(
-            `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is ${maxScps}, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
-          );
-        } else {
-          console.log(
-            `${target.name} ${scpItem.targetType} scp count validation successful, total scp count is ${totalScpCount}`,
-          );
-        }
-
-        processedTargets.push(target.name);
+      if (exceedsMaxScpLimit(scpItem.targetType, totalScpCount, maxOuAttachedScps, maxAccountAttachedScps)) {
+        console.log(
+          `${target.name} ${scpItem.targetType} scp count validation failed, total scp count is ${totalScpCount}`,
+        );
+        const maxScps = scpItem.targetType === 'ou' ? maxOuAttachedScps : maxAccountAttachedScps;
+        errors.push(
+          `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is ${maxScps}, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
+        );
+      } else {
+        console.log(
+          `${target.name} ${scpItem.targetType} scp count validation successful, total scp count is ${totalScpCount} (target took ${
+            Date.now() - targetStart
+          }ms)`,
+        );
       }
     }
   }
+
+  console.log(
+    `Scp count validation phase completed for ${processedTargets.size} target(s) in ${Math.round(
+      (Date.now() - phaseStart) / 1000,
+    )}s with ${errors.length} error(s)`,
+  );
+  return errors;
 }
 
 /**
  * Function to get total scps to be attached to the target
+ * @param organizationsClient
  * @param targetName
  * @param targetType
- * @param existingScps
+ * @param existingAttachedPolicies policy summaries currently attached to the target (from ListPoliciesForTarget)
  * @param serviceControlPolicies
+ * @param policyTagKey
+ * @param lzaManagedCache per-invocation cache of ListTagsForResource lookups keyed by policy id
  * @returns
  */
 async function getTotalScps(
+  organizationsClient: OrganizationsClient,
   targetName: string,
   targetType: scpTargetType,
-  existingScps: string[],
+  existingAttachedPolicies: PolicySummary[],
   serviceControlPolicies: serviceControlPolicyType[],
   policyTagKey: string,
+  lzaManagedCache: Map<string, Promise<boolean>>,
 ): Promise<[string[], boolean]> {
+  const existingScps = existingAttachedPolicies.map(item => item.Name!);
   const [totalScps, allowListStrategyFlag]: [string[], boolean] = getNewScps(
     targetName,
     targetType,
@@ -553,84 +605,87 @@ async function getTotalScps(
     serviceControlPolicies,
   );
   let allowListStrategyAndFullAWSAccessPolicyFlag = false;
-  for (const existingScp of existingScps) {
-    let nextToken: string | undefined = undefined;
-    do {
-      const page = await throttlingBackOff(() =>
-        organizationsClient.send(
-          new ListPoliciesCommand({
-            Filter: 'SERVICE_CONTROL_POLICY',
-            NextToken: nextToken,
-          }),
-        ),
-      );
-      for (const policy of page.Policies ?? []) {
-        if (policy.Name === existingScp) {
-          const configScp = serviceControlPolicies.find(item => item.name === existingScp);
-          const isAwsManaged = policy.AwsManaged ?? false;
-          const isLzaManaged = isAwsManaged ? false : await isLzaManagedPolicy(policy.Id!, policyTagKey);
 
-          // When attached policy is AWS managed, add to list of policies
-          if (isAwsManaged) {
-            // If the provided SCPs have 'allow-list' strategy and FullAWSAccess Policy is already attached to the TargetType then set allowListStrategyAndFullAWSAccessPolicyFlag to true
-            // This flag will be used to reduce the Total SCP count by 1 because when allow-list strategy is defined for a particular TargetType then FullAWSAccessPolicy is detached
-            if (allowListStrategyFlag && policy.Id === 'p-FullAWSAccess')
-              allowListStrategyAndFullAWSAccessPolicyFlag = true;
-            totalScps.push(existingScp);
-            break;
-          }
+  for (const policy of existingAttachedPolicies) {
+    const existingScp = policy.Name!;
+    // p-FullAWSAccess is the only AWS managed service control policy, so treat it as AWS managed even if the
+    // AwsManaged flag is absent from the policy summary. This keeps the allow-list adjustment below deterministic
+    // and avoids a pointless ListTagsForResource call against a policy that can never carry the LZA tag.
+    const isAwsManaged = (policy.AwsManaged ?? false) || policy.Id === FULL_AWS_ACCESS_POLICY_ID;
 
-          // When attached policy is NOT AWS managed and NOT LZA managed, add to list of policies, policies attached by other sources
-          if (!isLzaManaged) {
-            totalScps.push(existingScp);
-            break;
-          }
+    // When attached policy is AWS managed, add to list of policies
+    if (isAwsManaged) {
+      // If the provided SCPs have 'allow-list' strategy and FullAWSAccess Policy is already attached to the TargetType then set allowListStrategyAndFullAWSAccessPolicyFlag to true
+      // This flag will be used to reduce the Total SCP count by 1 because when allow-list strategy is defined for a particular TargetType then FullAWSAccessPolicy is detached
+      if (allowListStrategyFlag && policy.Id === FULL_AWS_ACCESS_POLICY_ID)
+        allowListStrategyAndFullAWSAccessPolicyFlag = true;
+      totalScps.push(existingScp);
+      continue;
+    }
 
-          // When attached policy is LZA managed, check if this is still present in config before adding to list of policies
-          if (isLzaManaged) {
-            if (
-              configScp &&
-              configScp.targetType === targetType &&
-              configScp.targets.find(item => item.name === targetName)
-            ) {
-              totalScps.push(existingScp);
-              break;
-            }
-          }
-        }
-      }
-      nextToken = page.NextToken;
-    } while (nextToken);
+    const isLzaManaged = await isLzaManagedPolicy(organizationsClient, policy.Id!, policyTagKey, lzaManagedCache);
+
+    // When attached policy is NOT AWS managed and NOT LZA managed, add to list of policies, policies attached by other sources
+    if (!isLzaManaged) {
+      totalScps.push(existingScp);
+      continue;
+    }
+
+    // When attached policy is LZA managed, check if this is still present in config before adding to list of policies
+    const configScp = serviceControlPolicies.find(item => item.name === existingScp);
+    if (configScp && configScp.targetType === targetType && configScp.targets.find(item => item.name === targetName)) {
+      totalScps.push(existingScp);
+    }
   }
 
   return [totalScps, allowListStrategyAndFullAWSAccessPolicyFlag];
 }
 
 /**
- * Function to check if policy is managed by LZA, this is by checking lzaManaged tag with Yes value
+ * Function to check if policy is managed by LZA, this is by checking lzaManaged tag with Yes value.
+ * Results are memoized in the supplied cache so each policy is looked up at most once per invocation. The in-flight
+ * promise is cached rather than the resolved value so concurrent callers share one lookup; a rejected lookup is
+ * evicted so it is retried rather than replayed.
+ * @param organizationsClient
  * @param policyId
+ * @param policyTagKey
+ * @param cache
  * @returns
  */
-async function isLzaManagedPolicy(policyId: string, policyTagKey: string): Promise<boolean> {
-  let nextToken: string | undefined = undefined;
-  do {
-    const page = await throttlingBackOff(() =>
-      organizationsClient.send(
-        new ListTagsForResourceCommand({
-          ResourceId: policyId,
-          NextToken: nextToken,
-        }),
-      ),
-    );
-    for (const tag of page.Tags ?? []) {
-      if (tag.Key === policyTagKey && tag.Value === 'Yes') {
-        return true;
+async function isLzaManagedPolicy(
+  organizationsClient: OrganizationsClient,
+  policyId: string,
+  policyTagKey: string,
+  cache: Map<string, Promise<boolean>>,
+): Promise<boolean> {
+  const cached = cache.get(policyId);
+  if (cached) {
+    return cached;
+  }
+  const lookup = (async () => {
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        organizationsClient.send(
+          new ListTagsForResourceCommand({
+            ResourceId: policyId,
+            NextToken: nextToken,
+          }),
+        ),
+      );
+      for (const tag of page.Tags ?? []) {
+        if (tag.Key === policyTagKey && tag.Value === 'Yes') {
+          return true;
+        }
       }
-    }
-    nextToken = page.NextToken;
-  } while (nextToken);
-
-  return false;
+      nextToken = page.NextToken;
+    } while (nextToken);
+    return false;
+  })();
+  // Evict on failure so a transient error is not cached and re-thrown for every later caller of the same policy id.
+  lookup.catch(() => cache.delete(policyId));
+  cache.set(policyId, lookup);
+  return lookup;
 }
 
 /**
