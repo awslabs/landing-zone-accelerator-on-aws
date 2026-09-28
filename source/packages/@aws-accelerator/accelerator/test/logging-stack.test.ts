@@ -14,9 +14,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { describe, test } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { snapShotTest } from './snapshot-test';
 import { Create } from './accelerator-test-helpers';
+import { LoggingStack } from '../lib/stacks/logging-stack';
 
 const testNamePrefix = 'Construct(LoggingStack): ';
 
@@ -89,5 +90,32 @@ describe('LoggingStack VPC flow logs bucket policy (#3604)', () => {
         ]),
       },
     });
+  });
+});
+
+describe('LoggingStack central-logs GuardDuty bucket prefix', () => {
+  // Guards against the inverted useCustomPrefix regression in the opt-in-region loop. The central-logs
+  // bucketPrefixes list is built solely from LoggingStack.getGuardDutyBucketPrefix, so asserting its
+  // result covers both broken cases: a custom prefix must not append an extra `guardduty`, and an
+  // unset useCustomPrefix must keep `guardduty` (ignoring any customOverride).
+
+  test('uses only the custom prefix when useCustomPrefix is true (no duplicate guardduty prefix)', () => {
+    expect(LoggingStack.getGuardDutyBucketPrefix({ useCustomPrefix: true, customOverride: 'custom-gd' })).toBe(
+      'custom-gd',
+    );
+  });
+
+  test('uses the default guardduty prefix when useCustomPrefix is false, ignoring customOverride', () => {
+    expect(LoggingStack.getGuardDutyBucketPrefix({ useCustomPrefix: false, customOverride: 'custom-gd' })).toBe(
+      'guardduty',
+    );
+  });
+
+  test('defaults to the guardduty prefix when no override is configured', () => {
+    expect(LoggingStack.getGuardDutyBucketPrefix(undefined)).toBe('guardduty');
+  });
+
+  test('returns undefined (no prefix) when useCustomPrefix is true with no customOverride', () => {
+    expect(LoggingStack.getGuardDutyBucketPrefix({ useCustomPrefix: true })).toBeUndefined();
   });
 });

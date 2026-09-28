@@ -1627,6 +1627,24 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   /**
+   * Resolves the central-logs bucket prefix used for GuardDuty findings export.
+   *
+   * Returns `'guardduty'` by default. When a custom prefix override is enabled
+   * (`useCustomPrefix: true`), returns the configured `customOverride` (which may be undefined,
+   * meaning no prefix). When `useCustomPrefix` is not set, the default `'guardduty'` is used and
+   * any `customOverride` is ignored. The prefix is region-independent and added once.
+   *
+   * @param overrideGuardDutyPrefix - Optional GuardDuty export prefix override configuration
+   * @returns The resolved prefix, or undefined when a custom override is enabled with no value
+   */
+  static getGuardDutyBucketPrefix(overrideGuardDutyPrefix?: t.IPrefixConfig): string | undefined {
+    if (overrideGuardDutyPrefix?.useCustomPrefix) {
+      return overrideGuardDutyPrefix.customOverride ?? undefined;
+    }
+    return 'guardduty';
+  }
+
+  /**
    * Create list of principal needs access to CentralLogs bucket
    * @returns
    */
@@ -1660,19 +1678,17 @@ export class LoggingStack extends AcceleratorStack {
         principal: 'guardduty.amazonaws.com',
         accessType: BucketAccessType.READWRITE,
       });
-      let guardDutyPrefix: string | undefined = 'guardduty';
-      if (
-        this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-          ?.useCustomPrefix
-      ) {
-        guardDutyPrefix =
-          this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-            ?.customOverride ?? undefined;
-      }
+      const guardDutyPrefix = LoggingStack.getGuardDutyBucketPrefix(
+        this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix,
+      );
       if (guardDutyPrefix) {
         bucketPrefixes.push(guardDutyPrefix);
       }
 
+      // The GuardDuty bucket prefix is region-independent and already added once by the block above
+      // using the correct useCustomPrefix check. Only the per-opt-in-region service principal needs to
+      // be added here — do not recompute the prefix (previously done with an inverted check, which added
+      // an unwanted `guardduty` prefix for custom-prefix configurations).
       for (const region of this.props.globalConfig.enabledRegions) {
         if (OptInRegions.includes(region)) {
           awsPrincipalAccesses.push({
@@ -1680,18 +1696,6 @@ export class LoggingStack extends AcceleratorStack {
             principal: `guardduty.${region}.amazonaws.com`,
             accessType: BucketAccessType.READWRITE,
           });
-          let guardDutyPrefix: string | undefined = 'guardduty';
-          if (
-            !this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-              ?.useCustomPrefix
-          ) {
-            guardDutyPrefix =
-              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideGuardDutyPrefix
-                ?.customOverride ?? undefined;
-          }
-          if (guardDutyPrefix) {
-            bucketPrefixes.push(guardDutyPrefix);
-          }
         }
       }
     }
