@@ -44,6 +44,7 @@ export function addAcceleratorTags(node: IConstruct, partition: string, tags: IT
     'AWS::Route53Resolver::ResolverEndpoint',
     'AWS::Route53Resolver::ResolverRule',
     'AWS::Route53Resolver::ResolverQueryLoggingConfig',
+    'AWS::Route53Resolver::FirewallRuleGroupAssociation',
     'AWS::Events::Rule',
     'AWS::Lambda::EventSourceMapping',
   ];
