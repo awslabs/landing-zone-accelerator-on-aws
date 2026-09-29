@@ -107,6 +107,32 @@ If a module fails:
 | `State management failure: DynamoDB table not found` | Prepare stack hasn't been deployed or table was deleted | Re-run the pipeline from the Prepare stage |
 | `AccessDeniedException` | Insufficient permissions for cross-account operations | Verify the cross-account role exists in all accounts. If `cdkOptions.customDeploymentRole` is set, ensure that role trusts the module runner and grants the module's required actions (see Bootstrap docs); otherwise verify the management account access role. |
 | `TooManyRequestsException` | API rate limiting | Pipeline will retry automatically. If persistent, check for concurrent executions. |
+| `... operation timeout after <ms>ms` | Member/account association is slower than the operation timeout — common in slower partitions (GovCloud/China) or large organizations | Re-run the pipeline (association usually completes and the retry succeeds). To avoid it up front, raise the timeout with the `GUARDDUTY_OPERATION_TIMEOUT` / `MACIE_OPERATION_TIMEOUT` environment variable (see [Tuning operation timeouts](#tuning-operation-timeouts)). |
+
+---
+
+## Tuning operation timeouts
+
+Some security modules wait for organization-wide state to converge before completing — for example, GuardDuty
+verifies that member accounts are enrolled after `CreateMembers`. In slower partitions (GovCloud, China) or in
+large organizations, that convergence can take longer than the default per-operation timeout, causing the module
+to fail with `... operation timeout after <ms>ms`. A retry typically succeeds because association finishes in the
+background, but you can also raise the timeout so the first run completes.
+
+Set the appropriate environment variable in your LZA pipeline (value in milliseconds):
+
+| Module | Environment Variable | Default |
+|--------|----------------------|---------|
+| Amazon GuardDuty | `GUARDDUTY_OPERATION_TIMEOUT` | `900000` (15 minutes) |
+| Amazon Macie | `MACIE_OPERATION_TIMEOUT` | `300000` (5 minutes) |
+
+For example, to allow up to 20 minutes for GuardDuty:
+
+```
+GUARDDUTY_OPERATION_TIMEOUT=1200000
+```
+
+Set it the same way as other pipeline environment variables (see [How to set the environment variable](#how-to-set-the-environment-variable)).
 
 ---
 

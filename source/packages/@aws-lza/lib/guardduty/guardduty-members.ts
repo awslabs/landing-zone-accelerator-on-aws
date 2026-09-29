@@ -41,6 +41,14 @@ import { IGuardDutyFeatureFlags } from './interfaces';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
+// Budget for verifying member enrollment after CreateMembers. Member association can take several minutes
+// in slower partitions (e.g. GovCloud/China) and on new installations with freshly created accounts, so the
+// default 5-check (~5 min) budget is too short and caused enrollment verification to fail on the first run.
+// ~14 checks at 1-minute intervals gives roughly a 14-minute budget, which must stay below the batch
+// operation timeout (operationTimeoutMs, default 15 min) so this wait can complete before the outer timeout.
+const MEMBER_ENROLLMENT_RETRY_LIMIT = 13;
+const MEMBER_ENROLLMENT_QUERY_INTERVAL_MINUTES = 1;
+
 function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < array.length; i += chunkSize) {
@@ -427,6 +435,8 @@ export abstract class GuardDutyMembers {
         'Could not verify all accounts were enrolled in GuardDuty',
         logger,
         logPrefix,
+        MEMBER_ENROLLMENT_RETRY_LIMIT,
+        MEMBER_ENROLLMENT_QUERY_INTERVAL_MINUTES,
       );
     }
 

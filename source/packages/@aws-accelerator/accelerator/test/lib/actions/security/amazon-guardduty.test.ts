@@ -465,7 +465,7 @@ describe('AmazonGuardDuty', () => {
           autoEnableOrgMembers: 'ALL',
           batchOperationSettings: {
             maxConcurrentEnvironments: 50,
-            operationTimeoutMs: 300000,
+            operationTimeoutMs: 900000,
           },
           protectionsConfiguration: {
             s3Protection: {
@@ -546,6 +546,90 @@ describe('AmazonGuardDuty', () => {
         }),
       );
     });
+
+    it('should use GUARDDUTY_OPERATION_TIMEOUT env var for operationTimeoutMs when set', async () => {
+      // Use a value distinct from the default (900000) so this test fails if the env-var read is
+      // removed or inverted and the code falls through to the default.
+      process.env['GUARDDUTY_OPERATION_TIMEOUT'] = '600000';
+      const { configureGuardDuty } = await import('aws-lza');
+      const mockResponse = {
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      };
+      vi.mocked(configureGuardDuty).mockResolvedValue(mockResponse);
+
+      const params = createMockModuleParams();
+      const result = await AmazonGuardDuty.configure(params);
+
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            batchOperationSettings: { maxConcurrentEnvironments: 50, operationTimeoutMs: 600000 },
+          }),
+        }),
+      );
+      expect(result).toBe(mockResponse);
+      delete process.env['GUARDDUTY_OPERATION_TIMEOUT'];
+    });
+
+    it('should default operationTimeoutMs to 900000 when GUARDDUTY_OPERATION_TIMEOUT env var is not set', async () => {
+      delete process.env['GUARDDUTY_OPERATION_TIMEOUT'];
+      const { configureGuardDuty } = await import('aws-lza');
+      const mockResponse = {
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      };
+      vi.mocked(configureGuardDuty).mockResolvedValue(mockResponse);
+
+      const params = createMockModuleParams();
+      const result = await AmazonGuardDuty.configure(params);
+
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            batchOperationSettings: { maxConcurrentEnvironments: 50, operationTimeoutMs: 900000 },
+          }),
+        }),
+      );
+      expect(result).toBe(mockResponse);
+    });
+
+    it.each(['15m', 'abc', '0', '-1000', ''])(
+      'falls back to the default 900000 when GUARDDUTY_OPERATION_TIMEOUT is invalid (%s)',
+      async invalidValue => {
+        process.env['GUARDDUTY_OPERATION_TIMEOUT'] = invalidValue;
+        const { configureGuardDuty } = await import('aws-lza');
+        const mockResponse = {
+          status: MODULE_STATE_CODE.COMPLETED,
+          summary: 'GuardDuty configured successfully',
+          timestamp: new Date().toISOString(),
+          moduleName: AcceleratorModules.GUARDDUTY,
+          dryRun: false,
+        };
+        vi.mocked(configureGuardDuty).mockResolvedValue(mockResponse);
+
+        const params = createMockModuleParams();
+        const result = await AmazonGuardDuty.configure(params);
+
+        // A non-numeric/non-positive value must not become NaN (which coerces the timeout to 0 and
+        // fails every account) — it falls back to the 900000 default.
+        expect(configureGuardDuty).toHaveBeenCalledWith(
+          expect.objectContaining({
+            configuration: expect.objectContaining({
+              batchOperationSettings: { maxConcurrentEnvironments: 50, operationTimeoutMs: 900000 },
+            }),
+          }),
+        );
+        expect(result).toBe(mockResponse);
+        delete process.env['GUARDDUTY_OPERATION_TIMEOUT'];
+      },
+    );
   });
 
   describe('configure - state save phase', () => {

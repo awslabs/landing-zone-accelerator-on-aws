@@ -1407,6 +1407,37 @@ describe('GuardDutyMembers - enrollment waitUntil coverage', () => {
 
     expect(results[0]).toBe(true);
   });
+
+  test('enrollment waitUntil uses the extended retry budget (13 retries, 1 minute interval)', async () => {
+    mockExecuteApi.mockResolvedValue({});
+    mockPaginate.mockReturnValue({
+      [Symbol.asyncIterator]: async function* () {
+        yield { Members: [{ AccountId: '111111111111' }, { AccountId: '222222222222' }] };
+      },
+    });
+
+    await GuardDutyMembers.enable(
+      mockClient,
+      mockAccounts,
+      [],
+      'NEW' as OrgFeatureStatus,
+      mockDetectorId,
+      false,
+      logPrefix,
+      defaultFeatures,
+    );
+
+    // The enrollment-verification wait must be given a budget larger than the default (5 retries),
+    // sized to fit under the batch operationTimeoutMs so slow member association is tolerated.
+    expect(mockWaitUntil).toHaveBeenCalledWith(
+      expect.any(Function),
+      'Could not verify all accounts were enrolled in GuardDuty',
+      expect.anything(),
+      logPrefix,
+      13,
+      1,
+    );
+  });
 });
 
 describe('GuardDutyMembers - getExistingMembers empty paginator coverage', () => {

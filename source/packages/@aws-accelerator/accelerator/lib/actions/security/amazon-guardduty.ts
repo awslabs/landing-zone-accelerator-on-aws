@@ -127,6 +127,33 @@ export abstract class AmazonGuardDuty {
   }
 
   /**
+   * Resolves the per-environment batch operation timeout (milliseconds).
+   *
+   * Operators may extend the timeout via the `GUARDDUTY_OPERATION_TIMEOUT` env var for slower partitions
+   * (GovCloud/China) or large organizations. The value must be a positive, finite number of milliseconds;
+   * any invalid value (e.g. `15m`, `NaN`, `0`, negative) falls back to the default. This guards against a
+   * non-numeric value becoming NaN and coercing the operation timeout to 0, which would fail every account.
+   *
+   * @returns Resolved operation timeout in milliseconds
+   */
+  private static resolveOperationTimeoutMs(): number {
+    const DEFAULT_OPERATION_TIMEOUT_MS = 900000; // 15 minutes; must exceed the ~14 min enrollment wait
+    const raw = process.env['GUARDDUTY_OPERATION_TIMEOUT'];
+    if (!raw) {
+      return DEFAULT_OPERATION_TIMEOUT_MS;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      AmazonGuardDuty.logger.warn(
+        `Ignoring invalid GUARDDUTY_OPERATION_TIMEOUT="${raw}"; expected a positive number of milliseconds. ` +
+          `Using default ${DEFAULT_OPERATION_TIMEOUT_MS}ms.`,
+      );
+      return DEFAULT_OPERATION_TIMEOUT_MS;
+    }
+    return parsed;
+  }
+
+  /**
    * Resolves the excluded regions from either the top-level excludeRegions config
    * or the deploymentTargets.excludedRegions fallback.
    * @param guardDutyConfig - GuardDuty configuration object
@@ -299,7 +326,11 @@ export abstract class AmazonGuardDuty {
         autoEnableOrgMembers: this.getAutoEnableOrgMembers(guardDutyConfig.autoEnableOrgMembers),
         batchOperationSettings: {
           maxConcurrentEnvironments: 50,
-          operationTimeoutMs: 300000,
+          // Allow operators to extend the per-environment timeout in slower partitions (e.g. GovCloud/China)
+          // or large organizations where member association takes longer (via GUARDDUTY_OPERATION_TIMEOUT).
+          // Default is 15 minutes so the member-enrollment verification wait (~14 min) can complete before
+          // this outer timeout; previously 5 minutes, which pre-empted enrollment verification on slow setups.
+          operationTimeoutMs: AmazonGuardDuty.resolveOperationTimeoutMs(),
         },
         protectionsConfiguration,
         exportFrequency: guardDutyConfig.exportConfiguration?.exportFrequency,
