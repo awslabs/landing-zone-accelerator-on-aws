@@ -41,6 +41,24 @@ import { IGuardDutyFeatureFlags } from './interfaces';
 
 const logger = createLogger([path.parse(path.basename(__filename)).name]);
 
+// GuardDuty returns this BadRequestException message when a request references a feature name that is not
+// valid in the current region/partition (e.g. EKS Runtime Monitoring / RDS / Lambda in us-isob-east-1).
+// Only this specific condition should trigger the S3-only fallback; any other BadRequestException (invalid
+// feature/config combination, malformed parameter, invalid detector state) is a genuine error that must
+// surface so it is not silently downgraded to S3-only.
+const UNSUPPORTED_FEATURE_ERROR_FRAGMENT = 'provided feature names are invalid';
+
+/**
+ * Returns true only for the specific "unsupported feature in this region/partition" BadRequestException,
+ * so the S3-only fallback is not applied to unrelated client-side request errors.
+ */
+function isUnsupportedFeatureError(error: unknown): error is BadRequestException {
+  return (
+    error instanceof BadRequestException &&
+    (error.message ?? '').toLowerCase().includes(UNSUPPORTED_FEATURE_ERROR_FRAGMENT)
+  );
+}
+
 // Budget for verifying member enrollment after CreateMembers. Member association can take several minutes
 // in slower partitions (e.g. GovCloud/China) and on new installations with freshly created accounts, so the
 // default 5-check (~5 min) budget is too short and caused enrollment verification to fail on the first run.
@@ -100,13 +118,49 @@ export abstract class GuardDutyMembers {
     if (dryRun) {
       logger.dryRun('UpdateDetectorCommand', updateDetectorParameters, logPrefix);
     } else {
-      await executeApi(
-        'UpdateDetectorCommand',
-        updateDetectorParameters,
-        () => client.send(new UpdateDetectorCommand(updateDetectorParameters)),
-        logger,
-        logPrefix,
-      );
+      try {
+        await executeApi(
+          'UpdateDetectorCommand',
+          updateDetectorParameters,
+          () => client.send(new UpdateDetectorCommand(updateDetectorParameters)),
+          logger,
+          logPrefix,
+        );
+      } catch (error: unknown) {
+        // To keep the detector true to config (drift protection), LZA sends ALL GuardDuty features on every
+        // update — features the customer did not configure are sent as DISABLED, not omitted. Some feature
+        // names (e.g. EKS Runtime Monitoring, RDS, Lambda) do not exist in every region/partition (e.g. LCK),
+        // so GuardDuty rejects the request with "provided feature names are invalid" — even when those
+        // features are DISABLED and even when the customer enabled none of them. This is therefore a
+        // region/partition limitation, not a customer misconfiguration. Only that specific error triggers the
+        // S3-only fallback (S3 stays enabled); any other BadRequestException (invalid feature/config
+        // combination, malformed parameter, invalid detector state) is re-thrown so a genuine error is not
+        // silently downgraded to S3-only.
+        if (!isUnsupportedFeatureError(error)) {
+          throw error;
+        }
+        logger.warn(
+          `UpdateDetector rejected the requested feature names as invalid in this region/partition ` +
+            `("${(error as BadRequestException).message}"). LZA sends all features (unconfigured ones as ` +
+            `DISABLED) to stay true to config, but some feature names do not exist here, so this fails even ` +
+            `when no features are enabled. Retrying with S3 protection only; other GuardDuty features are not ` +
+            `configured in this region.`,
+          logPrefix,
+        );
+        const s3OnlyParameters = {
+          DetectorId: detectorId,
+          Features: [GuardDutyMembers.createFeature(DetectorFeature.S3_DATA_EVENTS, featuresToEnable?.s3DataEvents)],
+          Enable: true,
+          FindingPublishingFrequency: additionalOptions?.exportFrequency,
+        };
+        await executeApi(
+          'UpdateDetectorCommand',
+          s3OnlyParameters,
+          () => client.send(new UpdateDetectorCommand(s3OnlyParameters)),
+          logger,
+          logPrefix,
+        );
+      }
     }
 
     const updateDetectorMalwareParameters = {
@@ -444,23 +498,55 @@ export abstract class GuardDutyMembers {
     const memberFeatures = GuardDutyMembers.createDetectorFeatures(featuresToEnable);
 
     for (const accounts of batchedAccounts) {
+      const accountIds = accounts
+        .map((account: AccountDetail) => account.AccountId)
+        .filter((accountId: string | undefined): accountId is string => accountId !== undefined);
       const parameters = {
         DetectorId: detectorId,
-        AccountIds: accounts
-          .map((account: AccountDetail) => account.AccountId)
-          .filter((accountId: string | undefined): accountId is string => accountId !== undefined),
+        AccountIds: accountIds,
         Features: memberFeatures,
       };
       if (dryRun) {
         logger.dryRun('UpdateMemberDetectorsCommand', parameters, logPrefix);
       } else {
-        await executeApi(
-          'UpdateMemberDetectorsCommand',
-          parameters,
-          () => client.send(new UpdateMemberDetectorsCommand(parameters)),
-          logger,
-          logPrefix,
-        );
+        try {
+          await executeApi(
+            'UpdateMemberDetectorsCommand',
+            parameters,
+            () => client.send(new UpdateMemberDetectorsCommand(parameters)),
+            logger,
+            logPrefix,
+          );
+        } catch (error: unknown) {
+          // Mirror the main-detector fallback: LZA sends all features (unconfigured ones as DISABLED) to stay
+          // true to config, but some feature names do not exist in every region/partition (e.g. LCK), so
+          // GuardDuty returns "provided feature names are invalid" even when no features are enabled — a
+          // region/partition limitation, not a misconfiguration. Only that specific error triggers the S3-only
+          // retry; any other BadRequestException is re-thrown so a genuine error is not silently downgraded.
+          if (!isUnsupportedFeatureError(error)) {
+            throw error;
+          }
+          logger.warn(
+            `UpdateMemberDetectors rejected the requested feature names as invalid in this region/partition ` +
+              `("${(error as BadRequestException).message}"). LZA sends all features (unconfigured ones as ` +
+              `DISABLED) to stay true to config, but some feature names do not exist here, so this fails even ` +
+              `when no features are enabled. Retrying with S3 protection only; other GuardDuty features are not ` +
+              `configured for members in this region.`,
+            logPrefix,
+          );
+          const s3OnlyParameters = {
+            DetectorId: detectorId,
+            AccountIds: accountIds,
+            Features: [GuardDutyMembers.createFeature(DetectorFeature.S3_DATA_EVENTS, featuresToEnable?.s3DataEvents)],
+          };
+          await executeApi(
+            'UpdateMemberDetectorsCommand',
+            s3OnlyParameters,
+            () => client.send(new UpdateMemberDetectorsCommand(s3OnlyParameters)),
+            logger,
+            logPrefix,
+          );
+        }
       }
     }
 

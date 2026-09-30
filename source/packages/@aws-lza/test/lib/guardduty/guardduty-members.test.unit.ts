@@ -622,6 +622,192 @@ describe('GuardDutyMembers', () => {
 
       expect(results[results.length - 1]).toBe(true);
     });
+
+    test('should fall back to S3-only when UpdateDetector throws BadRequestException (unsupported feature/region)', async () => {
+      const { BadRequestException } = await import('@aws-sdk/client-guardduty');
+
+      let updateDetectorCallCount = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateDetectorCommand') {
+          updateDetectorCallCount++;
+          if (updateDetectorCallCount === 1) {
+            throw new BadRequestException({
+              message: 'The request failed because the provided feature names are invalid',
+              $metadata: {},
+            });
+          }
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+      );
+
+      const updateDetectorCalls = mockExecuteApi.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'UpdateDetectorCommand',
+      );
+      // Original attempt + one S3-only retry.
+      expect(updateDetectorCalls).toHaveLength(2);
+      // The retry must send ONLY the S3 feature, and it must be ENABLED (the whole point of the fallback).
+      const retryParams = updateDetectorCalls[1][1] as { Features: { Name: string; Status: string }[] };
+      expect(retryParams.Features).toHaveLength(1);
+      expect(retryParams.Features[0].Name).toBe('S3_DATA_EVENTS');
+      expect(retryParams.Features[0].Status).toBe('ENABLED');
+    });
+
+    test('should rethrow non-BadRequestException from UpdateDetector without falling back', async () => {
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateDetectorCommand') {
+          throw new Error('Network timeout');
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          defaultFeatures,
+        ),
+      ).rejects.toThrow('Network timeout');
+    });
+
+    test('should rethrow a BadRequestException that is not the unsupported-feature signal (no S3 fallback)', async () => {
+      const { BadRequestException } = await import('@aws-sdk/client-guardduty');
+
+      let updateDetectorCallCount = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateDetectorCommand') {
+          updateDetectorCallCount++;
+          // A genuine client error unrelated to region feature availability — must NOT be swallowed.
+          throw new BadRequestException({
+            message: 'The request is rejected because the parameter is malformed',
+            $metadata: {},
+          });
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          defaultFeatures,
+        ),
+      ).rejects.toThrow('parameter is malformed');
+
+      // Must not have attempted an S3-only retry — only the single failing call.
+      expect(updateDetectorCallCount).toBe(1);
+    });
+
+    test('should fall back to S3-only when UpdateMemberDetectors throws BadRequestException', async () => {
+      const { BadRequestException } = await import('@aws-sdk/client-guardduty');
+
+      let memberCallCount = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateMemberDetectorsCommand') {
+          memberCallCount++;
+          if (memberCallCount === 1) {
+            throw new BadRequestException({
+              message: 'The request failed because the provided feature names are invalid',
+              $metadata: {},
+            });
+          }
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+      );
+
+      const memberCalls = mockExecuteApi.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'UpdateMemberDetectorsCommand',
+      );
+      expect(memberCalls).toHaveLength(2);
+      const retryParams = memberCalls[1][1] as { Features: { Name: string; Status: string }[] };
+      expect(retryParams.Features).toHaveLength(1);
+      expect(retryParams.Features[0].Name).toBe('S3_DATA_EVENTS');
+      expect(retryParams.Features[0].Status).toBe('ENABLED');
+    });
+
+    test('should rethrow non-BadRequestException from UpdateMemberDetectors without falling back', async () => {
+      let memberCallCount = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateMemberDetectorsCommand') {
+          memberCallCount++;
+          // Transient/unrelated error (e.g. throttling, network) must propagate, not trigger an S3-only retry.
+          throw new Error('Network timeout');
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+        ),
+      ).rejects.toThrow('Network timeout');
+
+      // Must not have attempted an S3-only retry — only the single failing call.
+      expect(memberCallCount).toBe(1);
+    });
   });
 
   describe('disable', () => {
