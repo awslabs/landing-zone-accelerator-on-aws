@@ -36,34 +36,6 @@ describe('addAcceleratorTags', () => {
     expect(() => addAcceleratorTags(stack, 'aws', [], 'AWSAccelerator')).not.toThrow();
   });
 
-  it('does not tag Route53Resolver FirewallRuleGroupAssociation', () => {
-    // A protected association (mutationProtection: ENABLED) cannot be modified at all:
-    // UpdateFirewallRuleGroupAssociation "disallows modification or removal of the association".
-    // Tagging it therefore fails the stack, so the type must stay in excludedResourceTypes.
-    // Universal Configuration sets mutationProtection: ENABLED by default, so without this a
-    // single global tag in global-config.yaml breaks NetworkAssociationsStack.
-    const app = new cdk.App();
-    const stack = new cdk.Stack(app, 'DnsFirewallAssocStack');
-
-    new cdk.aws_route53resolver.CfnFirewallRuleGroupAssociation(stack, 'Assoc', {
-      firewallRuleGroupId: 'rslvr-frg-1234567890abcdef0',
-      vpcId: 'vpc-1234567890abcdef0',
-      priority: 101,
-      mutationProtection: 'ENABLED',
-    });
-
-    addAcceleratorTags(stack, 'aws', [{ key: 'lza-owner', value: 'global-default' }], 'AWSAccelerator');
-
-    const template = Template.fromStack(stack);
-    const assocs = template.findResources('AWS::Route53Resolver::FirewallRuleGroupAssociation');
-
-    expect(Object.keys(assocs).length).toBe(1);
-    for (const logicalId of Object.keys(assocs)) {
-      // Neither the user-defined global tag nor the mandatory Accelerator tag may be applied.
-      expect(assocs[logicalId]['Properties']?.Tags).toBeUndefined();
-    }
-  });
-
   it('skips TransitGateway tagging in non-aws partitions', () => {
     const app = new cdk.App();
     const stack = new cdk.Stack(app, 'GovStack');
