@@ -39,6 +39,32 @@
 # Prereq job always runs when any module job runs (idempotent infrastructure).
 
 # ============================================================
+# Shared rule fragments (DRY)
+# ============================================================
+# Common gating used by every integration job. Spliced into each job's `rules:` via
+# `!reference`, followed by the job's own upstream integ-branch `changes:` rule and a final
+# `when: never`. On the RC/release-tag path the AWS account IDs are overridden to the dedicated
+# RC environment accounts (RC_ENV_*), so the same jobs run against the RC accounts on tags.
+#
+# Module jobs (macie/guardduty/tgw/...) use `.integ-common-rules` (RC path overrides ENV_NAME,
+# ACCOUNT_ID + PIPELINE_ACCOUNT_ID). The prereq job keeps its rules inline (single job) — its RC path
+# overrides ENV_NAME, ACCOUNT_ID + LOGARCHIVE_ACCOUNT_ID (no PIPELINE_ACCOUNT_ID, no per-module changes).
+.integ-common-rules:
+  rules:
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - if: $EXECUTE_INTEGRATION_TEST == "No"
+      when: never
+    - if: '$EXECUTE_INTEGRATION_TEST == "Yes" && $CI_COMMIT_TAG == null'
+      when: always
+    - if: '$EXECUTE_RC_INTEGRATION_TEST == "Yes" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/'
+      variables:
+        ENV_NAME: releaseConfig
+        ACCOUNT_ID: "${RC_ENV_MANAGEMENT_ACCOUNT_ID}"
+        PIPELINE_ACCOUNT_ID: "${RC_ENV_MANAGEMENT_ACCOUNT_ID}"
+      when: always
+
+# ============================================================
 # Prerequisites: deploy shared test infrastructure (once)
 # ============================================================
 integ:prereq:aws:us-east-1:
@@ -68,7 +94,14 @@ integ:prereq:aws:us-east-1:
       when: never
     - if: $EXECUTE_INTEGRATION_TEST == "No"
       when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
+    - if: '$EXECUTE_INTEGRATION_TEST == "Yes" && $CI_COMMIT_TAG == null'
+      when: always
+    # RC/release tag runs against the dedicated RC environment accounts and config.
+    - if: '$EXECUTE_RC_INTEGRATION_TEST == "Yes" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/'
+      variables:
+        ENV_NAME: releaseConfig
+        ACCOUNT_ID: "${RC_ENV_MANAGEMENT_ACCOUNT_ID}"
+        LOGARCHIVE_ACCOUNT_ID: "${RC_ENV_LOGARCHIVE_ACCOUNT_ID}"
       when: always
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       when: always
@@ -113,12 +146,7 @@ integ:macie:aws:us-east-1:
     expire_in: 7 days
   timeout: 15m
   rules:
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "No"
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
+    - !reference [.integ-common-rules, rules]
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/amazon-macie/**/*
@@ -166,12 +194,7 @@ integ:guardduty:aws:us-east-1:
     expire_in: 7 days
   timeout: 15m
   rules:
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "No"
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
+    - !reference [.integ-common-rules, rules]
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/guardduty/**/*
@@ -222,12 +245,7 @@ integ:tgw:aws:us-east-1:
     expire_in: 7 days
   timeout: 30m
   rules:
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "No"
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
+    - !reference [.integ-common-rules, rules]
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/transit-gateway/**/*
@@ -295,12 +313,7 @@ integ:config-rule-tagging:aws:us-east-1:
     DISPLAY_NAME: AWS Config Rule Tagging
   timeout: 30m
   rules:
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "No"
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
+    - !reference [.integ-common-rules, rules]
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/aws-config/**/*
@@ -322,12 +335,7 @@ integ:tag-and-backup-policy-account-attachments:aws:us-east-1:
     DISPLAY_NAME: Tag and Backup Policy Account Attachments
   timeout: 45m
   rules:
-    - if: $CI_MERGE_REQUEST_IID != null
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "No"
-      when: never
-    - if: $EXECUTE_INTEGRATION_TEST == "Yes"
-      when: always
+    - !reference [.integ-common-rules, rules]
     - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_BRANCH == "integ"
       changes:
         - source/packages/@aws-lza/lib/aws-organizations/tag-and-backup-policy-account-attachments*

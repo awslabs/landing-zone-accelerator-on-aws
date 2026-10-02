@@ -161,11 +161,16 @@ The framework handles environment setup, manifest discovery, serial execution, p
 
 ## CI Integration
 
-Integration tests run in GitLab CI when `EXECUTE_INTEGRATION_TEST=Yes`. Module test jobs additionally require that the module's source files have changed (file-change detection via GitLab `changes` keyword).
+Integration tests run in GitLab CI in two ways:
 
-In the remote repo, jobs are restricted to the `integ` branch only — they will not run on `main`, release branches, or MR pipelines. In forks, jobs run on any branch as long as `EXECUTE_INTEGRATION_TEST=Yes` and the relevant files have changed.
+- **On-demand / fork runs** — when `EXECUTE_INTEGRATION_TEST=Yes` on a non-tag pipeline (`CI_COMMIT_TAG` is null). This forces the full module suite to run with no file-change gating. These run against the sample-config environment (`ENV_NAME=sampleConfig`, `SAMPLE_CONFIG_ENV_*` accounts).
+- **RC / release-tag runs** — when `EXECUTE_RC_INTEGRATION_TEST=Yes` and the pipeline is for a release-candidate/release tag matching `/v(\d.+){2}\d/` (e.g. `v1.17.0`). On this path the jobs run against the dedicated RC environment: `ENV_NAME=releaseConfig` and the `RC_ENV_*` account IDs. File-change gating does not apply — the full module suite runs for the tag.
 
-The prereq job runs whenever `EXECUTE_INTEGRATION_TEST=Yes` (no file-change gating) since all module jobs depend on it and the idempotent CLI scripts are a no-op when infrastructure already exists.
+In both cases MR pipelines are explicitly excluded (`CI_MERGE_REQUEST_IID != null` → never), and `EXECUTE_INTEGRATION_TEST=No` is an explicit kill switch that overrides the on-demand path.
+
+When neither force variable is set, module jobs run only on the `integ` branch in the upstream repo (`CI_PROJECT_ID=21753`) when relevant module files have changed. In forks, setting `EXECUTE_INTEGRATION_TEST=Yes` runs the full module suite on any non-tag branch with no file-change gating.
+
+The prereq job runs whenever any module job runs (no file-change gating) since all module jobs depend on it and the idempotent CLI scripts are a no-op when infrastructure already exists. On the RC/release-tag path it uses the `RC_ENV_*` accounts; otherwise the `SAMPLE_CONFIG_ENV_*` accounts.
 
 Test results appear as per-manifest rows in GitLab's Tests tab via JUnit reporting.
 
@@ -175,11 +180,14 @@ All module logs are shipped to CloudWatch Logs (`{prefix}-Module-Verbose-Logs`) 
 
 | Variable | Description |
 |---|---|
-| `EXECUTE_INTEGRATION_TEST` | `Yes` to enable integration tests, `No` to disable |
+| `EXECUTE_INTEGRATION_TEST` | `Yes` to force integration tests on non-tag pipelines (ignored on tag pipelines), `No` to disable all integration tests on every pipeline, including release tags. |
+| `EXECUTE_RC_INTEGRATION_TEST` | `Yes` to run integration tests on a release-candidate/release tag (`CI_COMMIT_TAG` matching `/v(\d.+){2}\d/`) against the RC environment |
 | `ACCELERATOR_PREFIX` | Resource naming prefix (e.g., `LzaIntegTest`) |
 | `LZA_GITLAB_ROLE_NAME` | IAM role name for CI credential vending (e.g., `LzaGitlabRole`) |
-| `SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID` | Management account ID |
-| `SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID` | Log archive account ID |
+| `SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID` | Management account ID (on-demand / `sampleConfig` path) |
+| `SAMPLE_CONFIG_ENV_LOGARCHIVE_ACCOUNT_ID` | Log archive account ID (on-demand / `sampleConfig` path) |
+| `RC_ENV_MANAGEMENT_ACCOUNT_ID` | Management account ID for the RC/release-tag path (`releaseConfig`) |
+| `RC_ENV_LOGARCHIVE_ACCOUNT_ID` | Log archive account ID for the RC/release-tag path (used by the prereq job) |
 
 ### Pipeline Flow
 
