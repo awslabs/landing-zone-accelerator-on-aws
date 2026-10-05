@@ -23,6 +23,8 @@ export default defineConfig({
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
     coverage: {
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
       include: ['lib/**/*.ts'],
       exclude: [
         '**/*.d.ts',

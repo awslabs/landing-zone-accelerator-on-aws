@@ -6,6 +6,8 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     testTimeout: 180000,
     coverage: {
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
       exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {
         branches: 70,

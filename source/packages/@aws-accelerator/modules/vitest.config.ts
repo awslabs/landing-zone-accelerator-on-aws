@@ -11,5 +11,10 @@ export default defineConfig({
     pool: 'threads',
     reporters: ['default', 'junit'],
     outputFile: './test-reports/test-results.xml',
+    coverage: {
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
+      exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**', '**/test/**'],
+    },
   },
 });

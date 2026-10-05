@@ -338,6 +338,10 @@ accelerator:attribution-check:
       when: always
     - when: never
 
+.publish-unit-test-data:
+  script:
+    - MC_TEST_TYPE=unit MC_COMPONENT="$MC_COMPONENT" bash .gitlab/scripts/publish-test-data.sh || true
+
 release:test:utils:
   stage: pipeline
   needs: ["accelerator:build"]
@@ -394,12 +398,17 @@ unit-test:accelerator:
     KUBERNETES_CPU_LIMIT: "16"
     KUBERNETES_MEMORY_REQUEST: "64Gi"
     KUBERNETES_MEMORY_LIMIT: "64Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: accelerator
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source/packages/@aws-accelerator/accelerator"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -424,12 +433,17 @@ unit-test:config:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: config
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/config"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -454,12 +468,17 @@ unit-test:constructs:
     KUBERNETES_CPU_LIMIT: "16"
     KUBERNETES_MEMORY_REQUEST: "64Gi"
     KUBERNETES_MEMORY_LIMIT: "64Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: constructs
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=49152"
     - "cd source/packages/@aws-accelerator/constructs"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -484,12 +503,17 @@ unit-test:govcloud-account-vending:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: govcloud-account-vending
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/govcloud-account-vending"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -514,6 +538,9 @@ unit-test:installer:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: installer
   tags:
     - arch:amd64
   script:
@@ -522,6 +549,8 @@ unit-test:installer:
     - "yarn test:unit"
     - "yarn cdk synth"
     - "cp cdk.out/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -548,12 +577,17 @@ unit-test:modules:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: modules
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/modules"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -578,12 +612,17 @@ unit-test:tools:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: tools
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-accelerator/tools"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -608,12 +647,19 @@ unit-test:aws-lza:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: aws-lza
+    MC_REPORT_GLOB: "source/packages/@aws-lza/test-reports/*.xml"
+    MC_COVERAGE_GLOB: "source/packages/@aws-lza/coverage/coverage-summary.json"
   tags:
     - arch:amd64
   script:
     - "export NODE_OPTIONS=--max_old_space_size=6144"
     - "cd source/packages/@aws-lza"
     - "yarn test:unit"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:
@@ -638,6 +684,9 @@ unit-test:installer-container:
     KUBERNETES_CPU_LIMIT: "2"
     KUBERNETES_MEMORY_REQUEST: "8Gi"
     KUBERNETES_MEMORY_LIMIT: "8Gi"
+    AWS_CREDS_TARGET_ROLE: "${MC_TESTDATA_ROLE_ARN}"
+    AWS_DEFAULT_REGION: us-east-1
+    MC_COMPONENT: installer-container
   tags:
     - arch:amd64
   script:
@@ -646,6 +695,8 @@ unit-test:installer-container:
     - "yarn test:unit"
     - "yarn cdk synth --context use-external-pipeline-account=true"
     - "cp cdk.out/AWSAccelerator-InstallerContainerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerContainerStack.template.json"
+  after_script:
+    - !reference [.publish-unit-test-data, script]
   artifacts:
     when: always
     reports:

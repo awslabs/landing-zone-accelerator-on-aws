@@ -16,6 +16,8 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     silent: true,
     coverage: {
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
       exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {
         branches: 63,

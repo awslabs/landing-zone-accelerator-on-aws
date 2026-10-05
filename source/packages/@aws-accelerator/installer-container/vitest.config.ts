@@ -48,6 +48,8 @@ export default defineConfig({
     outputFile: './test-reports/test-results.xml',
     testTimeout: 120000, // CDK synthesis can take time, especially for complex stacks
     coverage: {
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage',
       exclude: ['**/*.d.ts', '**/dist/**', '**/node_modules/**'],
       thresholds: {
         branches: 70,

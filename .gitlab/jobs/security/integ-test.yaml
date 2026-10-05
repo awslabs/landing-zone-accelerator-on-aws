@@ -38,6 +38,15 @@
 # in the upstream repo when relevant module files have changed.
 # Prereq job always runs when any module job runs (idempotent infrastructure).
 
+.publish-integ-test-data:
+  script:
+    - |
+      MC_TEST_TYPE=integration MC_COMPONENT="${MC_COMPONENT:-$MODULE_INTEG_SLUG}" \
+      MC_PARTITION=commercial MC_REGION="${AWS_DEFAULT_REGION:-us-east-1}" \
+      MC_MANIFEST="$CI_PROJECT_DIR/integ-manifest-${MC_COMPONENT:-$MODULE_INTEG_SLUG}.json" \
+      MC_REPORT_GLOB="source/packages/@aws-accelerator/accelerator/test-reports/*.xml" \
+      bash .gitlab/scripts/publish-test-data.sh || true
+
 # ============================================================
 # Shared rule fragments (DRY)
 # ============================================================
@@ -128,6 +137,7 @@ integ:macie:aws:us-east-1:
     VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
     PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     ACCELERATOR_STAGE: "integ-macie"
+    MC_COMPONENT: macie
     # LOGGING_BUCKET_NAME and LOGGING_BUCKET_KEY_ARN are injected from
     # the prereq job's dotenv artifact (actual KMS key ARN, not alias).
   tags:
@@ -137,6 +147,8 @@ integ:macie:aws:us-east-1:
     # Publish scenario descriptions.
     - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts macie 'Amazon Macie' > $CI_PROJECT_DIR/integ-manifest-macie.json"
     - "yarn test:integration test/integration/modules/macie/index.test.integration.ts"
+  after_script:
+    - !reference [.publish-integ-test-data, script]
   artifacts:
     when: always
     reports:
@@ -176,6 +188,7 @@ integ:guardduty:aws:us-east-1:
     VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
     PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     ACCELERATOR_STAGE: "integ-guardduty"
+    MC_COMPONENT: guardduty
     # LOGGING_BUCKET_NAME and LOGGING_BUCKET_KEY_ARN are injected from
     # the prereq job's dotenv artifact (actual KMS key ARN, not alias).
   tags:
@@ -185,6 +198,8 @@ integ:guardduty:aws:us-east-1:
     # Publish scenario descriptions.
     - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts guardduty 'Amazon GuardDuty' > $CI_PROJECT_DIR/integ-manifest-guardduty.json"
     - "yarn test:integration test/integration/modules/guardduty/index.test.integration.ts"
+  after_script:
+    - !reference [.publish-integ-test-data, script]
   artifacts:
     when: always
     reports:
@@ -224,6 +239,7 @@ integ:tgw:aws:us-east-1:
     VERBOSE_LOG_GROUP_NAME: "${ACCELERATOR_PREFIX}-Module-Verbose-Logs"
     PIPELINE_ACCOUNT_ID: "${SAMPLE_CONFIG_ENV_MANAGEMENT_ACCOUNT_ID}"
     ACCELERATOR_STAGE: "integ-tgw"
+    MC_COMPONENT: tgw
     # LOGGING_BUCKET_NAME and LOGGING_BUCKET_KEY_ARN are injected from
     # the prereq job's dotenv artifact (actual KMS key ARN, not alias).
     # TGW_INTEG_SSM_PREFIX, TGW_INTEG_NETWORK_ACCOUNT_ID,
@@ -236,6 +252,8 @@ integ:tgw:aws:us-east-1:
     # Publish scenario descriptions.
     - "npx ts-node --transpile-only test/integration/framework/aggregate-manifests.ts tgw 'Transit Gateway Associations & Propagations' > $CI_PROJECT_DIR/integ-manifest-tgw.json"
     - "yarn test:integration test/integration/modules/tgw/index.test.integration.ts"
+  after_script:
+    - !reference [.publish-integ-test-data, script]
   artifacts:
     when: always
     reports:
@@ -291,6 +309,7 @@ integ:tgw:aws:us-east-1:
       bash "${CI_PROJECT_DIR}/source/packages/@aws-accelerator/accelerator/test/integration/framework/run-module-integration.sh" \
         cleanup "${MODULE_INTEG_SLUG}"
       echo "fallback_cleanup_exit_code=$?" | tee -a "${CI_PROJECT_DIR}/integ-${MODULE_INTEG_SLUG}-job-status.txt"
+    - !reference [.publish-integ-test-data, script]
   artifacts:
     when: always
     reports:
