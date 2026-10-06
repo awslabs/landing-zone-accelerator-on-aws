@@ -207,10 +207,7 @@ export class PolicyResource {
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     });
 
-    if (
-      serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName &&
-      props.partition == 'aws'
-    ) {
+    if (serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName) {
       this.stack.addSsmParameter({
         logicalId: pascalCase(`SsmParam${scp.name}ScpPolicyId`),
         parameterName: this.stack.getSsmPath(SsmResourceType.SCP, [scp.name]),
@@ -382,7 +379,7 @@ export class PolicyResource {
    * @param props {@link AccountsStackProps}
    */
   public configureAndAttachQuarantineScp(scpItems: scpItem[], props: AcceleratorStackProps) {
-    if (props.organizationConfig.quarantineNewAccounts?.enable === true && props.partition === 'aws') {
+    if (props.organizationConfig.quarantineNewAccounts?.enable === true) {
       const quarantineScpItem = scpItems.find(
         item => item.name === props.organizationConfig.quarantineNewAccounts?.scpPolicyName,
       );
@@ -474,8 +471,9 @@ export class PolicyResource {
       );
 
       //If any GovCloud accounts are configured also
-      //watch for any GovCloudCreateAccount events
-      if (props.accountsConfig.anyGovCloudAccounts()) {
+      //watch for any GovCloudCreateAccount events.
+      //The CreateGovCloudAccount API is only available in the commercial aws partition.
+      if (props.partition === 'aws' && props.accountsConfig.anyGovCloudAccounts()) {
         this.logger.info(`Creating EventBridge rule to attach quarantine scp to accounts when GovCloud is enabled`);
         const createGovCloudAccountEventRule = new cdk.aws_events.Rule(this.stack, 'CreateGovCloudAccountRule', {
           eventPattern: {

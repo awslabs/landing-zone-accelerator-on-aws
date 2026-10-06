@@ -24,7 +24,9 @@ The Finalize stack is the last stage of the pipeline. It re-evaluates and re-att
 ### Quarantine SCP Detachment
 - If `quarantineNewAccounts` is enabled, detaches the quarantine SCP from accounts that have been fully configured
 - Uses an EventBridge rule + Lambda to detect when accounts are ready
-- Only runs in the `aws` partition
+- Runs in all partitions when `quarantineNewAccounts` is enabled. The attach-side watch for
+  `CreateGovCloudAccount` remains commercial-only, since that API is only available in the `aws`
+  partition (see the Accounts stack)
 
 ## Key Code Paths
 

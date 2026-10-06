@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded by a shared per-invocation deadline) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
 - fix(deps): update adm-zip 0.6.0->0.6.1 to remediate CVE-2026-77301 (HIGH, denial of service via uncontrolled memory allocation) flagged by the daily vulnerability scan
 - fix(organizations): reduce Organizations API calls made by the Prepare stage SCP count validation so it no longer exceeds the 15 minute Lambda limit on large organizations; attached policy details from `ListPoliciesForTarget` are used directly instead of re-listing every SCP in the organization once per attached policy per target, `ListTagsForResource` results are cached per policy for the invocation, and phase start/end timing is logged so a timeout identifies the responsible validation phase
+- fix(scp): apply `quarantineNewAccounts` in all partitions instead of commercial `aws` only
 
 ## [1.17.0] - 
 

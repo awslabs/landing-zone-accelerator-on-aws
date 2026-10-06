@@ -654,6 +654,111 @@ describe('AccountsStack - Quarantine SCP Functionality', () => {
     const quarantineLambda = quarantineLambdas[0] as any;
     expect(quarantineLambda.Properties.Environment.Variables.SCP_POLICY_NAME).toBe('Quarantine');
   });
+
+  it('should create the quarantine SCP id SSM parameter when quarantine is enabled', () => {
+    const template = getQuarantineTemplate();
+
+    const ssmParams = template.findResources('AWS::SSM::Parameter');
+    const scpIdParam = Object.values(ssmParams).find(
+      (p: any) =>
+        typeof p.Properties?.Name === 'string' && p.Properties.Name.endsWith('/organizations/scp/Quarantine/id'),
+    );
+    expect(scpIdParam).toBeDefined();
+  });
+});
+
+describe('AccountsStack - Quarantine SCP partition support', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const templateFor = (partition: string) => {
+    const stack = Create.stack('Management-us-east-1', [AcceleratorStage.ACCOUNTS, partition]);
+    expect(stack).toBeDefined();
+    return Template.fromStack(stack!);
+  };
+
+  it.each(['aws-us-gov', 'aws-cn', 'aws-iso'])(
+    'should create the attach Lambda and CreateAccountRule on %s partition',
+    partition => {
+      const template = templateFor(partition);
+
+      const lambdas = template.findResources('AWS::Lambda::Function');
+      const quarantineLambdas = Object.values(lambdas).filter((lambda: any) =>
+        lambda.Properties?.Description?.includes('quarantine scp'),
+      );
+      expect(quarantineLambdas.length).toBe(1);
+
+      template.hasResourceProperties('AWS::Events::Rule', {
+        Description: 'Rule to notify when a new account is created.',
+        EventPattern: {
+          detail: {
+            eventName: ['CreateAccount'],
+            eventSource: ['organizations.amazonaws.com'],
+          },
+        },
+      });
+    },
+  );
+
+  it.each(['aws-us-gov', 'aws-cn', 'aws-iso'])(
+    'should not create CreateGovCloudAccountRule on %s partition',
+    partition => {
+      const template = templateFor(partition);
+
+      // CreateGovCloudAccount is a commercial-only API. Watching for it outside `aws`
+      // creates a rule that can never fire.
+      const rules = template.findResources('AWS::Events::Rule');
+      const govCloudRules = Object.values(rules).filter((rule: any) =>
+        JSON.stringify(rule).includes('CreateGovCloudAccount'),
+      );
+      expect(govCloudRules.length).toBe(0);
+    },
+  );
+
+  it.each(['aws-us-gov', 'aws-cn', 'aws-iso'])(
+    'should create the quarantine SCP id SSM parameter on %s partition',
+    partition => {
+      const template = templateFor(partition);
+
+      const ssmParams = template.findResources('AWS::SSM::Parameter');
+      const scpIdParam = Object.values(ssmParams).find(
+        (p: any) =>
+          typeof p.Properties?.Name === 'string' && p.Properties.Name.endsWith('/organizations/scp/Quarantine/id'),
+      );
+      expect(scpIdParam).toBeDefined();
+    },
+  );
+
+  it.each(['aws-us-gov', 'aws-cn', 'aws-iso'])(
+    'should scope the attach Lambda AttachPolicy grant to partition-correct ARNs on %s partition',
+    partition => {
+      const template = templateFor(partition);
+
+      // orgPolicyWrite is the actual quarantine control: it scopes organizations:AttachPolicy to
+      // the quarantine SCP and to accounts in the org. These ARNs are built from
+      // `this.stack.partition`, which CDK renders as the `AWS::Partition` pseudo-parameter rather
+      // than a baked literal - so CloudFormation resolves it to the deploying partition. Assert
+      // that indirection is intact and that no commercial ARN was hardcoded.
+      //
+      // Note the deliberate asymmetry with finalize-stack.test.ts, which asserts a literal
+      // `arn:aws-us-gov:organizations::`. The detach side interpolates `props.partition` into a
+      // plain string inside CustomResourceProvider policyStatements, so it bakes a literal there.
+      const policies = template.findResources('AWS::IAM::Policy');
+      const attachPolicy = Object.values(policies).find((p: any) =>
+        JSON.stringify(p).includes('organizations:AttachPolicy'),
+      ) as any;
+      expect(attachPolicy).toBeDefined();
+
+      const orgWrite = attachPolicy.Properties.PolicyDocument.Statement.find((s: any) => s.Sid === 'OrgWrite');
+      expect(orgWrite).toBeDefined();
+
+      const rendered = JSON.stringify(orgWrite.Resource);
+      expect(rendered).toContain('AWS::Partition');
+      expect(rendered).not.toContain('arn:aws:organizations');
+      expect(rendered).not.toContain(`arn:${partition}:organizations`);
+    },
+  );
 });
 
 describe('AccountsStack - MoveAccountRule Configuration Combinations', () => {

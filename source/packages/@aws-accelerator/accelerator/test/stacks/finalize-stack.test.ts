@@ -149,27 +149,24 @@ describe('FinalizeStack - quarantineNewAccounts gating', () => {
     expect(quarantineLambdas.length).toBeGreaterThan(0);
   });
 
-  test('does not create quarantine resources on aws-us-gov partition even when enabled', () => {
+  test.each(['aws-us-gov', 'aws-cn', 'aws-iso', 'aws-iso-b', 'aws-iso-f', 'aws-iso-e', 'aws-eusc'])(
+    'creates quarantine detach resources on %s partition when enabled',
+    partition => {
+      const props = buildFinalizeProps({ quarantineEnabled: true, partition });
+      const stack = new FinalizeStack(app, `test-finalize-quarantine-${partition}`, props);
+      const template = Template.fromStack(stack);
+
+      template.resourceCountIs('Custom::DetachQuarantineScp', 1);
+    },
+  );
+
+  test('detach resource policy uses the partition-correct Organizations ARNs', () => {
     const props = buildFinalizeProps({ quarantineEnabled: true, partition: 'aws-us-gov' });
-    const stack = new FinalizeStack(app, 'test-finalize-quarantine-usgov', props);
+    const stack = new FinalizeStack(app, 'test-finalize-quarantine-usgov-arns', props);
     const template = Template.fromStack(stack);
 
-    const lambdas = template.findResources('AWS::Lambda::Function');
-    const quarantineLambdas = Object.values(lambdas).filter((l: any) =>
-      JSON.stringify(l).toLowerCase().includes('quarantine'),
-    );
-    expect(quarantineLambdas.length).toBe(0);
-  });
-
-  test('does not create quarantine resources on aws-cn partition even when enabled', () => {
-    const props = buildFinalizeProps({ quarantineEnabled: true, partition: 'aws-cn' });
-    const stack = new FinalizeStack(app, 'test-finalize-quarantine-cn', props);
-    const template = Template.fromStack(stack);
-
-    const lambdas = template.findResources('AWS::Lambda::Function');
-    const quarantineLambdas = Object.values(lambdas).filter((l: any) =>
-      JSON.stringify(l).toLowerCase().includes('quarantine'),
-    );
-    expect(quarantineLambdas.length).toBe(0);
+    const policies = JSON.stringify(template.findResources('AWS::IAM::Role'));
+    expect(policies).toContain('arn:aws-us-gov:organizations::');
+    expect(policies).not.toContain('arn:aws:organizations::');
   });
 });
