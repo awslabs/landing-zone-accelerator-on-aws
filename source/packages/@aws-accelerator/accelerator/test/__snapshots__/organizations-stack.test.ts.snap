@@ -7373,6 +7373,7 @@ exports[`OrganizationsStack with SkipGuardDuty > Construct(OrganizationsStack wi
                     "organizations:ListAWSServiceAccessForOrganization",
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
+                    "organizations:ListRoots",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {

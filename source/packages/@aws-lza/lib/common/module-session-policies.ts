@@ -252,6 +252,12 @@ const GUARDDUTY = createModulePolicy('guardduty', [
   // service principals and enables trusted access when missing (management account, before regional ops).
   'organizations:ListAWSServiceAccessForOrganization',
   'organizations:EnableAWSServiceAccess',
+  // GuardDuty's EnableOrganizationAdminAccount requires the calling principal to hold
+  // organizations:ListRoots. Without it the API returns AccessDeniedException
+  // ("you do not have the organizations:ListRoots permission") on first-time
+  // delegated-admin enablement (greenfield). This is undocumented on the GuardDuty
+  // permissions page but was added to the AmazonGuardDutyFullAccess_v2 managed policy.
+  'organizations:ListRoots',
 ]);
 
 const CONFIG_RULE_TAGGING = createModulePolicy('config-rule-tagging', [

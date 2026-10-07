@@ -192,6 +192,17 @@ describe('ModuleSessionPolicies', () => {
       expect(actions).toContain('organizations:EnableAWSServiceAccess');
     });
 
+    it('GuardDuty module should grant organizations:ListRoots for EnableOrganizationAdminAccount', () => {
+      // GuardDuty's EnableOrganizationAdminAccount requires the caller to hold
+      // organizations:ListRoots; without it greenfield delegated-admin enablement fails with
+      // AccessDeniedException ("you do not have the organizations:ListRoots permission").
+      const parsed = JSON.parse(MODULE_SESSION_POLICIES['guardduty'].policy);
+      const actions: string[] = parsed.Statement.find(
+        (s: { Sid?: string }) => s.Sid === 'ModuleSpecificActions',
+      ).Action;
+      expect(actions).toContain('organizations:ListRoots');
+    });
+
     it('Config rule tagging should use least-privilege Config actions', () => {
       const parsed = JSON.parse(MODULE_SESSION_POLICIES['config-rule-tagging'].policy);
       const actions: string[] = parsed.Statement.find(
