@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.18.0] - 
 
+### Added
+
+- feat(installer-container): publish the installer ECS task's VPC, subnet, and security group IDs to stack-scoped SSM parameters under `/<prefix>/<stackName>/network/` (qualifier-scoped when using an external pipeline account); values resolve to the created resources or the customer-provided IDs when UseExistingVpc is Yes
+
 ### Changed
 
 - chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide

@@ -2275,6 +2275,43 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStack/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -2300,6 +2337,80 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStack/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStack/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -5231,6 +5342,47 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackCombined/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -5260,6 +5412,88 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackCombined/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackCombined/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -8210,6 +8444,43 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackSingleAccount/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -8235,6 +8506,80 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackSingleAccount/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackSingleAccount/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -11159,6 +11504,47 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackExternal/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -11188,6 +11574,88 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackExternal/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/TestInstallerContainerStackExternal/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -14147,6 +14615,43 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackPermBoundary/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -14172,6 +14677,80 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackPermBoundary/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackPermBoundary/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -17067,6 +17646,43 @@ def handler(event, context):
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamSecurityGroupId6B3345F4": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackS3/network/security-group/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "SecurityGroup",
+            },
+            {
+              "Ref": "ExistingSecurityGroupId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": {
       "Properties": {
         "Name": {
@@ -17092,6 +17708,80 @@ def handler(event, context):
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamSubnetId03057112": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackS3/network/subnet/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "PrivateSubnet0",
+            },
+            {
+              "Ref": "ExistingSubnetId",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamVpcIdD74859D2": {
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/TestInstallerContainerStackS3/network/vpc/id",
+            ],
+          ],
+        },
+        "Tags": {
+          "Accelerator": {
+            "Ref": "AcceleratorPrefix",
+          },
+        },
+        "Type": "String",
+        "Value": {
+          "Fn::If": [
+            "CreateVpcCondition",
+            {
+              "Ref": "Vpc",
+            },
+            {
+              "Ref": "ExistingVpcId",
+            },
+          ],
         },
       },
       "Type": "AWS::SSM::Parameter",

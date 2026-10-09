@@ -394,6 +394,8 @@ export class InstallerContainerStack extends cdk.Stack {
 
     let stackIdSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/stack-id`;
     let acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/version`;
+    // Stack-scoped so installer networking params never collide with customer /<prefix>/network/vpc/<name>/... params
+    let networkSsmParameterPrefix = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/network`;
     let installerKeyAliasName = `alias/${oneWordPrefix}/installer/kms/key`;
     let acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/installer/kms/key-arn`;
     let installerAccessLogsBucketName = `${lowerCasePrefix}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
@@ -409,6 +411,9 @@ export class InstallerContainerStack extends cdk.Stack {
       acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/version`;
+      networkSsmParameterPrefix = `/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/${
+        cdk.Stack.of(this).stackName
+      }/network`;
       installerKeyAliasName = `alias/${oneWordPrefix}/${this.acceleratorQualifier!.valueAsString}/installer/kms/key`;
       acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/${
         this.acceleratorQualifier!.valueAsString
@@ -962,6 +967,41 @@ export class InstallerContainerStack extends cdk.Stack {
       groupDescription: 'Security group for VPC',
     });
     securityGroup.cfnOptions.condition = createVpcCondition;
+
+    /**
+     * Networking SSM Parameters
+     * Publishes the VPC, subnet, and security group used by the installer ECS task.
+     * Values resolve to the created resources when UseExistingVpc = No, otherwise to the customer-provided IDs.
+     */
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamVpcId', {
+      parameterName: `${networkSsmParameterPrefix}/vpc/id`,
+      stringValue: cdk.Fn.conditionIf(
+        createVpcCondition.logicalId,
+        vpc.ref,
+        this.existingVpcId.valueAsString,
+      ).toString(),
+      simpleName: false,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamSubnetId', {
+      parameterName: `${networkSsmParameterPrefix}/subnet/id`,
+      stringValue: cdk.Fn.conditionIf(
+        createVpcCondition.logicalId,
+        privateSubnet.ref,
+        this.existingSubnetId.valueAsString,
+      ).toString(),
+      simpleName: false,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamSecurityGroupId', {
+      parameterName: `${networkSsmParameterPrefix}/security-group/id`,
+      stringValue: cdk.Fn.conditionIf(
+        createVpcCondition.logicalId,
+        securityGroup.ref,
+        this.existingSecurityGroupId.valueAsString,
+      ).toString(),
+      simpleName: false,
+    });
 
     /**
      * VPC Flow Logs
