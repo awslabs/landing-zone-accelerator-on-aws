@@ -26,6 +26,12 @@ For a detailed cost breakdown, see the [Cost](https://docs.aws.amazon.com/soluti
 | SCPs per target | 5 | LZA validates this during the Prepare stage |
 | Accounts per organization | 10 (soft limit) | Request increase before deploying many workload accounts |
 
+### AWS Fargate (container deployment)
+
+| Quota | Default | Relevance |
+|-------|---------|-----------|
+| Fargate On-Demand vCPU resource count (`L-3032A538`) | 6 ([Amazon ECS endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/ecs-service.html)) | The container deployment task requests 8 vCPU. Raise the quota to at least 8 in the home Region of the LZA deployment account before the first run, or the RunEngine automation fails at the RunTask step |
+
 ### AWS Config
 
 | Quota | Default | Relevance |

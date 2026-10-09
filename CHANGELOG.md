@@ -87,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(s3): add explicit DependsOn between bucket policy and bucket to prevent CloudFormation race condition (issue #402)
 - fix(securityhub): skip deploymentTargets validation for disabled standards (issue #537)
 - fix(customizations): support optional autoScalingGroupName for firewall and application auto scaling groups (note: setting this value on an existing auto scaling group forces resource replacement)
+- docs(installer-container): document the Fargate On-Demand vCPU quota the deployment task needs (8 vCPU against an AWS default of 6) in the container guide and the cost and quotas page, and add AWS European Sovereign Cloud steps to the container guide: host the installer template in Amazon S3 in the partition (it is larger than the 51,200-byte inline limit) and copy the container image into a private Amazon ECR repository in the partition
 - docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
 - fix(s3): allow expired object delete marker only lifecycle rules
 - chore: upgrade to node24

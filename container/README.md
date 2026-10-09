@@ -57,6 +57,16 @@ To set up the LZA deployment account, choose one of the following options:
   - For Control Tower deployments: `AWSControlTowerExecution`
   - For Organizations-only deployments: `OrganizationAccountAccessRole`
 
+**Fargate vCPU quota**
+
+The deployment task requests 8 vCPU and 32 GB of memory on AWS Fargate. The AWS default for the **Fargate On-Demand vCPU resource count** quota (quota code `L-3032A538`) is 6 ([Amazon ECS endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/ecs-service.html)), which is below what the task needs. Before the first run, check the applied value in the home Region of the LZA deployment account, and [request an increase](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html) to at least 8 if it is lower:
+
+```bash
+aws service-quotas get-service-quota --service-code fargate --quota-code L-3032A538 --region <home-region>
+```
+
+If the quota is too low, ECS returns `You’ve reached the limit on the number of vCPUs you can run concurrently` and the **RunTask** step of the automation fails.
+
 ---
 
 #### Cross-Account IAM Role Setup
@@ -124,6 +134,31 @@ For more information on Amazon ECR:
 If you are contributing to the solution and need to build the image from source, see [Building the Container Image Locally](https://awslabs.github.io/landing-zone-accelerator-on-aws/latest/developer-guide/container-build/) in the Developer Guide. Locally built images are for development and testing only and are not suitable for running in Amazon ECS — use the public image referenced above for deployments.
 
 
+#### AWS European Sovereign Cloud
+
+In the AWS European Sovereign Cloud (partition `aws-eusc`, Region `eusc-de-east-1`), the supported path is to serve the template and the container image from inside the partition. Complete these steps in the LZA deployment account before you launch the solution:
+
+1. **Host the template in Amazon S3 in the partition.** The template is larger than the 51,200-byte limit for a template uploaded in the request (see [CloudFormation quotas](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html)), so CloudFormation must read it from an Amazon S3 URL, and the `s3.amazonaws.com/solutions-reference` URL in this guide is not in the `aws-eusc` partition. Download the template for the release you deploy, upload it to an S3 bucket in the LZA deployment account (block public access and encrypt the bucket, as for any other bucket in the account), and give its URL in step 4 of [Launch the solution](#launch-the-solution):
+
+    ```bash
+    aws s3 cp AWSAccelerator-InstallerContainerStack.template s3://<template-bucket>/installer/ --region eusc-de-east-1
+    ```
+
+    The Amazon S3 URL then has the form `https://<template-bucket>.s3.eusc-de-east-1.amazonaws.eu/installer/AWSAccelerator-InstallerContainerStack.template`.
+
+    If you synthesize the template from source with `yarn cdk synth`, upload the file that CDK writes to the `cdk.out` directory. The command's standard output starts with deployment mode messages, so it is not a valid template.
+
+2. **Host the container image in Amazon ECR in the partition.** Copy the `linux/amd64` release image from the public gallery into a private Amazon ECR repository in the LZA deployment account, and set the `ImageUri` parameter to that image, so the task pulls its image from a registry in the partition. The registry domain is `<account-id>.dkr.ecr.eusc-de-east-1.amazonaws.eu`:
+
+    ```bash
+    docker pull --platform linux/amd64 public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:<version>
+    docker tag public.ecr.aws/aws-solutions/landing-zone-accelerator-on-aws:<version> <account-id>.dkr.ecr.eusc-de-east-1.amazonaws.eu/<repository>:<version>
+    aws ecr get-login-password --region eusc-de-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.eusc-de-east-1.amazonaws.eu
+    docker push <account-id>.dkr.ecr.eusc-de-east-1.amazonaws.eu/<repository>:<version>
+    ```
+
+3. **Check the Fargate vCPU quota** in `eusc-de-east-1`, as described in [Fargate vCPU quota](#lza-deployment-account).
+
 ### Deploy the Solution
 
 #### AWS CloudFormation template
@@ -144,7 +179,7 @@ To deploy the solution, complete the following steps:
 
 3. Navigate to **AWS CloudFormation** and click **Create Stack**.
 
-4. On the **Create stack** page, copy the [template URL](https://s3.amazonaws.com/solutions-reference/landing-zone-accelerator-on-aws/latest/AWSAccelerator-InstallerContainerStack.template) and paste it in the **Amazon S3 URL** text box and choose **Next**.
+4. On the **Create stack** page, copy the [template URL](https://s3.amazonaws.com/solutions-reference/landing-zone-accelerator-on-aws/latest/AWSAccelerator-InstallerContainerStack.template) and paste it in the **Amazon S3 URL** text box and choose **Next**. In the AWS European Sovereign Cloud, use the URL of the template in your own bucket (see [AWS European Sovereign Cloud](#aws-european-sovereign-cloud)).
 
 5. On the **Specify stack details** page, assign a name to your solution stack (recommended: `AWSAccelerator-InstallerContainerStack`).
 
