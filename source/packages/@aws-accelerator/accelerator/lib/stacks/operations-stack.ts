@@ -378,6 +378,26 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   /**
+   * Returns the SAML:aud value for partitions where SamlConsolePrincipal does not produce one.
+   *
+   * - aws-cn: workaround for https://github.com/aws/aws-cdk/issues/22091
+   * - aws-eusc: the AWS CDK region facts have an empty SAML sign-on URL, and the partition only publishes
+   *   regional sign-in endpoints (https://<region>.signin.amazonaws-eusc.eu/saml)
+   *
+   * @returns the SAML audience, or undefined to use SamlConsolePrincipal
+   */
+  private getSamlAudience(): string | undefined {
+    switch (this.props.partition) {
+      case 'aws-cn':
+        return 'https://signin.amazonaws.cn/saml';
+      case 'aws-eusc':
+        return `https://${this.props.globalConfig.homeRegion}.signin.amazonaws-eusc.eu/saml`;
+      default:
+        return undefined;
+    }
+  }
+
+  /**
    * Generates the role principal for a single assumedBy entry.
    *
    * @param assumedByItem
@@ -420,20 +440,29 @@ export class OperationsStack extends AcceleratorStack {
         }
       }
 
-      case 'provider':
-        // workaround due to https://github.com/aws/aws-cdk/issues/22091
-        if (this.props.partition === 'aws-cn') {
+      case 'provider': {
+        const samlProvider = this.providers[assumedByItem.principal];
+        if (!samlProvider) {
+          this.logger.error(
+            `SAML provider "${assumedByItem.principal}" referenced by role "${roleItem.name}" is not defined. ` +
+              `Add it to iam-config.yaml providers[] or update roleSets[].roles[name="${roleItem.name}"].assumedBy[].principal.`,
+          );
+          throw new Error(`SAML provider ${assumedByItem.principal} not found`);
+        }
+        const samlAudience = this.getSamlAudience();
+        if (samlAudience) {
           return new cdk.aws_iam.FederatedPrincipal(
-            this.providers[assumedByItem.principal!].samlProviderArn,
+            samlProvider.samlProviderArn,
             {
               StringEquals: {
-                'SAML:aud': 'https://signin.amazonaws.cn/saml',
+                'SAML:aud': samlAudience,
               },
             },
             'sts:AssumeRoleWithSAML',
           );
         }
-        return new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal!]);
+        return new cdk.aws_iam.SamlConsolePrincipal(samlProvider);
+      }
 
       case 'principalArn':
         return new cdk.aws_iam.ArnPrincipal(assumedByItem.principal!);
