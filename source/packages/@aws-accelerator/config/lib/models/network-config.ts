@@ -5779,9 +5779,11 @@ export type NfwStatefulDefaultActionType =
   | 'aws:drop_strict'
   | 'aws:drop_established'
   | 'aws:drop_established_app_layer'
+  | 'aws:drop_established_app_layer_to_server'
   | 'aws:alert_strict'
   | 'aws:alert_established'
-  | 'aws:alert_established_app_layer';
+  | 'aws:alert_established_app_layer'
+  | 'aws:alert_established_app_layer_to_server';
 export type NfwStatelessRuleTcpFlagType = 'FIN' | 'SYN' | 'RST' | 'PSH' | 'ACK' | 'URG' | 'ECE' | 'CWR';
 export type NfwStatefulRuleOptionsType = 'DEFAULT_ACTION_ORDER' | 'STRICT_ORDER';
 export type NfwLogType = 'ALERT' | 'FLOW';
