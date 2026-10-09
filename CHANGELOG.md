@@ -101,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(sts): stop hardcoding the STS endpoint in the accelerator pipeline/CLI execution environment and the `@aws-lza` modules, so the AWS SDK resolves the regional endpoint natively and honors the standard `AWS_ENDPOINT_URL_STS` / `AWS_ENDPOINT_URL` and `AWS_USE_FIPS_ENDPOINT` overrides where those variables are present. This does not cover STS clients invoked inside Lambda custom resources, which do not receive these environment variables at runtime (issue #1183)
 - fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later (issue #4188)
 - fix(deps): remediate HIGH CVEs (brace-expansion, fast-uri, js-yaml, nanoid, postcss, ip-address, undici)
+- fix(deps): remediate HIGH/CRITICAL CVEs (handlebars, fast-uri, undici, brace-expansion, source-map-js, ip-address, basic-ftp, markdown-it)
 
 ## [1.16.2] - 2026-08-31
 
