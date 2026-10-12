@@ -73,3 +73,75 @@ describe('NetworkVpcDnsStack VPC-level resolver rules', () => {
     expect(vpcLevelRules).toHaveLength(1);
   });
 });
+
+describe('NetworkVpcDnsStack central interface endpoint record sets', () => {
+  const acceleratorTestStacks = Create.stacks(AcceleratorStage.NETWORK_VPC_DNS);
+
+  const recordNamesInZone = (zoneName: string): string[] => {
+    const stack = acceleratorTestStacks.stacks.get('Network-us-east-1')!;
+    const records = Template.fromStack(stack).findResources('AWS::Route53::RecordSet');
+    return Object.values(records)
+      .map(r => r.Properties?.Name as string)
+      .filter(name => name === zoneName || name === `*.${zoneName}`)
+      .sort();
+  };
+
+  const recordNamesByLogicalId = (logicalIdPrefix: string): Record<string, string> => {
+    const stack = acceleratorTestStacks.stacks.get('Network-us-east-1')!;
+    const records = Template.fromStack(stack).findResources('AWS::Route53::RecordSet');
+    return Object.fromEntries(
+      Object.entries(records)
+        .filter(([id]) => id.startsWith(logicalIdPrefix))
+        .map(([id, r]) => [id, r.Properties?.Name as string]),
+    );
+  };
+
+  test('creates wildcard and apex records for the FIPS variant of a wildcard service (ecr-fips.dkr)', () => {
+    // Network-Endpoints is the central endpoint VPC and declares both ecr.dkr and ecr-fips.dkr.
+    // Both PrivateDnsNames are wildcards, so with private DNS disabled on central endpoints the
+    // FIPS zone needs the same wildcard record as the non-FIPS zone or account-scoped hosts NXDOMAIN.
+    expect(recordNamesInZone('dkr.ecr-fips.us-east-1.amazonaws.com.')).toEqual([
+      '*.dkr.ecr-fips.us-east-1.amazonaws.com.',
+      'dkr.ecr-fips.us-east-1.amazonaws.com.',
+    ]);
+    expect(recordNamesInZone('dkr.ecr.us-east-1.amazonaws.com.')).toEqual([
+      '*.dkr.ecr.us-east-1.amazonaws.com.',
+      'dkr.ecr.us-east-1.amazonaws.com.',
+    ]);
+  });
+
+  test('creates wildcard and apex records for bedrock-agentcore.gateway', () => {
+    // AgentCore Gateway's PrivateDnsName is *.gateway.bedrock-agentcore.<region>.amazonaws.com; gateway hosts are
+    // <gateway-id>.gateway.bedrock-agentcore..., so without the wildcard record they NXDOMAIN.
+    expect(recordNamesInZone('gateway.bedrock-agentcore.us-east-1.amazonaws.com.')).toEqual([
+      '*.gateway.bedrock-agentcore.us-east-1.amazonaws.com.',
+      'gateway.bedrock-agentcore.us-east-1.amazonaws.com.',
+    ]);
+  });
+
+  test('keeps the deployed apex record under its existing logical ID for services that became wildcard services', () => {
+    // Before ecr-fips.dkr and bedrock-agentcore.gateway were wildcard services, their apex records were deployed
+    // under the base ...EpRecordSet ID.
+    // Renaming that resource to the wildcard name while creating a new apex resource would race on the same
+    // record name during upgrade, so the apex must stay on the existing ID and the wildcard must be new.
+    expect(recordNamesByLogicalId('NetworkEndpointsVpcEcrFipsDkrEpRecordSet')).toEqual({
+      NetworkEndpointsVpcEcrFipsDkrEpRecordSet79BD22AA: 'dkr.ecr-fips.us-east-1.amazonaws.com.',
+      NetworkEndpointsVpcEcrFipsDkrEpRecordSetWildcard2327EE16: '*.dkr.ecr-fips.us-east-1.amazonaws.com.',
+    });
+    expect(recordNamesByLogicalId('NetworkEndpointsVpcBedrockAgentcoreGatewayEpRecordSet')).toEqual({
+      NetworkEndpointsVpcBedrockAgentcoreGatewayEpRecordSetC619D2F3:
+        'gateway.bedrock-agentcore.us-east-1.amazonaws.com.',
+      NetworkEndpointsVpcBedrockAgentcoreGatewayEpRecordSetWildcard9F1A8173:
+        '*.gateway.bedrock-agentcore.us-east-1.amazonaws.com.',
+    });
+    // Existing wildcard services keep their deployed mapping.
+    expect(recordNamesByLogicalId('NetworkEndpointsVpcEcrDkrEpRecordSet')).toEqual({
+      NetworkEndpointsVpcEcrDkrEpRecordSet2DE2B6CB: '*.dkr.ecr.us-east-1.amazonaws.com.',
+      NetworkEndpointsVpcEcrDkrEpRecordSetNonWildcard056D21B7: 'dkr.ecr.us-east-1.amazonaws.com.',
+    });
+  });
+
+  test('does not add a wildcard record for a non-wildcard service', () => {
+    expect(recordNamesInZone('ssm.us-east-1.amazonaws.com')).toEqual(['ssm.us-east-1.amazonaws.com']);
+  });
+});

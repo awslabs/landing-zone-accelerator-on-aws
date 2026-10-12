@@ -735,6 +735,69 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       },
       "Type": "AWS::EC2::VPCEndpoint",
     },
+    "NetworkEndpointsVpcBedrockAgentcoreGatewayEpCAE9E44B": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": [
+          {
+            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-east-1.bedrock-agentcore.gateway",
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Endpoints-bedrock-agentcore.gateway",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
     "NetworkEndpointsVpcCodeartifactApiEp2E4B51E8": {
       "Properties": {
         "PolicyDocument": {
@@ -1108,6 +1171,69 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
           {
             "Key": "Name",
             "Value": "Network-Endpoints-ecr.dkr",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkEndpointsVpcEcrFipsDkrEpD09BE918": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": "o-asdf123456",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByOrgsIdentities",
+            },
+            {
+              "Action": "*",
+              "Condition": {
+                "Bool": {
+                  "aws:PrincipalIsAWSService": "true",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AllowRequestsByAWSServicePrincipals",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": [
+          {
+            "Ref": "NetworkEndpointsVpchttpsEpSecurityGroup90D555DD",
+          },
+        ],
+        "ServiceName": "com.amazonaws.us-east-1.ecr-fips.dkr",
+        "SubnetIds": [
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Endpoints-ecr-fips.dkr",
           },
         ],
         "VpcEndpointType": "Interface",
@@ -3142,7 +3268,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointsaccessAnalyzerDns80847016": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointssecretsmanagerDns073EEE73",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/dns",
@@ -3173,7 +3299,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointsaccessAnalyzerPhzF41FB5A9": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointssecretsmanagerDns073EEE73",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/access-analyzer/hostedZoneId",
@@ -3202,9 +3328,71 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsbedrockAgentcoreGatewayDns8F701D77": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsecrFipsDkrDns002E81BB",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/bedrock-agentcore.gateway/dns",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcBedrockAgentcoreGatewayEpCAE9E44B",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointsbedrockAgentcoreGatewayPhzC3E871A4": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsecrFipsDkrDns002E81BB",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/bedrock-agentcore.gateway/hostedZoneId",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcBedrockAgentcoreGatewayEpCAE9E44B",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointscodeartifactApiDnsD1D4C462": {
       "DependsOn": [
-        "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30",
+        "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.api/dns",
@@ -3234,6 +3422,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.api/hostedZoneId",
         "Type": "String",
@@ -3263,7 +3454,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointscodeartifactRepositoriesDnsD49322BB": {
       "DependsOn": [
-        "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30",
+        "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.repositories/dns",
@@ -3294,7 +3485,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointscodeartifactRepositoriesPhzDC1F51C9": {
       "DependsOn": [
-        "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30",
+        "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/codeartifact.repositories/hostedZoneId",
@@ -3506,9 +3697,68 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsecrFipsDkrDns002E81BB": {
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/ecr-fips.dkr/dns",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcEcrFipsDkrEpD09BE918",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkEndpointsecrFipsDkrPhz04A6D8AB": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsecrFipsDkrDns002E81BB",
+      ],
+      "Properties": {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/ecr-fips.dkr/hostedZoneId",
+        "Type": "String",
+        "Value": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::Split": [
+                ":",
+                {
+                  "Fn::Select": [
+                    0,
+                    {
+                      "Fn::GetAtt": [
+                        "NetworkEndpointsVpcEcrFipsDkrEpD09BE918",
+                        "DnsEntries",
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkEndpointseksDns35E4FACC": {
       "DependsOn": [
-        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimeDnsB5A28675",
+        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimePhz82B57555",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/dns",
@@ -3538,6 +3788,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointseksPhz632B4665": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimePhz82B57555",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/eks/hostedZoneId",
         "Type": "String",
@@ -3567,7 +3820,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointsiamDns6DE05F5B": {
       "DependsOn": [
-        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimeDnsB5A28675",
+        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimePhz82B57555",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/iam/dns",
@@ -3598,7 +3851,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointsiamPhz0CAD6838": {
       "DependsOn": [
-        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimeDnsB5A28675",
+        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimePhz82B57555",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/iam/hostedZoneId",
@@ -3749,6 +4002,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsroute53Dns594C558D": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssecretsmanagerDns073EEE73",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/route53/dns",
         "Type": "String",
@@ -3777,9 +4033,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsroute53PhzC24B4D31": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointsroute53Dns594C558D",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/route53/hostedZoneId",
         "Type": "String",
@@ -3839,6 +4092,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsecrFipsDkrDns002E81BB",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3-global.accesspoint/dns",
         "Type": "String",
@@ -3867,9 +4123,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointss3GlobalAccesspointPhz46A7E80B": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointss3GlobalAccesspointDns50F35D30",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/s3-global.accesspoint/hostedZoneId",
         "Type": "String",
@@ -3930,7 +4183,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointssagemakerApiDns63B7C86E": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881",
+        "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.api/dns",
@@ -3961,7 +4214,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointssagemakerApiPhzA5FABDD1": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881",
+        "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.api/hostedZoneId",
@@ -3991,6 +4244,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimeDnsB5A28675": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.featurestore-runtime/dns",
         "Type": "String",
@@ -4019,9 +4275,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimePhz82B57555": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointssagemakerFeaturestoreRuntimeDnsB5A28675",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.featurestore-runtime/hostedZoneId",
         "Type": "String",
@@ -4050,9 +4303,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.runtime/dns",
         "Type": "String",
@@ -4082,7 +4332,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointssagemakerRuntimePhzF1A7F98F": {
       "DependsOn": [
-        "SsmParamNetworkEndpointscodeartifactApiPhzEDB90881",
+        "SsmParamNetworkEndpointssagemakerRuntimeDns24E497E5",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/sagemaker.runtime/hostedZoneId",
@@ -4112,9 +4362,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointssecretsmanagerDns073EEE73": {
-      "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/dns",
         "Type": "String",
@@ -4144,7 +4391,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamNetworkEndpointssecretsmanagerPhzF52D763D": {
       "DependsOn": [
-        "SsmParamNetworkEndpointseksPhz632B4665",
+        "SsmParamNetworkEndpointssecretsmanagerDns073EEE73",
       ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/secretsmanager/hostedZoneId",
@@ -4295,9 +4542,6 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C": {
-      "DependsOn": [
-        "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE",
-      ],
       "Properties": {
         "Name": "/accelerator/network/vpc/Network-Inspection/networkFirewall/accelerator-firewall/arn",
         "Type": "String",
@@ -4686,7 +4930,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamacceleratorInboundDohResolverEndpoint85963665": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsroute53Dns594C558D",
+        "SsmParamNetworkEndpointsroute53PhzC24B4D31",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-doh/id",
@@ -4702,7 +4946,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamacceleratorInboundFipsResolverEndpoint6D5C99D9": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsroute53Dns594C558D",
+        "SsmParamNetworkEndpointsroute53PhzC24B4D31",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound-fips/id",
@@ -4718,7 +4962,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": {
       "DependsOn": [
-        "SsmParamNetworkEndpointsroute53Dns594C558D",
+        "SsmParamNetworkEndpointsroute53PhzC24B4D31",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
@@ -4733,6 +4977,9 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": {
+      "DependsOn": [
+        "SsmParamNetworkEndpointsroute53PhzC24B4D31",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
         "Type": "String",
@@ -4747,7 +4994,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParaminboundEndpointLocalResolverEndpoint79EEABA5": {
       "DependsOn": [
-        "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE",
+        "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/inbound-endpoint-local/id",
@@ -4763,7 +5010,7 @@ exports[`NetworkVpcEndpointsStack > Construct(NetworkVpcEndpointsStack):  Snapsh
     },
     "SsmParamoutboundEndpointLocalResolverEndpointE4A58AEE": {
       "DependsOn": [
-        "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE",
+        "SsmParamNetworkInspectionAcceleratorFirewallFirewallArn40D3C53C",
       ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/endpoints/outbound-endpoint-local/id",

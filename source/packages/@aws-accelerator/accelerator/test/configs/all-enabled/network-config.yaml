@@ -1485,6 +1485,8 @@ vpcs:
         - service: logs
         - service: s3
         - service: ecr.dkr
+        - service: ecr-fips.dkr
+        - service: bedrock-agentcore.gateway
         - service: s3-global.accesspoint
         - service: codeartifact.repositories
         - service: codeartifact.api

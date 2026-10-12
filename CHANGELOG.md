@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later (issue #4188)
 - fix(deps): remediate HIGH CVEs (brace-expansion, fast-uri, js-yaml, nanoid, postcss, ip-address, undici)
 - fix(deps): remediate HIGH/CRITICAL CVEs (handlebars, fast-uri, undici, brace-expansion, source-map-js, ip-address, basic-ftp, markdown-it)
+- fix(networking): create the wildcard record in the private hosted zone for centralized ecr-fips.dkr and bedrock-agentcore.gateway interface endpoints, matching ecr.dkr
 
 ## [1.16.2] - 2026-08-31
 

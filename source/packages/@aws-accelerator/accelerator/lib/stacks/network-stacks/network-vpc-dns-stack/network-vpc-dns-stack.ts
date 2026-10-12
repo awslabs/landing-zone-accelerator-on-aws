@@ -238,9 +238,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
     let recordSetName = hostedZoneName;
     const wildcardServices = [
       'appsync-api',
+      'bedrock-agentcore.gateway',
       'codeartifact.repositories',
       'deviceadvisor.iot',
       'ecr.dkr',
+      'ecr-fips.dkr',
       'execute-api',
       'grafana-workspace',
       'lorawan.cups',
@@ -251,7 +253,12 @@ export class NetworkVpcDnsStack extends NetworkStack {
       's3-global.accesspoint',
       'transfer.server',
     ];
-    if (wildcardServices.includes(endpointItem.service)) {
+    // Wildcard services whose apex record was already deployed under the base logical ID before they were
+    // added to wildcardServices. The apex record keeps that ID and the wildcard record gets a new one, so an
+    // upgrade only adds a record instead of renaming the deployed apex record and recreating it under a new ID.
+    const apexKeepsBaseIdServices = ['bedrock-agentcore.gateway', 'ecr-fips.dkr'];
+    const isWildcardService = wildcardServices.includes(endpointItem.service);
+    if (isWildcardService) {
       recordSetName = `*.${hostedZoneName}`;
     }
 
@@ -270,9 +277,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
 
     // Create alias record for hosted zone
     this.logger.info(`Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
+    const baseRecordSetId = `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`;
+    const apexKeepsBaseId = apexKeepsBaseIdServices.includes(endpointItem.service);
     const recordSet = new RecordSet(
       this,
-      `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`,
+      isWildcardService && apexKeepsBaseId ? `${baseRecordSetId}Wildcard` : baseRecordSetId,
       {
         type: 'A',
         name: recordSetName,
@@ -284,11 +293,11 @@ export class NetworkVpcDnsStack extends NetworkStack {
     this.route53Resources.push(recordSet);
 
     // Create additional record for wildcard services endpoints
-    if (wildcardServices.includes(endpointItem.service)) {
+    if (isWildcardService) {
       this.logger.info(`Creating additional record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`);
       const nonWildcardRecordSet = new RecordSet(
         this,
-        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSetNonWildcard`,
+        apexKeepsBaseId ? baseRecordSetId : `${baseRecordSetId}NonWildcard`,
         {
           type: 'A',
           name: hostedZoneName,

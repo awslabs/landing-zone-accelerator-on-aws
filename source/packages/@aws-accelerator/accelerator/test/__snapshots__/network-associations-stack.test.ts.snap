@@ -175,6 +175,10 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/access-analyzer/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonebedrockagentcoregatewayidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/bedrock-agentcore.gateway/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonecodeartifactapiidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/codeartifact.api/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -193,6 +197,10 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneecrdkridC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ecr.dkr/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneecrfipsdkridC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ecr-fips.dkr/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneeksidC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -410,6 +418,12 @@ exports[`NetworkAssociationsStack > Construct(NetworkAssociationsStack):  Snapsh
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneecrdkridC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneecrfipsdkridC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonebedrockagentcoregatewayidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZones3globalaccesspointidC96584B6F00A464EAD1953AFF4B05118Parameter",
