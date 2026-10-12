@@ -173,11 +173,20 @@ export abstract class RegisterOrganizationalUnitModule {
    *
    * @remarks
    * This is a best-effort operation. If the portfolio is not found or the association fails,
-   * a warning is logged and execution continues without throwing.
+   * a warning is logged and execution continues without throwing. Skipped in the aws-eusc partition, where
+   * AWS Control Tower does not create an Account Factory portfolio.
    *
    * @param params {@link ModuleParams}
    */
   private static async associateCallerWithControlTowerPortfolio(params: ModuleParams): Promise<void> {
+    // AWS Service Catalog, and with it the Account Factory portfolio, is not available in the aws-eusc partition
+    if (params.runnerParameters.partition === 'aws-eusc') {
+      statusLogger.info(
+        `AWS Service Catalog is not available in partition ${params.runnerParameters.partition}, skipping Control Tower portfolio association.`,
+      );
+      return;
+    }
+
     try {
       const homeRegion = params.moduleRunnerParameters.configs.globalConfig.homeRegion;
       const credentials = params.moduleRunnerParameters.managementAccountCredentials;

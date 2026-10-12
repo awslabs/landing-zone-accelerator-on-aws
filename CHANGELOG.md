@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(control-tower): skip the AWS Control Tower Account Factory portfolio association during OU registration and stop creating the `<prefix>-CrossAccount-ServiceCatalog-Role` IAM role (`<prefix>` is the accelerator prefix, `AWSAccelerator` by default) in the `aws-eusc` partition, where AWS Service Catalog is not available; on upgrade, existing `aws-eusc` deployments delete this unused role from the Operations stack. If a policy was attached to or added on the role outside the accelerator, IAM rejects the delete with `DeleteConflict` and the Operations stack update rolls back in that account; remove that policy before upgrading
 - fix(nfw): add stateful default action types drop_established_app_layer_to_server and alert_established_app_layer_to_server
 - fix(networking): create the subnet IPv4 CIDR SSM parameter in share-target accounts for IPAM-allocated subnets when useV2Stacks is enabled, restoring V1 behavior
 - fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation

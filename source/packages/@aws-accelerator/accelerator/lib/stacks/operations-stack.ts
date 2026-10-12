@@ -125,8 +125,10 @@ export class OperationsStack extends AcceleratorStack {
       // Create Accelerator Access Role in every region
       this.createAssetAccessRole(props, assetBucketKmsKey);
 
-      // Create Cross Account Service Catalog Role
-      this.createServiceCatalogPropagationRole();
+      // Create Cross Account Service Catalog Role (AWS Service Catalog is not available in the aws-eusc partition)
+      if (this.props.partition !== 'aws-eusc') {
+        this.createServiceCatalogPropagationRole();
+      }
 
       // Create Session Manager IAM Policy
       if (

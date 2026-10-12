@@ -168,6 +168,47 @@ describe('OperationsStack service quota limits tests', () => {
   });
 });
 
+describe('OperationsStack Service Catalog propagation role partition gating', () => {
+  const findServiceCatalogPropagationRoles = (template: Template) =>
+    template.findResources('AWS::IAM::Role', {
+      Properties: {
+        Policies: Match.arrayWith([
+          Match.objectLike({
+            PolicyDocument: {
+              Statement: Match.arrayWith([
+                Match.objectLike({ Action: Match.arrayWith(['servicecatalog:AcceptPortfolioShare']) }),
+              ]),
+            },
+          }),
+        ]),
+      },
+    });
+
+  test.each([
+    ['aws', 'us-east-1', 1],
+    ['aws-eusc', 'eusc-de-east-1', 0],
+  ])(
+    'creates %s partition (home region %s) Service Catalog propagation role count %i',
+    (partition, homeRegion, expectedCount) => {
+      // Deploy in the partition's own home region so the home-region branch runs and only the partition gate decides
+      const baseProps = createAcceleratorStackProps();
+      const props = createAcceleratorStackProps({
+        partition,
+        globalRegion: homeRegion,
+        env: { region: homeRegion, account: '00000001' },
+        globalConfig: { ...baseProps.globalConfig, homeRegion } as GlobalConfig,
+      } as AcceleratorStackProps);
+      const stack = new OperationsStack(
+        app,
+        `unit-test-operations-stack-service-catalog-${partition}`,
+        props as OperationsStackProps,
+      );
+
+      expect(Object.keys(findServiceCatalogPropagationRoles(Template.fromStack(stack)))).toHaveLength(expectedCount);
+    },
+  );
+});
+
 function buildLimit(serviceCode: string): ServiceQuotaLimitsConfig {
   return {
     serviceCode,
