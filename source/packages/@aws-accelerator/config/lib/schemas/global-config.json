@@ -1643,7 +1643,7 @@
     },
     "ISessionManagerConfig": {
       "additionalProperties": false,
-      "description": "## SessionManager Configuration\n\n### Example ```yaml sessionManager:   sendToCloudWatchLogs: true   sendToS3: true   excludeRegions: []   excludeAccounts: []   lifecycleRules: []   attachPolicyToIamRoles:     - EC2-Default-SSM-AD-Role ```",
+      "description": "## SessionManager Configuration\n\n### Example ```yaml sessionManager:   sendToCloudWatchLogs: true   sendToS3: true   excludeRegions: []   excludeAccounts: []   lifecycleRules: []   attachPolicyToIamRoles:     - EC2-Default-SSM-AD-Role   idleSessionTimeout: 15   maxSessionDuration: 60   cloudWatchStreamingEnabled: true   shellProfile:     linux: echo \"This session is logged and monitored.\" ```",
       "properties": {
         "attachPolicyToIamRoles": {
           "description": "**Attach Policy to IAM Roles** *(Optional)*\n\nA list of IAM Ec2 roles that the Session Manager access policy should be attached to.",
@@ -1651,6 +1651,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "cloudWatchStreamingEnabled": {
+          "description": "**CloudWatch Streaming Enabled** *(Optional)*\n\nDetermines whether session data is streamed continuously to CloudWatch Logs.\n\nRequires `sendToCloudWatchLogs` to be enabled. When `true`, session data is streamed to the log group as the session runs. When `false`, session logs are delivered to the log group once at the end of the session. When undefined the input is left out of the session document and the Session Manager default applies.\n\nContinuous streaming sends more data to CloudWatch Logs than end of session delivery, which carries the corresponding ingestion cost and retention consequences.",
+          "type": "boolean"
         },
         "excludeAccounts": {
           "description": "**Excluded Accounts** *(Optional)*\n\nList of AWS Account names to be excluded from this SessionManager configuration",
@@ -1666,12 +1670,20 @@
           },
           "type": "array"
         },
+        "idleSessionTimeout": {
+          "description": "**Idle Session Timeout** *(Optional)*\n\nThe number of minutes of inactivity to allow before a session ends.\n\nValid values range from 1 to 60 minutes. When undefined the input is left out of the session document and sessions run at the Session Manager default of 20 minutes.\n\nThis is not a hard cap on session length. The idle timer is reset by client side activity, which includes terminal and browser window resize events as well as session reconnects, so a session held open by a client that keeps emitting such events never goes idle. Use `maxSessionDuration` when an absolute session limit is required.",
+          "type": "number"
+        },
         "lifecycleRules": {
           "description": "**S3 Lifecycle Rules** *(Optional)*\n\nDefines the lifecycle rules for the S3 bucket containing the logs.",
           "items": {
             "$ref": "#/definitions/ILifecycleRule"
           },
           "type": "array"
+        },
+        "maxSessionDuration": {
+          "description": "**Maximum Session Duration** *(Optional)*\n\nThe maximum number of minutes a session is allowed to run before it ends, regardless of activity.\n\nValid values range from 1 to 1440 minutes. When undefined the input is left out of the session document and no maximum duration is enforced.",
+          "type": "number"
         },
         "sendToCloudWatchLogs": {
           "description": "**Send to CloudWatch Logs** *(Required)*\n\nDetermines whether sending SessionManager logs to CloudWatch logs is enabled.",
@@ -1680,12 +1692,31 @@
         "sendToS3": {
           "description": "**Send to S3** *(Required)*\n\nDetermines whether sending SessionManager logs to S3 is enabled. When enabled, the accelerator sends the session manager logs directly to the central log bucket in the LogArchive account, which resides in the centralized logging Region (`logging.centralizedLoggingRegion`, the home Region by default).\n\nBecause that bucket is single-Region, instances in any other enabled Region write to it cross-Region. A Region-scoped Amazon S3 gateway VPC endpoint cannot reach a bucket in another Region, so in a fully private Region (VPC endpoints only, no internet egress) that is not the centralized logging Region, Session Manager connections that require this log destination fail to establish and open a blank screen. For those Regions, enable `sendToCloudWatchLogs` instead (it writes to a Region-local log group that the accelerator forwards to the central bucket) or exclude the Region with `excludeRegions`.",
           "type": "boolean"
+        },
+        "shellProfile": {
+          "$ref": "#/definitions/ISessionManagerShellProfileConfig",
+          "description": "**Shell Profile** *(Optional)*\n\nPer operating system session preferences, including commands run when a session starts.\n\nThe commands in a shell profile run on every in-scope managed node when a session starts, so this property puts executable content into the global configuration file. Review values with the same care as any other deployed code.\n\nThe accelerator is the only source of this value. A shell profile set outside the accelerator is removed the next time the session document is written, so an injected profile does not survive."
         }
       },
       "required": [
         "sendToCloudWatchLogs",
         "sendToS3"
       ],
+      "type": "object"
+    },
+    "ISessionManagerShellProfileConfig": {
+      "additionalProperties": false,
+      "description": "## SessionManager Shell Profile Configuration\n\nPreferences applied inside a session on a per operating system basis, such as shell preferences, environment variables, working directories, and commands run when a session starts.\n\n### Example ```yaml shellProfile:   linux: |     cd /home/ssm-user     echo \"This session is logged and monitored.\"   windows: Write-Host \"This session is logged and monitored.\" ```",
+      "properties": {
+        "linux": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "**Linux and macOS Shell Profile** *(Optional)*\n\nThe shell preferences, environment variables, working directories, and commands applied to sessions on Linux and macOS managed nodes.\n\nThe value is run by the shell when a session starts, so it is executable content delivered to every in-scope managed node. Treat it with the same care as any other code you deploy."
+        },
+        "windows": {
+          "$ref": "#/definitions/NonEmptyString",
+          "description": "**Windows Shell Profile** *(Optional)*\n\nThe shell preferences, environment variables, working directories, and commands applied to sessions on Windows Server managed nodes.\n\nThe value is run by the shell when a session starts, so it is executable content delivered to every in-scope managed node. Treat it with the same care as any other code you deploy."
+        }
+      },
       "type": "object"
     },
     "ISnsConfig": {

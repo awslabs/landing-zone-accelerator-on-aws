@@ -1906,6 +1906,49 @@ export interface IServiceQuotaLimitsConfig {
 
 /**
  *
+ * ## SessionManager Shell Profile Configuration
+ *
+ * Preferences applied inside a session on a per operating system basis, such as shell preferences,
+ * environment variables, working directories, and commands run when a session starts.
+ *
+ * ### Example
+ * ```yaml
+ * shellProfile:
+ *   linux: |
+ *     cd /home/ssm-user
+ *     echo "This session is logged and monitored."
+ *   windows: Write-Host "This session is logged and monitored."
+ * ```
+ *
+ * @category Global Configuration
+ *
+ * @see {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/session-preferences-shell-config.html | Configure shell profiles} for more information
+ */
+export interface ISessionManagerShellProfileConfig {
+  /**
+   * **Linux and macOS Shell Profile** *(Optional)*
+   *
+   * The shell preferences, environment variables, working directories, and commands applied to
+   * sessions on Linux and macOS managed nodes.
+   *
+   * The value is run by the shell when a session starts, so it is executable content delivered to
+   * every in-scope managed node. Treat it with the same care as any other code you deploy.
+   */
+  readonly linux?: t.NonEmptyString;
+  /**
+   * **Windows Shell Profile** *(Optional)*
+   *
+   * The shell preferences, environment variables, working directories, and commands applied to
+   * sessions on Windows Server managed nodes.
+   *
+   * The value is run by the shell when a session starts, so it is executable content delivered to
+   * every in-scope managed node. Treat it with the same care as any other code you deploy.
+   */
+  readonly windows?: t.NonEmptyString;
+}
+
+/**
+ *
  * ## SessionManager Configuration
  *
  * ### Example
@@ -1918,6 +1961,11 @@ export interface IServiceQuotaLimitsConfig {
  *   lifecycleRules: []
  *   attachPolicyToIamRoles:
  *     - EC2-Default-SSM-AD-Role
+ *   idleSessionTimeout: 15
+ *   maxSessionDuration: 60
+ *   cloudWatchStreamingEnabled: true
+ *   shellProfile:
+ *     linux: echo "This session is logged and monitored."
  * ```
  *
  * @category Global Configuration
@@ -1969,6 +2017,62 @@ export interface ISessionManagerConfig {
    *
    */
   readonly attachPolicyToIamRoles?: string[];
+  /**
+   * **Idle Session Timeout** *(Optional)*
+   *
+   * The number of minutes of inactivity to allow before a session ends.
+   *
+   * Valid values range from 1 to 60 minutes. When undefined the input is left out of the session
+   * document and sessions run at the Session Manager default of 20 minutes.
+   *
+   * This is not a hard cap on session length. The idle timer is reset by client side activity,
+   * which includes terminal and browser window resize events as well as session reconnects, so a
+   * session held open by a client that keeps emitting such events never goes idle. Use
+   * `maxSessionDuration` when an absolute session limit is required.
+   *
+   * @see {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/session-preferences-timeout.html | Specify an idle session timeout value} for more information
+   */
+  readonly idleSessionTimeout?: number;
+  /**
+   * **Maximum Session Duration** *(Optional)*
+   *
+   * The maximum number of minutes a session is allowed to run before it ends, regardless of activity.
+   *
+   * Valid values range from 1 to 1440 minutes. When undefined the input is left out of the session
+   * document and no maximum duration is enforced.
+   *
+   * @see {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/session-preferences-max-timeout.html | Specify a maximum session duration} for more information
+   */
+  readonly maxSessionDuration?: number;
+  /**
+   * **CloudWatch Streaming Enabled** *(Optional)*
+   *
+   * Determines whether session data is streamed continuously to CloudWatch Logs.
+   *
+   * Requires `sendToCloudWatchLogs` to be enabled. When `true`, session data is streamed to the log
+   * group as the session runs. When `false`, session logs are delivered to the log group once at the
+   * end of the session. When undefined the input is left out of the session document and the Session
+   * Manager default applies.
+   *
+   * Continuous streaming sends more data to CloudWatch Logs than end of session delivery, which
+   * carries the corresponding ingestion cost and retention consequences.
+   */
+  readonly cloudWatchStreamingEnabled?: boolean;
+  /**
+   * **Shell Profile** *(Optional)*
+   *
+   * Per operating system session preferences, including commands run when a session starts.
+   *
+   * The commands in a shell profile run on every in-scope managed node when a session starts, so
+   * this property puts executable content into the global configuration file. Review values with
+   * the same care as any other deployed code.
+   *
+   * The accelerator is the only source of this value. A shell profile set outside the accelerator is
+   * removed the next time the session document is written, so an injected profile does not survive.
+   *
+   * @see {@link ISessionManagerShellProfileConfig} for detailed parameter information
+   */
+  readonly shellProfile?: ISessionManagerShellProfileConfig;
 }
 
 /**

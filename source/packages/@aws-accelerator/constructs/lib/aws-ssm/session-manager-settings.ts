@@ -44,6 +44,29 @@ export interface SsmSessionManagerSettingsProps {
    * Accelerator CMK Details for SSM
    */
   readonly ssmKeyDetails: { alias: string; description: string };
+  /**
+   * Minutes of inactivity allowed before a session ends, 1-60. When undefined the input is omitted
+   * from the session document and the Session Manager default applies.
+   */
+  readonly idleSessionTimeout?: number;
+  /**
+   * Maximum minutes a session may run before it ends, 1-1440. When undefined the input is omitted
+   * from the session document and no maximum is enforced.
+   */
+  readonly maxSessionDuration?: number;
+  /**
+   * Whether session data is streamed continuously to CloudWatch Logs rather than delivered at the
+   * end of the session. When undefined the input is omitted from the session document.
+   */
+  readonly cloudWatchStreamingEnabled?: boolean;
+  /**
+   * Per operating system session preferences, including commands run when a session starts. These
+   * commands run on every in-scope managed node at session start.
+   *
+   * Written only from configuration and never read back from the deployed document, so an
+   * out-of-band shell profile is removed on the next write.
+   */
+  readonly shellProfile?: { linux?: string; windows?: string };
 }
 
 export class SsmSessionManagerSettings extends Construct {
@@ -97,6 +120,12 @@ export class SsmSessionManagerSettings extends Construct {
         cloudWatchLogGroupName: sessionManagerLogGroupName,
         cloudWatchEncryptionEnabled: props.cloudWatchEncryptionEnabled,
         kmsKeyId: sessionManagerSessionCmk.keyId,
+        // The session document schema types both timeouts as strings, so convert here rather than
+        // relying on CloudFormation's property stringification.
+        idleSessionTimeout: props.idleSessionTimeout?.toString(),
+        maxSessionDuration: props.maxSessionDuration?.toString(),
+        cloudWatchStreamingEnabled: props.cloudWatchStreamingEnabled,
+        shellProfile: props.shellProfile,
       },
     });
 

@@ -1544,6 +1544,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
             alias: this.acceleratorResourceNames.customerManagedKeys.ssmKey.alias,
             description: this.acceleratorResourceNames.customerManagedKeys.ssmKey.description,
           },
+          idleSessionTimeout: this.props.globalConfig.logging.sessionManager.idleSessionTimeout,
+          maxSessionDuration: this.props.globalConfig.logging.sessionManager.maxSessionDuration,
+          cloudWatchStreamingEnabled: this.props.globalConfig.logging.sessionManager.cloudWatchStreamingEnabled,
+          shellProfile: this.props.globalConfig.logging.sessionManager.shellProfile,
         });
       }
     }

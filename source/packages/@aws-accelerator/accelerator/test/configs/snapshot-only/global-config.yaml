@@ -154,6 +154,12 @@ logging:
   sessionManager:
     sendToCloudWatchLogs: true
     sendToS3: true
+    idleSessionTimeout: 15
+    maxSessionDuration: 60
+    cloudWatchStreamingEnabled: true
+    shellProfile:
+      linux: echo "This session is logged and monitored."
+      windows: Write-Host "This session is logged and monitored."
   cloudwatchLogs:
     encryption:
       useCMK: true

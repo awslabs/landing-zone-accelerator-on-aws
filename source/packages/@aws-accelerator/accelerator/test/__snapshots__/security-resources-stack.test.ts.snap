@@ -4761,9 +4761,12 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
         "cloudWatchLogGroupName": {
           "Ref": "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0",
         },
+        "cloudWatchStreamingEnabled": true,
+        "idleSessionTimeout": "15",
         "kmsKeyId": {
           "Ref": "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
         },
+        "maxSessionDuration": "60",
         "s3BucketName": "existing-central-log-bucket",
         "s3EncryptionEnabled": true,
         "s3KeyPrefix": {
@@ -4779,6 +4782,10 @@ exports[`SecurityResourcesStack > Construct(SecurityResourcesStack):  Snapshot T
           ],
         },
         "sendToS3": true,
+        "shellProfile": {
+          "linux": "echo "This session is logged and monitored."",
+          "windows": "Write-Host "This session is logged and monitored."",
+        },
       },
       "Type": "Custom::SsmSessionManagerSettings",
       "UpdateReplacePolicy": "Delete",

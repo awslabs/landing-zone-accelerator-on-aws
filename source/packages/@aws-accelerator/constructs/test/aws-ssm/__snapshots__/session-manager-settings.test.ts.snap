@@ -227,3 +227,238 @@ exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snap
   },
 }
 `;
+
+exports[`SsmSessionManagerSettingsWithSessionPreferences > Construct(SsmSessionManagerSettings): with session preferences:  Snapshot Test 1`] = `
+{
+  "Resources": {
+    "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699": {
+      "DependsOn": [
+        "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "SOLUTION_ID": "AwsSolution/SO0199/1.16.2",
+          },
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 512,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs24.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSessionManagerLoggingCustomResourceProviderLogGroupF4E32979": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CwKeyC5A32F94",
+            "Arn",
+          ],
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:CreateDocument",
+                    "ssm:GetDocument",
+                    "ssm:UpdateDocument",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CwKeyC5A32F94": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SsmSessionManagerSettings24721AC9": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSessionManagerLoggingCustomResourceProviderLogGroupF4E32979",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699",
+            "Arn",
+          ],
+        },
+        "cloudWatchEncryptionEnabled": true,
+        "cloudWatchLogGroupName": {
+          "Ref": "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0",
+        },
+        "cloudWatchStreamingEnabled": true,
+        "idleSessionTimeout": "15",
+        "kmsKeyId": {
+          "Ref": "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
+        },
+        "maxSessionDuration": "60",
+        "s3BucketName": "bucketName",
+        "s3EncryptionEnabled": true,
+        "s3KeyPrefix": "prefix",
+        "sendToS3": true,
+        "shellProfile": {
+          "linux": "echo "This session is logged and monitored."",
+          "windows": "Write-Host "This session is logged and monitored."",
+        },
+      },
+      "Type": "Custom::SsmSessionManagerSettings",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmSessionManagerSettingsSessionManagerCloudWatchLogGroup15AB5AE0": {
+      "DeletionPolicy": "RetainExceptOnCreate",
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
+            "CwKeyC5A32F94",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "AWSAccelerator-sessionmanager-logs",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Description": "AWS Accelerator Session Manager Session Encryption",
+        "EnableKeyRotation": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SsmSessionManagerSettingsSessionManagerSessionKeyAlias59E0224E": {
+      "Properties": {
+        "AliasName": "alias/accelerator/sessionmanager-logs/session",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "SsmSessionManagerSettingsSessionManagerSessionKey23B7175C",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+  },
+}
+`;

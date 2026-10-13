@@ -27,6 +27,83 @@ import { setRetryStrategy } from '@aws-accelerator/utils/lib/common-functions';
 
 const documentName = 'SSM-SessionManagerRunShell';
 
+interface ShellProfile {
+  windows?: string;
+  linux?: string;
+}
+
+/**
+ * The `inputs` block of the `Standard_Stream` session document this custom resource owns.
+ *
+ * @remarks
+ * The optional members are the session preference inputs. They are declared last so that the
+ * serialized document is byte for byte identical to the previous releases' output when none of them
+ * is configured and the existing document carries none of them.
+ *
+ * @see {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-schema.html | Session document schema}
+ */
+interface SessionDocumentInputs {
+  cloudWatchEncryptionEnabled: boolean;
+  cloudWatchLogGroupName: string;
+  kmsKeyId: string;
+  s3BucketName: string;
+  s3EncryptionEnabled: boolean;
+  s3KeyPrefix: string;
+  runAsEnabled: boolean;
+  runAsDefaultUser: string;
+  cloudWatchStreamingEnabled?: boolean;
+  idleSessionTimeout?: string;
+  maxSessionDuration?: string;
+  shellProfile?: ShellProfile;
+}
+
+/**
+ * The session preference inputs, as supplied by the configuration file.
+ *
+ * @remarks
+ * `idleSessionTimeout` and `maxSessionDuration` are strings because the session document schema
+ * types them as strings, even though the configuration file takes them as numbers of minutes.
+ */
+interface ConfiguredSessionPreferences {
+  cloudWatchStreamingEnabled?: boolean;
+  idleSessionTimeout?: string;
+  maxSessionDuration?: string;
+  shellProfile?: ShellProfile;
+}
+
+/**
+ * Applies the session preference inputs to the document being written.
+ *
+ * @param inputs The document inputs to mutate
+ * @param configured The values supplied by the configuration file
+ *
+ * @remarks
+ * Configuration is the only authority for these inputs. A value set in `global-config.yaml` is
+ * written on every run, so one changed out of band is corrected on the next invocation. A preference
+ * that is not configured is left out of the document entirely, so the Session Manager default
+ * applies.
+ *
+ * Deliberately no fallback to the deployed document. That matters most for `shellProfile`, whose
+ * commands run on every in-scope managed node at session start: carrying an unconfigured value
+ * forward would let a principal holding `ssm:UpdateDocument` in a member account inject executable
+ * content that the accelerator then re-persists indefinitely. Rewriting the document from
+ * configuration is what corrects that drift.
+ */
+function applySessionPreferences(inputs: SessionDocumentInputs, configured: ConfiguredSessionPreferences): void {
+  if (configured.cloudWatchStreamingEnabled !== undefined) {
+    inputs.cloudWatchStreamingEnabled = configured.cloudWatchStreamingEnabled;
+  }
+  if (configured.idleSessionTimeout !== undefined) {
+    inputs.idleSessionTimeout = configured.idleSessionTimeout;
+  }
+  if (configured.maxSessionDuration !== undefined) {
+    inputs.maxSessionDuration = configured.maxSessionDuration;
+  }
+  if (configured.shellProfile !== undefined) {
+    inputs.shellProfile = configured.shellProfile;
+  }
+}
+
 export async function handler(event: CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
@@ -43,6 +120,18 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   const kmsKeyId: string = event.ResourceProperties['kmsKeyId'];
   const solutionId = process.env['SOLUTION_ID'];
 
+  // CloudFormation stringifies custom resource property values, so an absent property arrives as
+  // undefined and a boolean arrives as 'true' or 'false'. The two timeouts are forwarded as the
+  // strings the session document schema requires.
+  const rawCloudWatchStreamingEnabled: string | undefined = event.ResourceProperties['cloudWatchStreamingEnabled'];
+  const configuredPreferences: ConfiguredSessionPreferences = {
+    cloudWatchStreamingEnabled:
+      rawCloudWatchStreamingEnabled === undefined ? undefined : rawCloudWatchStreamingEnabled === 'true',
+    idleSessionTimeout: event.ResourceProperties['idleSessionTimeout'],
+    maxSessionDuration: event.ResourceProperties['maxSessionDuration'],
+    shellProfile: event.ResourceProperties['shellProfile'],
+  };
+
   const ssm = new SSMClient({ customUserAgent: solutionId, retryStrategy: setRetryStrategy() });
 
   switch (event.RequestType) {
@@ -54,7 +143,12 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         s3EncryptionEnabled = false;
         s3KeyPrefix = '';
       }
-      const settings = {
+      const settings: {
+        schemaVersion: string;
+        description: string;
+        sessionType: string;
+        inputs: SessionDocumentInputs;
+      } = {
         schemaVersion: '1.0',
         description: 'Document to hold regional settings for Session Manager',
         sessionType: 'Standard_Stream',
@@ -69,6 +163,7 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
           runAsDefaultUser: '',
         },
       };
+      applySessionPreferences(settings.inputs, configuredPreferences);
       try {
         const getDocumentResult = await throttlingBackOff(() =>
           ssm.send(new GetDocumentCommand({ Name: documentName })),

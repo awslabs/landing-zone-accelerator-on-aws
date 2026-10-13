@@ -948,6 +948,67 @@ export class GlobalConfigValidator {
         );
       }
     }
+
+    this.validateSessionManagerSessionPreferences(values, errors);
+  }
+
+  /**
+   * Validate the Session Manager session preference properties against the ranges and
+   * interdependencies the session document schema imposes.
+   *
+   * @remarks
+   * These ranges are fixed by the session document schema, so catching them here keeps a bad value
+   * from surfacing as a deployment failure in the Security_Resources stage.
+   *
+   * @see {@link https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-schema.html | Session document schema}
+   */
+  private validateSessionManagerSessionPreferences(values: GlobalConfig, errors: string[]) {
+    const sessionManager = values.logging.sessionManager;
+
+    this.validateSessionManagerTimeout('idleSessionTimeout', sessionManager.idleSessionTimeout, 1, 60, errors);
+    this.validateSessionManagerTimeout('maxSessionDuration', sessionManager.maxSessionDuration, 1, 1440, errors);
+
+    if (sessionManager.cloudWatchStreamingEnabled && !sessionManager.sendToCloudWatchLogs) {
+      errors.push(
+        `Session Manager cloudWatchStreamingEnabled is set to true but sendToCloudWatchLogs is not enabled. Streaming has no log group to write to unless sendToCloudWatchLogs is set to true.`,
+      );
+    }
+
+    if (
+      sessionManager.shellProfile &&
+      sessionManager.shellProfile.linux === undefined &&
+      sessionManager.shellProfile.windows === undefined
+    ) {
+      errors.push(`Session Manager shellProfile must define at least one of linux or windows.`);
+    }
+  }
+
+  /**
+   * Validate a Session Manager timeout property is a whole number of minutes within the given range.
+   *
+   * @param propertyName The name of the property being validated, used in the error message
+   * @param value The configured value, or undefined when the property is not set
+   * @param minimum The smallest value the session document schema accepts, in minutes
+   * @param maximum The largest value the session document schema accepts, in minutes
+   * @param errors The list of validation errors to append to
+   */
+  private validateSessionManagerTimeout(
+    propertyName: string,
+    value: number | undefined,
+    minimum: number,
+    maximum: number,
+    errors: string[],
+  ) {
+    if (value === undefined) {
+      return;
+    }
+    if (!Number.isInteger(value)) {
+      errors.push(
+        `Session Manager ${propertyName} must be a whole number of minutes between ${minimum} and ${maximum}, got ${value}.`,
+      );
+    } else if (value < minimum || value > maximum) {
+      errors.push(`Session Manager ${propertyName} must be between ${minimum} and ${maximum} minutes, got ${value}.`);
+    }
   }
 
   /**

@@ -70,4 +70,71 @@ export abstract class StaticInput {
       runAsDefaultUser: '',
     },
   };
+
+  /**
+   * The session document inputs produced by {@link createProps}, which configures no session
+   * preferences. Used as the baseline the session preference cases build on.
+   */
+  public static readonly baselineInputs = {
+    cloudWatchEncryptionEnabled: false,
+    cloudWatchLogGroupName: StaticInput.createProps.cloudWatchLogGroupName,
+    kmsKeyId: StaticInput.createProps.kmsKeyId,
+    s3BucketName: '',
+    s3EncryptionEnabled: false,
+    s3KeyPrefix: '',
+    runAsEnabled: false,
+    runAsDefaultUser: '',
+  };
+
+  /**
+   * A document that carries no session preference inputs, as written by releases before these
+   * properties were configurable.
+   */
+  public static readonly documentWithoutSessionPreferences = {
+    Content: JSON.stringify({ inputs: StaticInput.baselineInputs }),
+  };
+
+  /**
+   * A document whose session preference inputs were set out of band, for example through the console.
+   */
+  public static readonly documentWithSessionPreferences = {
+    Content: JSON.stringify({
+      inputs: {
+        ...StaticInput.baselineInputs,
+        cloudWatchStreamingEnabled: true,
+        idleSessionTimeout: '45',
+        maxSessionDuration: '720',
+        shellProfile: { linux: 'echo out-of-band', windows: 'Write-Host out-of-band' },
+      },
+    }),
+  };
+
+  /**
+   * {@link createProps} with every session preference configured. CloudFormation stringifies custom
+   * resource property values, so the booleans and numbers arrive as strings.
+   */
+  public static readonly createPropsWithSessionPreferences = {
+    ...StaticInput.createProps,
+    cloudWatchStreamingEnabled: 'true',
+    idleSessionTimeout: '15',
+    maxSessionDuration: '60',
+    shellProfile: { linux: 'echo configured', windows: 'Write-Host configured' },
+  };
+
+  public static readonly configuredSessionPreferenceInputs = {
+    ...StaticInput.baselineInputs,
+    cloudWatchStreamingEnabled: true,
+    idleSessionTimeout: '15',
+    maxSessionDuration: '60',
+    shellProfile: { linux: 'echo configured', windows: 'Write-Host configured' },
+  };
+
+  /**
+   * {@link createProps} with only `idleSessionTimeout` configured, used to check that the remaining
+   * preferences are carried forward from the existing document rather than dropped.
+   */
+  public static readonly createPropsWithIdleSessionTimeoutOnly = {
+    ...StaticInput.createProps,
+    idleSessionTimeout: '15',
+  };
 }

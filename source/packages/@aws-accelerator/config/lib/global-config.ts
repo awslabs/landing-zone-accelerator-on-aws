@@ -382,6 +382,10 @@ export class SessionManagerConfig implements i.ISessionManagerConfig {
   readonly excludeAccounts: string[] = [];
   readonly lifecycleRules: t.LifeCycleRule[] = [];
   readonly attachPolicyToIamRoles = [];
+  readonly idleSessionTimeout: number | undefined = undefined;
+  readonly maxSessionDuration: number | undefined = undefined;
+  readonly cloudWatchStreamingEnabled: boolean | undefined = undefined;
+  readonly shellProfile: i.ISessionManagerShellProfileConfig | undefined = undefined;
 }
 
 export class AccessLogBucketConfig implements i.IAccessLogBucketConfig {

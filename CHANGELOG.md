@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(config): add opt-in failOnConcurrentExecution guard that aborts a deployment when a newer pipeline execution supersedes the config table
 - feat(iam): add `accessAnalyzer.accountAnalyzer` to create an account level IAM Access Analyzer external access analyzer in every account and enabled region. Optional `accountAnalyzer.deploymentTargets` scopes which accounts and regions receive the analyzer
 - feat(data-perimeter): detect tampering of resource policies for the subset-check resource types (S3, KMS, IAM trust, Secrets Manager, ECR, SNS, SQS, OpenSearch, EventBridge, EFS, Backup vault, CodeArtifact, API Gateway). Duplicate-Sid and mandated-baseline drift are always detected; the statement-level check that flags appended permissive statements runs only when the `SourceAccount` allowlist is configured on the policy set. Detection only — remediation still never removes a statement
+- feat(ssm): add optional `idleSessionTimeout`, `maxSessionDuration`, `cloudWatchStreamingEnabled`, and `shellProfile` to `logging.sessionManager`, written to the Session Manager document only when configured
 
 ### Fixed
 - fix(control-tower): include the operation status message in the error and warning when an AWS Control Tower landing zone create, update or reset operation fails, so the pipeline log shows why the operation failed

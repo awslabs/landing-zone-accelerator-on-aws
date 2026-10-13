@@ -667,6 +667,88 @@ describe('SecurityConfigValidator', () => {
       expect(errors).toContain(MUTUALLY_EXCLUSIVE_ERROR);
     });
   });
+
+  describe('validateSessionManagerSessionPreferences', () => {
+    // validateSessionManagerSessionPreferences is private, so bind it to the prototype to exercise it directly.
+    const proto = GlobalConfigValidator.prototype as any;
+    const validateSessionManagerSessionPreferences = proto['validateSessionManagerSessionPreferences'].bind(proto);
+
+    const makeConfig = (sessionManager: unknown) => ({ logging: { sessionManager } }) as unknown as GlobalConfig;
+
+    it('passes when no session preference is configured', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(makeConfig({ sendToCloudWatchLogs: true, sendToS3: false }), errors);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('passes when every session preference is within range', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(
+        makeConfig({
+          sendToCloudWatchLogs: true,
+          sendToS3: false,
+          idleSessionTimeout: 15,
+          maxSessionDuration: 60,
+          cloudWatchStreamingEnabled: true,
+          shellProfile: { linux: 'echo hello' },
+        }),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it.each([
+      [0, 'Session Manager idleSessionTimeout must be between 1 and 60 minutes, got 0.'],
+      [61, 'Session Manager idleSessionTimeout must be between 1 and 60 minutes, got 61.'],
+    ])('fails when idleSessionTimeout is %s', (idleSessionTimeout, expected) => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(makeConfig({ idleSessionTimeout }), errors);
+      expect(errors).toContain(expected);
+    });
+
+    it.each([
+      [0, 'Session Manager maxSessionDuration must be between 1 and 1440 minutes, got 0.'],
+      [1441, 'Session Manager maxSessionDuration must be between 1 and 1440 minutes, got 1441.'],
+    ])('fails when maxSessionDuration is %s', (maxSessionDuration, expected) => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(makeConfig({ maxSessionDuration }), errors);
+      expect(errors).toContain(expected);
+    });
+
+    it('fails when a timeout is not a whole number of minutes', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(makeConfig({ idleSessionTimeout: 15.5 }), errors);
+      expect(errors).toContain(
+        'Session Manager idleSessionTimeout must be a whole number of minutes between 1 and 60, got 15.5.',
+      );
+    });
+
+    it('accepts the boundary values the session document schema permits', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(
+        makeConfig({ sendToCloudWatchLogs: true, idleSessionTimeout: 1, maxSessionDuration: 1440 }),
+        errors,
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('fails when cloudWatchStreamingEnabled is set without sendToCloudWatchLogs', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(
+        makeConfig({ sendToCloudWatchLogs: false, cloudWatchStreamingEnabled: true }),
+        errors,
+      );
+      expect(errors).toContain(
+        'Session Manager cloudWatchStreamingEnabled is set to true but sendToCloudWatchLogs is not enabled. Streaming has no log group to write to unless sendToCloudWatchLogs is set to true.',
+      );
+    });
+
+    it('fails when shellProfile defines neither linux nor windows', () => {
+      const errors: string[] = [];
+      validateSessionManagerSessionPreferences(makeConfig({ shellProfile: {} }), errors);
+      expect(errors).toContain('Session Manager shellProfile must define at least one of linux or windows.');
+    });
+  });
 });
 
 function createSecurityConfig(delegatedAdminAccount = 'Audit'): Partial<SecurityConfig> {
