@@ -17,6 +17,14 @@ if [ "${PUBLISH_TEST_DATA:-no}" != "yes" ]; then
   log "PUBLISH_TEST_DATA not 'yes' — skip"; exit 0
 fi
 
+_is_release_tag=0
+case "${CI_COMMIT_TAG:-}" in
+  v[0-9]*.[0-9]*.[0-9]*) _is_release_tag=1 ;;
+esac
+if [ "${CI_COMMIT_REF_NAME:-}" != "integ" ] && [ "$_is_release_tag" -ne 1 ]; then
+  log "ref '${CI_COMMIT_REF_NAME:-}' not integ branch or release tag — skip publish"; exit 0
+fi
+
 # --- guard rails: bail (exit 0) if essential inputs are missing ---------------
 if [ -z "${MC_DATA_BUCKET:-}" ]; then log "MC_DATA_BUCKET not set — skip"; exit 0; fi
 if [ -z "${MC_TEST_TYPE:-}" ];   then log "MC_TEST_TYPE not set — skip";   exit 0; fi
