@@ -111,6 +111,10 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
     try {
       const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
+      const previousPermissionSetArn: string | undefined = event.OldResourceProperties['permissionSetArn'];
+      const permissionSetChanged =
+        previousPermissionSetArn !== undefined && previousPermissionSetArn !== permissionSetArnValue;
+
       const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
       // Build the account assignment creation
       const assignmentCreationRequests = await buildCreateAssignmentsList(
@@ -128,21 +132,44 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         await createAssignment(assignmentCreationRequests, ssoAdminClient);
       }
 
-      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-        deletionList,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
-
-      // Build the Delete Parameters
+      // Accounts dropping out of scope held whichever permission set was previously assigned,
+      // not necessarily the new one, so they must be cleaned up against the old ARN.
       if (deletionList.length > 0) {
+        const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+          deletionList,
+          principals,
+          identityStoreId,
+          instanceArn,
+          permissionSetChanged ? previousPermissionSetArn! : permissionSetArnValue,
+          principalType as PrincipalType,
+          principalId!,
+          idcClient,
+        );
         await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
       }
+
+      // CloudFormation treats a permissionSetName change on an unchanged assignment as an
+      // in-place update of this same custom resource, not a replacement, so nothing else
+      // will ever notice the old permission set's assignment needs removing. Every account
+      // still in scope that was assigned under the previous permission set must have that
+      // grant explicitly removed here, or it is left permanently orphaned in Identity Center.
+      if (permissionSetChanged) {
+        const staleAccounts = previousAccountIdsList.filter(accountId => !deletionList.includes(accountId));
+        if (staleAccounts.length > 0) {
+          const staleAssignmentDeletionRequests = await buildDeleteAssignmentsList(
+            staleAccounts,
+            principals,
+            identityStoreId,
+            instanceArn,
+            previousPermissionSetArn!,
+            principalType as PrincipalType,
+            principalId!,
+            idcClient,
+          );
+          await deleteAssignment(staleAssignmentDeletionRequests, ssoAdminClient);
+        }
+      }
+
       return {
         PhysicalResourceId: event.LogicalResourceId,
         Status: 'SUCCESS',
