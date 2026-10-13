@@ -107,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(deps): remediate HIGH CVEs (brace-expansion, fast-uri, js-yaml, nanoid, postcss, ip-address, undici)
 - fix(deps): remediate HIGH/CRITICAL CVEs (handlebars, fast-uri, undici, brace-expansion, source-map-js, ip-address, basic-ftp, markdown-it)
 - fix(networking): create the wildcard record in the private hosted zone for centralized ecr-fips.dkr and bedrock-agentcore.gateway interface endpoints, matching ecr.dkr
+- fix(accelerator): wait for each stack's `.diff` file to finish writing before the diff step counts them, so the review diff no longer fails intermittently with "Number of template files N does not match number of diff files M" (issue #5011)
 
 ## [1.16.2] - 2026-08-31
 

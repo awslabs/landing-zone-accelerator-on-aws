@@ -14,6 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
+import { finished } from 'stream/promises';
 import { App } from 'aws-cdk-lib';
 
 import { cdkOptionsConfig, GlobalConfig } from '@aws-accelerator/config';
@@ -753,8 +754,8 @@ export class AcceleratorToolkit {
     for (const eachStack of stacksInFolder) {
       logger.debug(`Computing diff for ${eachStack}`);
       const stream = fs.createWriteStream(path.join(savePath, `${eachStack}.diff`), { flags: 'w' });
-      await stream.write(`\nStack: ${eachStack} \n`);
-      await printStackDiff(
+      stream.write(`\nStack: ${eachStack} \n`);
+      printStackDiff(
         path.join(savePath, `${eachStack}.json`),
         path.join(savePath, `${eachStack}.template.json`),
         false,
@@ -763,7 +764,9 @@ export class AcceleratorToolkit {
         undefined,
         stream,
       );
-      await stream.close();
+      // close() returns nothing to await; wait until the file is flushed and closed so checkDiffFiles sees it
+      stream.end();
+      await finished(stream);
 
       // Write structured JSON diff alongside text diff
       const structuredDiff = getStructuredDiff(

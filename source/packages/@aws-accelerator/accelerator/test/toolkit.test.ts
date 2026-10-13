@@ -11,9 +11,36 @@
  *  and limitations under the License.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { AcceleratorToolkit } from '../lib/toolkit';
 import { Toolkit, StackSelectionStrategy } from '@aws-cdk/toolkit-lib';
+import { GlobalConfig } from '@aws-accelerator/config';
+import { CachingCredentialProvider } from '@aws-accelerator/utils';
+
+// Diff files are written through fs.createWriteStream. The mock delays each file open by a timer, as a busy
+// libuv thread pool does, so a caller that does not wait for the stream to finish counts a file that is not on disk yet.
+const { slowOpen } = vi.hoisted(() => ({ slowOpen: { enabled: false } }));
+vi.mock('fs', async importOriginal => {
+  const actual = await importOriginal<typeof import('fs')>();
+  const createWriteStream = (file: string, options?: Record<string, unknown>) => {
+    if (!slowOpen.enabled) {
+      return actual.createWriteStream(file, options);
+    }
+    return actual.createWriteStream(file, {
+      ...options,
+      fs: {
+        open: (...args: Parameters<typeof actual.open>) => setTimeout(() => actual.open(...args), 25),
+        write: actual.write,
+        writev: actual.writev,
+        close: actual.close,
+      },
+    });
+  };
+  return { ...actual, default: { ...actual, createWriteStream }, createWriteStream };
+});
 
 // Mock the Toolkit class
 vi.mock('@aws-cdk/toolkit-lib', () => ({
@@ -60,9 +87,31 @@ const { mockLogger } = vi.hoisted(() => ({
 
 // Preserve every real @aws-accelerator/utils export (toolkit.ts imports many); only
 // replace createLogger so the module logger is our spyable mock.
+const { diffFilesAtCheck } = vi.hoisted(() => ({ diffFilesAtCheck: [] as string[][] }));
 vi.mock('@aws-accelerator/utils', async importOriginal => {
   const actual = await importOriginal<typeof import('@aws-accelerator/utils')>();
-  return { ...actual, createLogger: vi.fn(() => mockLogger) };
+  const realFs = await vi.importActual<typeof import('fs')>('fs');
+  return {
+    ...actual,
+    createLogger: vi.fn(() => mockLogger),
+    getCurrentAccountId: vi.fn().mockResolvedValue('111111111111'),
+    // Stands in for the deployed template download: writes <stack>.json next to <stack>.template.json
+    getCloudFormationTemplate: vi.fn(
+      async (_account: string, _region: string, _partition: string, _stage: string, stack: string, dir: string) => {
+        realFs.writeFileSync(path.join(dir, `${stack}.json`), JSON.stringify({ Resources: {} }));
+      },
+    ),
+    // Records which diff files are on disk at the moment the count runs, then runs the real check
+    checkDiffFiles: vi.fn(async (dir: string, templatePattern: string, diffPattern: string) => {
+      diffFilesAtCheck.push(
+        realFs
+          .readdirSync(dir)
+          .filter(f => f.endsWith(diffPattern))
+          .sort(),
+      );
+      return actual.checkDiffFiles(dir, templatePattern, diffPattern);
+    }),
+  };
 });
 
 describe('AcceleratorToolkit', () => {
@@ -511,6 +560,64 @@ describe('AcceleratorToolkit', () => {
         .map((call: unknown[]) => call[0])
         .find((arg: unknown) => typeof arg === 'string' && arg.startsWith('Underlying cause: the real reason'));
       expect(loggedCause).toBeDefined();
+    });
+  });
+  describe('runDiffStackCli', () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lza-diff-'));
+      diffFilesAtCheck.length = 0;
+      slowOpen.enabled = true;
+      vi.spyOn(GlobalConfig, 'loadRawGlobalConfig').mockReturnValue({
+        managementAccountAccessRole: 'AWSControlTowerExecution',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      vi.spyOn(CachingCredentialProvider, 'get').mockReturnValue({
+        getStsClient: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+      // runDiffStackCli resolves the output directory relative to the package root
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.spyOn(AcceleratorToolkit as any, 'setOutputDirectory').mockResolvedValue(
+        path.relative(path.join(__dirname, '..'), tmpDir),
+      );
+    });
+
+    afterEach(() => {
+      slowOpen.enabled = false;
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
+    it('waits for every diff file to be written before counting them', async () => {
+      // Arrange: three synthesized stacks, each with a resource the deployed template lacks
+      const stacks = ['StackA', 'StackB', 'StackC'];
+      for (const stack of stacks) {
+        fs.writeFileSync(
+          path.join(tmpDir, `${stack}.template.json`),
+          JSON.stringify({ Resources: { Topic: { Type: 'AWS::SNS::Topic' } } }),
+        );
+      }
+      const options = {
+        command: 'diff',
+        accountId: '111111111111',
+        region: 'us-east-1',
+        partition: 'aws',
+        stage: 'security',
+        configDirPath: tmpDir,
+      };
+
+      // Act
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (AcceleratorToolkit as any).runDiffStackCli(options, 'AWSAccelerator-SecurityStack-111111111111-us-east-1');
+
+      // Assert: all diff files existed when checkDiffFiles ran, and each holds the full diff
+      expect(diffFilesAtCheck).toEqual([stacks.map(stack => `${stack}.diff`)]);
+      for (const stack of stacks) {
+        const diff = fs.readFileSync(path.join(tmpDir, `${stack}.diff`), 'utf-8');
+        expect(diff).toContain(`Stack: ${stack}`);
+        expect(diff).toContain('AWS::SNS::Topic');
+      }
     });
   });
 });
