@@ -170,13 +170,28 @@ export async function setExternalManagementAccountCredentials(
 }
 
 /**
- * Returns the VPC endpoint service name prefix for the given partition.
+ * Returns the default VPC endpoint service name prefix for the given partition.
  *
- * VPC endpoint service names follow the pattern `{prefix}.{region}.{service}`.
- * The prefix varies by partition:
+ * Interface endpoint service names usually follow `{prefix}.{region}.{service}` and Gateway
+ * Load Balancer endpoint service names `{prefix}.vpce.{region}.{service-id}`. `VpcEndpoint`
+ * builds other forms for some services, such as `{prefix}.iam` and `aws.sagemaker.{region}.notebook`.
+ * The default prefix per partition:
  * - aws, aws-us-gov: com.amazonaws
  * - aws-cn: cn.com.amazonaws
  * - aws-eusc: eu.amazonaws
+ *
+ * The prefix is set per service, not per partition. In aws-cn and aws-eusc many services use
+ * `com.amazonaws`. For example, in eusc-de-east-1 (October 2026) only Gateway Load Balancer
+ * endpoint services and athena, ecr.api, ecr.dkr, execute-api, outposts and securityhub use
+ * `eu.amazonaws`; kms is `com.amazonaws.eusc-de-east-1.kms`, not `eu.amazonaws.eusc-de-east-1.kms`.
+ * List the service names in a Region with `aws ec2 describe-vpc-endpoint-services`.
+ *
+ * Any value other than a literal partition, including the `AWS::Partition` token, returns
+ * `com.amazonaws`. `NetworkVpcEndpointsStack` passes `cdk.Stack.of(this).partition`, which is that
+ * token because the accelerator app does not enable `@aws-cdk/core:enablePartitionLiterals`, so
+ * interface endpoints use `com.amazonaws` in every partition unless `serviceName` is set.
+ * `NetworkAssociationsGwlbStack` passes the literal partition. Changing what either caller passes
+ * changes the service names of deployed endpoints.
  *
  * @param partition - The AWS partition identifier
  * @returns The VPC endpoint service name prefix for the partition

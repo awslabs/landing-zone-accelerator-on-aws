@@ -2411,11 +2411,7 @@ export interface IInterfaceEndpointServiceConfig {
    */
   readonly service: t.NonEmptyString;
   /**
-   * (OPTIONAL) The full name of the service to create the endpoint for.
-   *
-   * @remarks
-   * This property can be used to input the full endpoint service names that do not
-   * conform with the standard `com.amazonaws.<REGION>.<SERVICE>` syntax.
+   * (OPTIONAL) The full name of the service to create the endpoint for. Set this when the service name in the Region differs from the name the solution builds, `com.amazonaws.<REGION>.<SERVICE>` for most services in every partition, for example services that use the `cn.com.amazonaws` prefix in aws-cn. List the service names available in a Region with `aws ec2 describe-vpc-endpoint-services`.
    */
   readonly serviceName?: t.NonEmptyString;
   /**
