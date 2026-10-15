@@ -616,12 +616,11 @@ abstract class LandingZoneOperation {
     }
 
     if (operationStatus === LandingZoneOperationStatus.FAILED) {
-      logger.warn(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${operationIdentifier}" in "${operationStatus}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
-      );
-      throw new Error(
-        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${operationIdentifier}" in "${operationStatus}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.`,
-      );
+      const message = `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${operationIdentifier}" in "${operationStatus}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status.${
+        response.operationDetails?.statusMessage ? ` Status message: "${response.operationDetails.statusMessage}"` : ''
+      }`;
+      logger.warn(message);
+      throw new Error(message);
     }
 
     return operationStatus;

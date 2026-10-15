@@ -535,6 +535,36 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
     });
 
+    test('should include the operation status message when the create operation fails', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof CreateLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.FAILED, statusMessage: 'mock status message' },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await new SetupLandingZoneModule().handler({
+          ...MOCK_CONSTANTS.moduleCommonParameter,
+          useExistingRole: false,
+          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+        });
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status. Status message: "mock status message"`,
+      );
+      expect(CreateLandingZoneCommand).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Status message: "mock status message"'));
+    });
+
     test('should successfully handle failure while rechecking of operation status', async () => {
       // Setup
       let getLandingZoneOperationCallCount = 0;
@@ -1045,6 +1075,36 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
       expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(1);
       expect(ControlTowerLogAccess.configure).not.toHaveBeenCalled();
+    });
+
+    test('should include the operation status message when the update operation fails', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof UpdateLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.FAILED, statusMessage: 'mock status message' },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await new SetupLandingZoneModule().handler({
+          ...MOCK_CONSTANTS.moduleCommonParameter,
+          useExistingRole: false,
+          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+        });
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status. Status message: "mock status message"`,
+      );
+      expect(UpdateLandingZoneCommand).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Status message: "mock status message"'));
     });
 
     test('should successfully handle failure while rechecking of operation status', async () => {
@@ -1580,6 +1640,35 @@ describe('Accelerator ControlTower Landing Zone Module', () => {
 
       expect(ResetLandingZoneCommand).toHaveBeenCalledTimes(1);
       expect(GetLandingZoneOperationCommand).toHaveBeenCalledTimes(2);
+    });
+
+    test('should include the operation status message when the reset operation fails', async () => {
+      // Setup
+      mockSend.mockImplementation(command => {
+        if (command instanceof ResetLandingZoneCommand) {
+          return Promise.resolve({
+            operationIdentifier: MOCK_CONSTANTS.operationIdentifier,
+          });
+        }
+        if (command instanceof GetLandingZoneOperationCommand) {
+          return Promise.resolve({
+            operationDetails: { status: LandingZoneOperationStatus.FAILED, statusMessage: 'mock status message' },
+          });
+        }
+        return Promise.reject(new Error('Unexpected command'));
+      });
+
+      // Execute & Verify
+      await expect(async () => {
+        await new SetupLandingZoneModule().handler({
+          ...MOCK_CONSTANTS.moduleCommonParameter,
+          useExistingRole: false,
+          configuration: MOCK_CONSTANTS.controlTowerLandingZoneConfiguration,
+        });
+      }).rejects.toThrowError(
+        `${MODULE_EXCEPTIONS.SERVICE_EXCEPTION}: AWS Control Tower Landing Zone operation with identifier "${MOCK_CONSTANTS.operationIdentifier}" in "${LandingZoneOperationStatus.FAILED}" state !!!!. Before continuing, proceed to AWS Control Tower and evaluate the status. Status message: "mock status message"`,
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Status message: "mock status message"'));
     });
 
     test('should successfully handle failure when ResetLandingZoneCommand did not return operationIdentifier', async () => {
