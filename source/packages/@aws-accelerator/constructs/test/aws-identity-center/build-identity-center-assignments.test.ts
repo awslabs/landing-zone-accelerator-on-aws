@@ -508,4 +508,126 @@ describe('Build Identity Center Assignments - Assignment Status Polling', () => 
     expect(result?.Status).toBe('FAILED');
     expect(result?.Reason).toContain('Assignment does not exist.');
   });
+
+  it('should delete the old permission set assignment when permissionSetArn changes on Update', async () => {
+    mockSSOAdminClient = {
+      send: vi
+        .fn()
+        // CreateAccountAssignmentCommand for the new permission set
+        .mockResolvedValueOnce({
+          AccountAssignmentCreationStatus: {
+            RequestId: 'create-req-1',
+            Status: 'SUCCEEDED',
+          },
+        })
+        // DeleteAccountAssignmentCommand for the old permission set, on the same account
+        .mockResolvedValueOnce({
+          AccountAssignmentDeletionStatus: {
+            RequestId: 'delete-req-1',
+            Status: 'SUCCEEDED',
+          },
+        }),
+    };
+    vi.mocked(SSOAdminClient).mockImplementation(function () {
+      return mockSSOAdminClient;
+    });
+    vi.mocked(CreateAccountAssignmentCommand).mockImplementation(function (input) {
+      return { input };
+    });
+    vi.mocked(DeleteAccountAssignmentCommand).mockImplementation(function (input) {
+      return { input };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    const event = createEvent('Update', {
+      ResourceProperties: {
+        instanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
+        identityStoreId: 'd-906751796e',
+        principals: [{ name: 'test-group', type: 'GROUP' }],
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-new',
+        accountIds: ['111111111111'],
+      },
+      OldResourceProperties: {
+        accountIds: ['111111111111'],
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-old',
+      },
+    });
+
+    const result = await handler(event);
+
+    expect(result?.Status).toBe('SUCCESS');
+    expect(CreateAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ PermissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-new' }),
+    );
+    // The account list is unchanged, so without this fix no delete would ever be issued and
+    // the old permission set's assignment would be left orphaned in Identity Center.
+    expect(DeleteAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        PermissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-old',
+        TargetId: '111111111111',
+      }),
+    );
+  });
+
+  it('should delete the departed principal when one group is swapped for another on Update, same accounts and permission set', async () => {
+    mockSSOAdminClient = {
+      send: vi
+        .fn()
+        // CreateAccountAssignmentCommand for the new principal (e.g. a DevOps group)
+        .mockResolvedValueOnce({
+          AccountAssignmentCreationStatus: {
+            RequestId: 'create-req-1',
+            Status: 'SUCCEEDED',
+          },
+        })
+        // DeleteAccountAssignmentCommand for the departed principal (e.g. a Developers group)
+        .mockResolvedValueOnce({
+          AccountAssignmentDeletionStatus: {
+            RequestId: 'delete-req-1',
+            Status: 'SUCCEEDED',
+          },
+        }),
+    };
+    vi.mocked(SSOAdminClient).mockImplementation(function () {
+      return mockSSOAdminClient;
+    });
+    vi.mocked(CreateAccountAssignmentCommand).mockImplementation(function (input) {
+      return { input };
+    });
+    vi.mocked(DeleteAccountAssignmentCommand).mockImplementation(function (input) {
+      return { input };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    const event = createEvent('Update', {
+      ResourceProperties: {
+        instanceArn: 'arn:aws:sso:::instance/ssoins-123456789210',
+        identityStoreId: 'd-906751796e',
+        principals: [{ name: 'devops-group', type: 'GROUP' }],
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-shared',
+        accountIds: ['111111111111'],
+      },
+      OldResourceProperties: {
+        accountIds: ['111111111111'],
+        permissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-shared',
+        principals: [{ name: 'developers-group', type: 'GROUP' }],
+      },
+    });
+
+    const result = await handler(event);
+
+    expect(result?.Status).toBe('SUCCESS');
+    expect(CreateAccountAssignmentCommand).toHaveBeenCalledTimes(1);
+    // Same accounts and same permission set, so without this fix nothing would ever notice
+    // the departed principal's assignment needed removing, it is left orphaned indefinitely.
+    expect(DeleteAccountAssignmentCommand).toHaveBeenCalledTimes(1);
+    expect(DeleteAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        PermissionSetArn: 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-shared',
+        TargetId: '111111111111',
+      }),
+    );
+  });
 });

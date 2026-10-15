@@ -111,7 +111,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
   async function onUpdate(event: AWSLambda.CloudFormationCustomResourceUpdateEvent) {
     try {
       const previousAccountIdsList: string[] = event.OldResourceProperties['accountIds'] ?? [];
-      const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+      const previousPermissionSetArn: string | undefined = event.OldResourceProperties['permissionSetArn'];
+      const previousPrincipals:
+        | [
+            {
+              name: string;
+              type: string;
+            },
+          ]
+        | []
+        | undefined = event.OldResourceProperties['principals'];
+      const permissionSetChanged =
+        previousPermissionSetArn !== undefined && previousPermissionSetArn !== permissionSetArnValue;
+
       // Build the account assignment creation
       const assignmentCreationRequests = await buildCreateAssignmentsList(
         accountIds,
@@ -128,21 +140,81 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         await createAssignment(assignmentCreationRequests, ssoAdminClient);
       }
 
-      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-        deletionList,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
-        idcClient,
-      );
+      // CloudFormation only ever treats this as an in-place property update of the same
+      // custom resource, never a replacement, no matter which property changed. Anything
+      // assigned under the previous properties that is not also assigned under the current
+      // ones must be explicitly deleted here, or it is left permanently orphaned in Identity
+      // Center. That covers three distinct cases off the same old-vs-new comparison: an
+      // account dropping out of scope, a principal (e.g. a group) being removed or swapped
+      // for another, and the permission set itself changing, which invalidates every
+      // previous assignment regardless of whether the same accounts/principals persist.
+      if (permissionSetChanged) {
+        if (previousAccountIdsList.length > 0) {
+          const staleAssignmentDeletionRequests = await buildDeleteAssignmentsList(
+            previousAccountIdsList,
+            previousPrincipals ?? principals,
+            identityStoreId,
+            instanceArn,
+            previousPermissionSetArn!,
+            principalType as PrincipalType,
+            principalId!,
+            idcClient,
+          );
+          await deleteAssignment(staleAssignmentDeletionRequests, ssoAdminClient);
+        }
+      } else if (previousPrincipals) {
+        const removedAccountIds = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+        const retainedAccountIds = previousAccountIdsList.filter(id => !removedAccountIds.includes(id));
+        const removedPrincipals = retrievePrincipalRemovals(previousPrincipals, principals);
 
-      // Build the Delete Parameters
-      if (deletionList.length > 0) {
-        await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+        // Every previous principal, on every account that dropped out of scope entirely.
+        if (removedAccountIds.length > 0) {
+          const departedAccountDeletions = await buildDeleteAssignmentsList(
+            removedAccountIds,
+            previousPrincipals,
+            identityStoreId,
+            instanceArn,
+            permissionSetArnValue,
+            principalType as PrincipalType,
+            principalId!,
+            idcClient,
+          );
+          await deleteAssignment(departedAccountDeletions, ssoAdminClient);
+        }
+
+        // Any principal removed (or swapped for another), on every account still in scope.
+        if (removedPrincipals.length > 0 && retainedAccountIds.length > 0) {
+          const departedPrincipalDeletions = await buildDeleteAssignmentsList(
+            retainedAccountIds,
+            removedPrincipals,
+            identityStoreId,
+            instanceArn,
+            permissionSetArnValue,
+            principalType as PrincipalType,
+            principalId!,
+            idcClient,
+          );
+          await deleteAssignment(departedPrincipalDeletions, ssoAdminClient);
+        }
+      } else {
+        // No principals array on the previous properties: a single implicit principal via
+        // principalType/principalId, so only the account list can have changed.
+        const deletionList = await retrieveAccountDeletions(previousAccountIdsList, accountIds);
+        if (deletionList.length > 0) {
+          const assignmentDeletionRequests = await buildDeleteAssignmentsList(
+            deletionList,
+            principals,
+            identityStoreId,
+            instanceArn,
+            permissionSetArnValue,
+            principalType as PrincipalType,
+            principalId!,
+            idcClient,
+          );
+          await deleteAssignment(assignmentDeletionRequests, ssoAdminClient);
+        }
       }
+
       return {
         PhysicalResourceId: event.LogicalResourceId,
         Status: 'SUCCESS',
@@ -507,6 +579,50 @@ async function deleteAssignment(
  * @param previousAccountIdsList List of accounts IDs that Identity Center Assignments were previously created for
  * @returns string[]
  */
+/**
+ * Returns the principals present in previousPrincipals but absent from currentPrincipals,
+ * matched by (type, name). Used to detect a principal being removed from, or swapped out of,
+ * an assignment whose accounts and permission set are otherwise unchanged.
+ * @param previousPrincipals Principals the assignment previously had
+ * @param currentPrincipals Principals the assignment currently has
+ * @returns the principals that have been removed
+ */
+function retrievePrincipalRemovals(
+  previousPrincipals:
+    | [
+        {
+          name: string;
+          type: string;
+        },
+      ]
+    | [],
+  currentPrincipals:
+    | [
+        {
+          name: string;
+          type: string;
+        },
+      ]
+    | [],
+):
+  | [
+      {
+        name: string;
+        type: string;
+      },
+    ]
+  | [] {
+  const currentKeys = new Set(currentPrincipals.map(p => `${p.type}:${p.name}`));
+  return previousPrincipals.filter(p => !currentKeys.has(`${p.type}:${p.name}`)) as
+    | [
+        {
+          name: string;
+          type: string;
+        },
+      ]
+    | [];
+}
+
 async function retrieveAccountDeletions(previousAccountIdsList: string[], accountIds: string[]) {
   const deletionList: string[] = [];
   for (const accountId of previousAccountIdsList) {
