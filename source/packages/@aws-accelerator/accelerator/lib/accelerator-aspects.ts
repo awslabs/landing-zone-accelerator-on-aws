@@ -22,10 +22,6 @@ const logger = createLogger(['accelerator-aspects']);
  */
 class GovCloudOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
-    if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId');
-      node.addPropertyDeletionOverride('Tags');
-    }
     if (node instanceof cdk.aws_iam.CfnRole) {
       const trustPolicyDoc = node.assumeRolePolicyDocument as cdk.aws_iam.SamlConsolePrincipal;
       if (JSON.stringify(trustPolicyDoc).includes('signin.aws.amazon.com')) {

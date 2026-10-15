@@ -412,25 +412,91 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('GovCloudOverrides', () => {
-    test('should remove KmsKeyId and Tags from LogGroup', () => {
+    test('should keep KmsKeyId and Tags on LogGroup (issue #5013)', () => {
       // GIVEN
-      new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
+      const key = new cdk.aws_kms.Key(stack, 'TestKey');
+      const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
         logGroupName: '/aws/test',
-        encryptionKey: new cdk.aws_kms.Key(stack, 'TestKey'),
+        encryptionKey: key,
       });
+
+      cdk.Tags.of(logGroup).add('Environment', 'Production');
 
       // WHEN
       new AcceleratorAspects(stack, 'aws-us-gov', false);
 
-      // THEN
+      // THEN the configured CMK and tags reach the template instead of being stripped
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         LogGroupName: '/aws/test',
+        KmsKeyId: stack.resolve(key.keyArn),
+        Tags: Match.arrayWith([{ Key: 'Environment', Value: 'Production' }]),
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      template.hasResource('AWS::Logs::LogGroup', (resource: any) => {
-        return !resource.Properties.KmsKeyId && !resource.Properties.Tags;
+    });
+
+    test('should keep KmsKeyId and Tags on LogGroup in a customization CustomStack', () => {
+      // GIVEN - a customer customization template imported verbatim via CfnInclude
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'lza-aspect-test-'));
+      const templateFile = 'log-group.yaml';
+      const kmsKeyArn = 'arn:aws-us-gov:kms:us-gov-west-1:111111111111:key/11111111-2222-3333-4444-555555555555';
+      fs.writeFileSync(
+        path.join(tmpDir, templateFile),
+        [
+          "AWSTemplateFormatVersion: '2010-09-09'",
+          'Resources:',
+          '  CustomerLogGroup:',
+          '    Type: AWS::Logs::LogGroup',
+          '    Properties:',
+          '      LogGroupName: /customer/app',
+          `      KmsKeyId: ${kmsKeyArn}`,
+          '      Tags:',
+          '        - Key: Owner',
+          '          Value: app-team',
+          '',
+        ].join('\n'),
+      );
+
+      const customStack = new CustomStack(app, 'TestCustomStack', {
+        env: { account: '111111111111', region: 'us-gov-west-1' },
+        configDirPath: tmpDir,
+        accountsConfig: new AccountsConfig({
+          managementAccountEmail: 'management@example.com',
+          logArchiveAccountEmail: 'logArchive@example.com',
+          auditAccountEmail: 'audit@example.com',
+        }),
+        globalConfig: new GlobalConfig({
+          homeRegion: 'us-gov-west-1',
+          controlTower: { enable: false },
+          managementAccountAccessRole: 'AWSControlTowerExecution',
+        }),
+        iamConfig: new IamConfig(),
+        networkConfig: new NetworkConfig(),
+        organizationConfig: new OrganizationConfig(),
+        securityConfig: new SecurityConfig(),
+        customizationsConfig: new CustomizationsConfig(),
+        partition: 'aws-us-gov',
+        centralizedLoggingRegion: 'us-gov-west-1',
+        runOrder: 1,
+        stackName: 'TestCustomStack',
+        templateFile,
+        terminationProtection: false,
+        ssmParamNamePrefix: '/accelerator',
       });
+
+      // WHEN
+      new AcceleratorAspects(app, 'aws-us-gov', false, {
+        excludeAwsSolutionAspect: candidateStack => candidateStack instanceof CustomStack,
+      });
+
+      // THEN the customer-authored KmsKeyId and Tags are deployed as written
+      const customTemplate = Template.fromStack(customStack);
+      customTemplate.hasResourceProperties('AWS::Logs::LogGroup', {
+        LogGroupName: '/customer/app',
+        KmsKeyId: kmsKeyArn,
+        Tags: [{ Key: 'Owner', Value: 'app-team' }],
+      });
+
+      fs.rmSync(tmpDir, { recursive: true, force: true });
     });
 
     test('should modify SAML provider URL for GovCloud', () => {
@@ -467,11 +533,14 @@ describe('AcceleratorAspects', () => {
   });
 
   describe('CnOverrides', () => {
-    test('should remove Tags from LogGroup', () => {
+    test('should keep KmsKeyId but remove Tags from LogGroup', () => {
       // GIVEN
-      new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
+      const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
         logGroupName: '/aws/test',
+        encryptionKey: new cdk.aws_kms.Key(stack, 'TestKey'),
       });
+
+      cdk.Tags.of(logGroup).add('Environment', 'Production');
 
       // WHEN
       new AcceleratorAspects(stack, 'aws-cn', false);
@@ -480,10 +549,8 @@ describe('AcceleratorAspects', () => {
       template = Template.fromStack(stack);
       template.hasResourceProperties('AWS::Logs::LogGroup', {
         LogGroupName: '/aws/test',
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      template.hasResource('AWS::Logs::LogGroup', (resource: any) => {
-        return !resource.Properties.KmsKeyId && !resource.Properties.Tags;
+        KmsKeyId: Match.anyValue(),
+        Tags: Match.absent(),
       });
     });
 
@@ -534,7 +601,7 @@ describe('AcceleratorAspects', () => {
         });
       });
 
-      test('should remove properties from CfnLogGroup', () => {
+      test('should keep KmsKeyId but remove Tags from CfnLogGroup', () => {
         // GIVEN
         const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
           logGroupName: '/aws/test',
@@ -548,9 +615,10 @@ describe('AcceleratorAspects', () => {
 
         // THEN
         template = Template.fromStack(stack);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        template.hasResource('AWS::Logs::LogGroup', (resource: any) => {
-          return !resource.Properties.KmsKeyId && !resource.Properties.Tags;
+        template.hasResourceProperties('AWS::Logs::LogGroup', {
+          LogGroupName: '/aws/test',
+          KmsKeyId: Match.anyValue(),
+          Tags: Match.absent(),
         });
       });
 
@@ -650,7 +718,7 @@ describe('AcceleratorAspects', () => {
         });
       });
 
-      test('should remove properties from CfnLogGroup', () => {
+      test('should keep KmsKeyId but remove Tags from CfnLogGroup', () => {
         // GIVEN
         const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
           logGroupName: '/aws/test',
@@ -664,9 +732,10 @@ describe('AcceleratorAspects', () => {
 
         // THEN
         template = Template.fromStack(stack);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        template.hasResource('AWS::Logs::LogGroup', (resource: any) => {
-          return !resource.Properties.KmsKeyId && !resource.Properties.Tags;
+        template.hasResourceProperties('AWS::Logs::LogGroup', {
+          LogGroupName: '/aws/test',
+          KmsKeyId: Match.anyValue(),
+          Tags: Match.absent(),
         });
       });
 
@@ -803,6 +872,40 @@ describe('AcceleratorAspects', () => {
             ],
           },
         });
+      });
+    });
+  });
+
+  describe('LogGroup partition overrides', () => {
+    // Expected handling of CloudWatch log group KmsKeyId and Tags per partition
+    test.each([
+      { partition: 'aws', keepsKmsKeyId: true, keepsTags: true },
+      { partition: 'aws-us-gov', keepsKmsKeyId: true, keepsTags: true },
+      { partition: 'aws-eusc', keepsKmsKeyId: true, keepsTags: true },
+      { partition: 'aws-iso-e', keepsKmsKeyId: true, keepsTags: true },
+      { partition: 'aws-iso-f', keepsKmsKeyId: true, keepsTags: true },
+      { partition: 'aws-iso', keepsKmsKeyId: true, keepsTags: false },
+      { partition: 'aws-iso-b', keepsKmsKeyId: true, keepsTags: false },
+      { partition: 'aws-cn', keepsKmsKeyId: true, keepsTags: false },
+    ])('$partition: KmsKeyId kept=$keepsKmsKeyId, Tags kept=$keepsTags', ({ partition, keepsKmsKeyId, keepsTags }) => {
+      // GIVEN
+      const key = new cdk.aws_kms.Key(stack, 'TestKey');
+      const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup', {
+        logGroupName: '/aws/test',
+        encryptionKey: key,
+      });
+
+      cdk.Tags.of(logGroup).add('Environment', 'Production');
+
+      // WHEN
+      new AcceleratorAspects(stack, partition, false);
+
+      // THEN
+      template = Template.fromStack(stack);
+      template.hasResourceProperties('AWS::Logs::LogGroup', {
+        LogGroupName: '/aws/test',
+        KmsKeyId: keepsKmsKeyId ? stack.resolve(key.keyArn) : Match.absent(),
+        Tags: keepsTags ? Match.arrayWith([{ Key: 'Environment', Value: 'Production' }]) : Match.absent(),
       });
     });
   });
