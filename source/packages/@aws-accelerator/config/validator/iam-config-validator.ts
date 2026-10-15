@@ -19,7 +19,7 @@ import { AccountsConfig } from '../lib/accounts-config';
 import { CommonValidatorFunctions } from './common/common-validator-functions';
 import { DeploymentTargets } from '../lib/common';
 import { IamConfig, PolicySetConfig } from '../lib/iam-config';
-import { IIamConfig, IIdentityCenterConfig } from '../lib/models/iam-config';
+import { IIamConfig, IIdentityCenterAssignmentConfig, IIdentityCenterConfig } from '../lib/models/iam-config';
 import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
@@ -116,6 +116,11 @@ export class IamConfigValidator {
 
     // Validate Identity Center Object
     errors.push(...this.validateIdentityCenter());
+
+    // Warn about Identity Center assignments that grant the same principal the same permission set on the same account
+    for (const warning of this.getIdentityCenterAssignmentOverlapWarnings()) {
+      this.logger.warn(warning);
+    }
 
     //
     // Validate IAM principal assignments for roles
@@ -545,6 +550,93 @@ export class IamConfigValidator {
     errors.push(...this.validateIdentityCenterAssignmentPrincipalIds());
 
     return errors;
+  }
+
+  /**
+   * Function to find Identity Center assignments that grant the same principal the same permission set on the same
+   * account. IAM Identity Center stores one account assignment per account, permission set, and principal, so when
+   * one of the overlapping assignments removes the principal or account, or is deleted or renamed, the shared account
+   * assignment is deleted even though the other assignment still declares it.
+   * Overlaps are reported as warnings rather than errors, because consolidating them by editing or deleting one of the
+   * assignments deletes the shared account assignment.
+   * Principals are compared by the values in the configuration without case sensitivity, so a principal referenced by
+   * name in one assignment and by the deprecated principalId in another is not detected.
+   * @returns Array of warning messages
+   */
+  private getIdentityCenterAssignmentOverlapWarnings(): string[] {
+    const warnings: string[] = [];
+    const identityCenter = this.iamConfig.identityCenter;
+    if (!identityCenter) {
+      return warnings;
+    }
+
+    const grants = (identityCenter.identityCenterAssignments ?? []).map(assignment => ({
+      name: assignment.name,
+      permissionSetName: assignment.permissionSetName,
+      principals: this.getIdentityCenterAssignmentPrincipals(assignment),
+      accountNames: new Set(
+        CommonValidatorFunctions.getAccountNamesFromDeploymentTargets(
+          this.accountsConfig,
+          assignment.deploymentTargets as DeploymentTargets,
+        ),
+      ),
+    }));
+
+    for (const [index, grant] of grants.entries()) {
+      for (const otherGrant of grants.slice(index + 1)) {
+        if (grant.permissionSetName !== otherGrant.permissionSetName) {
+          continue;
+        }
+        const sharedPrincipals = [...grant.principals]
+          .filter(([key]) => otherGrant.principals.has(key))
+          .map(([, principal]) => principal);
+        if (sharedPrincipals.length === 0) {
+          continue;
+        }
+        const sharedAccountNames = [...grant.accountNames].filter(accountName =>
+          otherGrant.accountNames.has(accountName),
+        );
+        if (sharedAccountNames.length > 0) {
+          warnings.push(
+            `Identity center ${identityCenter.name} assignments ${grant.name} and ${otherGrant.name} both grant permission set ${
+              grant.permissionSetName
+            } to [${sharedPrincipals.join(',')}] on accounts [${this.formatOverlapAccountNames(
+              sharedAccountNames,
+            )}]. Removing a principal or account from one of these assignments, or deleting or renaming one of them, also deletes the access the other assignment grants. To consolidate them, remove the shared principals from one assignment, then make a change to the other assignment so that it recreates the access.`,
+          );
+        }
+      }
+    }
+
+    return warnings;
+  }
+
+  /**
+   * Function to get the principals an Identity Center assignment grants access to
+   * @param assignment - Identity Center assignment configuration
+   * @returns Map of case insensitive principal keys to principals as written in the configuration
+   */
+  private getIdentityCenterAssignmentPrincipals(assignment: IIdentityCenterAssignmentConfig): Map<string, string> {
+    // The assignment custom resource only reads principalId when principals is not set, including an empty list.
+    const principals = assignment.principals
+      ? assignment.principals.map(principal => `${principal.type} ${principal.name}`)
+      : assignment.principalType && assignment.principalId
+        ? [`${assignment.principalType} ${assignment.principalId}`]
+        : [];
+    return new Map(principals.map(principal => [principal.toLowerCase(), principal]));
+  }
+
+  /**
+   * Function to format the account names of an Identity Center assignment overlap
+   * @param accountNames - Shared account names
+   * @returns Account names, limited to the first ten
+   */
+  private formatOverlapAccountNames(accountNames: string[]): string {
+    const maxAccountNames = 10;
+    if (accountNames.length <= maxAccountNames) {
+      return accountNames.join(',');
+    }
+    return `${accountNames.slice(0, maxAccountNames).join(',')} and ${accountNames.length - maxAccountNames} more`;
   }
 
   /**

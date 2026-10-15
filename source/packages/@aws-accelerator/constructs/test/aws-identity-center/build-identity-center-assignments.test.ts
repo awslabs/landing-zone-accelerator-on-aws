@@ -11,8 +11,8 @@
  *  and limitations under the License.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IdentitystoreClient } from '@aws-sdk/client-identitystore';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { IdentitystoreClient, GetGroupIdCommand, GetUserIdCommand } from '@aws-sdk/client-identitystore';
 import {
   SSOAdminClient,
   CreateAccountAssignmentCommand,
@@ -907,5 +907,488 @@ describe('Build Identity Center Assignments - Permission Set Rename/Replacement'
     );
     expect(CreateAccountAssignmentCommand).toHaveBeenCalledTimes(2);
     expect(DeleteAccountAssignmentCommand).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('Build Identity Center Assignments - Principal Changes', () => {
+  const PERMISSION_SET_ARN = 'arn:aws:sso:::permissionSet/ssoins-1111111111111111/ps-1111111111111111';
+  const INSTANCE_ARN = 'arn:aws:sso:::instance/ssoins-123456789210';
+  const IDENTITY_STORE_ID = 'd-906751796e';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockIdentityStoreClient: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSSOAdminClient: any;
+  let assignments: Set<string>;
+  let groupIds: Record<string, string>;
+  let userIds: Record<string, string>;
+
+  interface MockSsoCommand {
+    kind: 'create' | 'delete' | 'describeCreate' | 'describeDelete' | 'list';
+    input: {
+      AccountId?: string;
+      PermissionSetArn?: string;
+      PrincipalId?: string;
+      PrincipalType?: string;
+      TargetId?: string;
+    };
+  }
+
+  interface MockIdentityStoreCommand {
+    kind: 'group' | 'user';
+    input: { AlternateIdentifier: { UniqueAttribute: { AttributeValue: string } } };
+  }
+
+  function assignmentKey(input: MockSsoCommand['input']): string {
+    return `${input.PermissionSetArn}|${input.TargetId ?? input.AccountId}|${input.PrincipalType}|${input.PrincipalId}`;
+  }
+
+  function assignment(accountId: string, principalType: string, principalId: string): string {
+    return `${PERMISSION_SET_ARN}|${accountId}|${principalType}|${principalId}`;
+  }
+
+  function notFound(name: string) {
+    return Object.assign(new Error(`${name} does not exist`), { name: 'ResourceNotFoundException' });
+  }
+
+  function updateEvent(resourceProperties: Record<string, unknown>, oldResourceProperties: Record<string, unknown>) {
+    const baseProperties = {
+      instanceArn: INSTANCE_ARN,
+      identityStoreId: IDENTITY_STORE_ID,
+      permissionSetArn: PERMISSION_SET_ARN,
+      accountIds: ['111111111111'],
+    };
+    return {
+      RequestType: 'Update',
+      ResponseURL: 'https://example.com',
+      StackId: 'test-stack',
+      RequestId: 'test-request',
+      LogicalResourceId: 'test-resource',
+      ResourceType: 'Custom::IdentityCenterAssignments',
+      ResourceProperties: { ...baseProperties, ...resourceProperties },
+      OldResourceProperties: { ...baseProperties, ...oldResourceProperties },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    groupIds = { developers: 'group-developers', devops: 'group-devops' };
+    userIds = { 'jane.doe': 'user-jane' };
+    assignments = new Set();
+
+    mockIdentityStoreClient = {
+      send: vi.fn(async (command: MockIdentityStoreCommand) => {
+        const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+        const ids = command.kind === 'group' ? groupIds : userIds;
+        if (!ids[name]) {
+          throw notFound(name);
+        }
+        return command.kind === 'group' ? { GroupId: ids[name] } : { UserId: ids[name] };
+      }),
+    };
+
+    mockSSOAdminClient = {
+      send: vi.fn(async (command: MockSsoCommand) => {
+        switch (command.kind) {
+          case 'list': {
+            const prefix = `${command.input.PermissionSetArn}|${command.input.AccountId}|`;
+            return {
+              AccountAssignments: [...assignments]
+                .filter(key => key.startsWith(prefix))
+                .map(key => {
+                  const [, , principalType, principalId] = key.split('|');
+                  return { PrincipalType: principalType, PrincipalId: principalId };
+                }),
+            };
+          }
+          case 'create':
+            assignments.add(assignmentKey(command.input));
+            return { AccountAssignmentCreationStatus: { RequestId: 'create-req', Status: 'SUCCEEDED' } };
+          case 'delete':
+            assignments.delete(assignmentKey(command.input));
+            return { AccountAssignmentDeletionStatus: { RequestId: 'delete-req', Status: 'SUCCEEDED' } };
+          default:
+            throw new Error(`Unexpected command ${command.kind}`);
+        }
+      }),
+    };
+
+    vi.mocked(IdentitystoreClient).mockImplementation(function () {
+      return mockIdentityStoreClient;
+    });
+    vi.mocked(GetGroupIdCommand).mockImplementation(function (input) {
+      return { kind: 'group', input };
+    });
+    vi.mocked(GetUserIdCommand).mockImplementation(function (input) {
+      return { kind: 'user', input };
+    });
+    vi.mocked(SSOAdminClient).mockImplementation(function () {
+      return mockSSOAdminClient;
+    });
+    vi.mocked(CreateAccountAssignmentCommand).mockImplementation(function (input) {
+      return { kind: 'create', input };
+    });
+    vi.mocked(DeleteAccountAssignmentCommand).mockImplementation(function (input) {
+      return { kind: 'delete', input };
+    });
+    vi.mocked(ListAccountAssignmentsCommand).mockImplementation(function (input) {
+      return { kind: 'list', input };
+    });
+  });
+
+  afterEach(() => {
+    // vi.clearAllMocks does not reset implementations, so do not leak these command shapes into other suites.
+    vi.mocked(GetGroupIdCommand).mockReset();
+    vi.mocked(GetUserIdCommand).mockReset();
+    vi.mocked(CreateAccountAssignmentCommand).mockReset();
+    vi.mocked(DeleteAccountAssignmentCommand).mockReset();
+    vi.mocked(ListAccountAssignmentsCommand).mockReset();
+  });
+
+  it('should delete the old group assignment when a group is swapped for another on the same accounts', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    const result = await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    expect(result?.Status).toBe('SUCCESS');
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete only the removed principal and keep the retained one on every account in scope', async () => {
+    assignments = new Set([
+      assignment('111111111111', 'GROUP', 'group-developers'),
+      assignment('111111111111', 'USER', 'user-jane'),
+      assignment('222222222222', 'GROUP', 'group-developers'),
+      assignment('222222222222', 'USER', 'user-jane'),
+    ]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'developers', type: 'GROUP' }], accountIds: ['111111111111', '222222222222'] },
+        {
+          principals: [
+            { name: 'developers', type: 'GROUP' },
+            { name: 'jane.doe', type: 'USER' },
+          ],
+          accountIds: ['111111111111', '222222222222'],
+        },
+      ),
+    );
+
+    expect(assignments).toEqual(
+      new Set([
+        assignment('111111111111', 'GROUP', 'group-developers'),
+        assignment('222222222222', 'GROUP', 'group-developers'),
+      ]),
+    );
+  });
+
+  it('should delete a removed principal from a removed account in the same update', async () => {
+    assignments = new Set([
+      assignment('111111111111', 'GROUP', 'group-developers'),
+      assignment('222222222222', 'GROUP', 'group-developers'),
+    ]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }], accountIds: ['111111111111'] },
+        { principals: [{ name: 'developers', type: 'GROUP' }], accountIds: ['111111111111', '222222222222'] },
+      ),
+    );
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete the old assignment when the deprecated principalId changes on the same accounts', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principalType: 'GROUP', principalId: 'group-devops' },
+        { principalType: 'GROUP', principalId: 'group-developers' },
+      ),
+    );
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete the old direct-principal assignment when migrating from principalId to principals', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-legacy')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principalType: 'GROUP', principalId: 'group-legacy' },
+      ),
+    );
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete the old principals assignment when migrating from principals to principalId', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principalType: 'GROUP', principalId: 'group-devops' },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should not delete an assignment when the old and new principal names resolve to the same principal', async () => {
+    groupIds['Developers'] = 'group-developers';
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'Developers', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    expect(DeleteAccountAssignmentCommand).not.toHaveBeenCalled();
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-developers')]));
+  });
+
+  it('should skip a removed principal that no longer exists in the identity store and still succeed', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+    delete groupIds['developers'];
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    const result = await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    expect(result?.Status).toBe('SUCCESS');
+    expect(DeleteAccountAssignmentCommand).not.toHaveBeenCalled();
+    expect(assignments).toContain(assignment('111111111111', 'GROUP', 'group-devops'));
+  });
+
+  it('should still fail the update when a removed principal lookup fails for a reason other than not found', async () => {
+    mockIdentityStoreClient.send.mockImplementation(async (command: MockIdentityStoreCommand) => {
+      const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+      if (name === 'developers') {
+        throw Object.assign(new Error('access denied'), { name: 'AccessDeniedException' });
+      }
+      return { GroupId: groupIds[name] };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    await expect(
+      handler(
+        updateEvent(
+          { principals: [{ name: 'devops', type: 'GROUP' }] },
+          { principals: [{ name: 'developers', type: 'GROUP' }] },
+        ),
+      ),
+    ).rejects.toThrow("Group 'developers' not found in Identity Store 'd-906751796e'");
+  });
+
+  it('should still fail the update when a removed principal lookup reports a missing KMS key', async () => {
+    mockIdentityStoreClient.send.mockImplementation(async (command: MockIdentityStoreCommand) => {
+      const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+      if (name === 'developers') {
+        throw Object.assign(notFound(name), { Reason: 'KMS_KEY_NOT_FOUND' });
+      }
+      return { GroupId: groupIds[name] };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    await expect(
+      handler(
+        updateEvent(
+          { principalType: 'GROUP', principalId: 'group-devops' },
+          { principals: [{ name: 'developers', type: 'GROUP' }] },
+        ),
+      ),
+    ).rejects.toThrow("Group 'developers' not found in Identity Store 'd-906751796e'");
+  });
+
+  it('should still fail the update when a removed principal lookup reports a missing identity store', async () => {
+    mockIdentityStoreClient.send.mockImplementation(async (command: MockIdentityStoreCommand) => {
+      const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+      if (name === 'developers') {
+        throw Object.assign(notFound(name), { ResourceType: 'IDENTITY_STORE' });
+      }
+      return { GroupId: groupIds[name] };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+    await expect(
+      handler(
+        updateEvent(
+          { principalType: 'GROUP', principalId: 'group-devops' },
+          { principals: [{ name: 'developers', type: 'GROUP' }] },
+        ),
+      ),
+    ).rejects.toThrow("Group 'developers' not found in Identity Store 'd-906751796e'");
+  });
+
+  it('should skip a removed principal whose lookup reports the group itself as not found', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+    mockIdentityStoreClient.send.mockImplementation(async (command: MockIdentityStoreCommand) => {
+      const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+      if (name === 'developers') {
+        throw Object.assign(notFound(name), { ResourceType: 'GROUP' });
+      }
+      return { GroupId: groupIds[name] };
+    });
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    const result = await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    expect(result?.Status).toBe('SUCCESS');
+    expect(DeleteAccountAssignmentCommand).not.toHaveBeenCalled();
+    expect(assignments).toContain(assignment('111111111111', 'GROUP', 'group-devops'));
+  });
+
+  it.each(['RESOURCE_POLICY', 'GROUP_MEMBERSHIP', 'USER'])(
+    'should still fail the update when a removed group lookup reports a missing %s resource',
+    async resourceType => {
+      mockIdentityStoreClient.send.mockImplementation(async (command: MockIdentityStoreCommand) => {
+        const name = command.input.AlternateIdentifier.UniqueAttribute.AttributeValue;
+        if (name === 'developers') {
+          throw Object.assign(notFound(name), { ResourceType: resourceType });
+        }
+        return { GroupId: groupIds[name] };
+      });
+
+      const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+
+      await expect(
+        handler(
+          updateEvent(
+            { principalType: 'GROUP', principalId: 'group-devops' },
+            { principals: [{ name: 'developers', type: 'GROUP' }] },
+          ),
+        ),
+      ).rejects.toThrow("Group 'developers' not found in Identity Store 'd-906751796e'");
+    },
+  );
+
+  it('should create the new assignment before deleting the old one so a swap never removes all access', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }] },
+      ),
+    );
+
+    const createOrder = vi.mocked(CreateAccountAssignmentCommand).mock.invocationCallOrder[0];
+    const deleteOrder = vi.mocked(DeleteAccountAssignmentCommand).mock.invocationCallOrder[0];
+    expect(createOrder).toBeDefined();
+    expect(deleteOrder).toBeDefined();
+    expect(createOrder).toBeLessThan(deleteOrder);
+  });
+
+  it('should restore the original assignment when CloudFormation rolls back a principal swap', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+    const swapProperties = { principals: [{ name: 'devops', type: 'GROUP' }] };
+    const originalProperties = { principals: [{ name: 'developers', type: 'GROUP' }] };
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(updateEvent(swapProperties, originalProperties));
+    // CloudFormation rolls back an Update by sending another Update with the old and new properties swapped.
+    await handler(updateEvent(originalProperties, swapProperties));
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-developers')]));
+  });
+
+  it('should fall back to the current instance, identity store, and permission set when old properties lack them', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        {
+          principals: [{ name: 'developers', type: 'GROUP' }],
+          instanceArn: undefined,
+          identityStoreId: undefined,
+          permissionSetArn: undefined,
+        },
+      ),
+    );
+
+    expect(DeleteAccountAssignmentCommand).toHaveBeenCalledWith(
+      expect.objectContaining({ InstanceArn: INSTANCE_ARN, PermissionSetArn: PERMISSION_SET_ARN }),
+    );
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete a removed principal only once when the previous account list contains duplicates', async () => {
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-developers')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [{ name: 'developers', type: 'GROUP' }], accountIds: ['111111111111', '111111111111'] },
+      ),
+    );
+
+    expect(DeleteAccountAssignmentCommand).toHaveBeenCalledTimes(1);
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'GROUP', 'group-devops')]));
+  });
+
+  it('should delete the old assignment when a deprecated USER principalId changes', async () => {
+    assignments = new Set([assignment('111111111111', 'USER', 'user-old')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principalType: 'USER', principalId: 'user-new' },
+        { principalType: 'USER', principalId: 'user-old' },
+      ),
+    );
+
+    expect(assignments).toEqual(new Set([assignment('111111111111', 'USER', 'user-new')]));
+  });
+
+  it('should ignore the deprecated principalId in old properties when principals is an empty list', async () => {
+    // The custom resource never created an assignment for principalId in this shape, so it must not delete one.
+    assignments = new Set([assignment('111111111111', 'GROUP', 'group-unmanaged')]);
+
+    const { handler } = await import('../../lib/aws-identity-center/build-identity-center-assignments/index.ts');
+    await handler(
+      updateEvent(
+        { principals: [{ name: 'devops', type: 'GROUP' }] },
+        { principals: [], principalType: 'GROUP', principalId: 'group-unmanaged' },
+      ),
+    );
+
+    expect(DeleteAccountAssignmentCommand).not.toHaveBeenCalled();
+    expect(assignments).toContain(assignment('111111111111', 'GROUP', 'group-unmanaged'));
   });
 });

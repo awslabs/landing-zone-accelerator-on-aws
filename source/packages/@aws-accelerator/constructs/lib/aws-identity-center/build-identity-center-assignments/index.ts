@@ -157,20 +157,25 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
         await deleteExistingAssignments(oldPermissionSetDeletionRequests, ssoAdminClient);
       }
     } else {
-      const deletionList = await retrieveAccountDeletions(previousProperties.accountIds, accountIds);
-      const assignmentDeletionRequests = await buildDeleteAssignmentsList(
-        deletionList,
-        principals,
-        identityStoreId,
-        instanceArn,
-        permissionSetArnValue,
-        principalType as PrincipalType,
-        principalId!,
+      // Delete every previous assignment that is no longer desired. This covers removed accounts,
+      // removed or swapped principals, and changes between principals and principalId.
+      const previousAssignmentRequests = await buildPreviousAssignmentsList(
+        previousProperties.accountIds,
+        previousProperties.principals,
+        previousProperties.identityStoreId ?? identityStoreId,
+        previousProperties.instanceArn ?? instanceArn,
+        previousProperties.permissionSetArn ?? permissionSetArnValue,
+        previousProperties.principalType as PrincipalType,
+        previousProperties.principalId,
         idcClient,
       );
+      const currentAssignmentKeys = new Set(assignmentCreationRequests.map(getAssignmentKey));
+      const staleAssignmentRequests = previousAssignmentRequests.filter(
+        assignmentRequest => !currentAssignmentKeys.has(getAssignmentKey(assignmentRequest)),
+      );
 
-      if (deletionList.length > 0) {
-        await deleteExistingAssignments(assignmentDeletionRequests, ssoAdminClient);
+      if (staleAssignmentRequests.length > 0) {
+        await deleteExistingAssignments(staleAssignmentRequests, ssoAdminClient);
       }
     }
     return {
@@ -338,6 +343,114 @@ async function buildDeleteAssignmentsList(
     }
   }
   return assignmentDeletionRequests;
+}
+
+/**
+ * Method to build the account assignments described by previous resource properties. Previous principals
+ * that no longer exist in the identity store are skipped because they cannot be resolved to a principal ID.
+ * @param accountIds List of accounts from the previous resource properties
+ * @param principals The previous principal objects that require a lookup
+ * @param identityStoreId
+ * @param instanceArn
+ * @param permissionSetArnValue
+ * @param principalType The previous Principal Type
+ * @param principalId The previous Principal ID
+ * @param idcClient
+ * @returns DeleteAccountAssignmentRequest[]
+ */
+async function buildPreviousAssignmentsList(
+  accountIds: string[],
+  principals: AssignmentPrincipals,
+  identityStoreId: string,
+  instanceArn: string,
+  permissionSetArnValue: string,
+  principalType: PrincipalType,
+  principalId: string | undefined,
+  idcClient: IdentitystoreClient,
+): Promise<DeleteAccountAssignmentRequest[]> {
+  const resolvedPrincipals: { PrincipalType: PrincipalType; PrincipalId: string }[] = [];
+  if (principals) {
+    for (const principal of principals) {
+      const resolvedPrincipalId = await getPreviousPrincipalId(principal, identityStoreId, idcClient);
+      if (resolvedPrincipalId) {
+        resolvedPrincipals.push({ PrincipalType: principal.type as PrincipalType, PrincipalId: resolvedPrincipalId });
+      }
+    }
+  } else if (principalType && principalId) {
+    resolvedPrincipals.push({ PrincipalType: principalType, PrincipalId: principalId });
+  }
+
+  return accountIds.flatMap(accountId =>
+    resolvedPrincipals.map(resolvedPrincipal => ({
+      InstanceArn: instanceArn,
+      TargetId: accountId,
+      TargetType: 'AWS_ACCOUNT',
+      PermissionSetArn: permissionSetArnValue,
+      ...resolvedPrincipal,
+    })),
+  );
+}
+
+/**
+ * Returns the principal ID of a previous principal, or undefined if it no longer exists in the identity store.
+ * @param principal Previous JSON object containing the name of the user/group as well as its type.
+ * @param identityStoreId The Identity store id
+ * @param idcClient
+ * @returns string | undefined
+ */
+async function getPreviousPrincipalId(
+  principal: AssignmentPrincipal,
+  identityStoreId: string,
+  idcClient: IdentitystoreClient,
+): Promise<string | undefined> {
+  try {
+    if (principal.type === 'USER') {
+      return await getUserPrincipalId(principal, identityStoreId, idcClient);
+    }
+    if (principal.type === 'GROUP') {
+      return await getGroupPrincipalId(principal, identityStoreId, idcClient);
+    }
+  } catch (error) {
+    if (error instanceof Error && isPrincipalNotFoundException(error.cause, principal.type)) {
+      console.warn(
+        `Skipping assignment cleanup for ${principal.type} '${principal.name}' because it no longer exists in Identity Store '${identityStoreId}'`,
+      );
+      return undefined;
+    }
+    throw error;
+  }
+  return undefined;
+}
+
+/**
+ * Checks whether an Identity Store error reports that the user or group itself does not exist. The same
+ * exception is also returned for other missing resources, such as the identity store or a customer managed
+ * KMS key, which must not be skipped.
+ * @param error Error to inspect
+ * @param principalType The type of the principal that was looked up
+ * @returns Whether the error reports the principal as missing
+ */
+function isPrincipalNotFoundException(error: unknown, principalType: string): boolean {
+  if (!isResourceNotFoundException(error)) {
+    return false;
+  }
+  const notFoundError = error as { Reason?: string; ResourceType?: string };
+  return !notFoundError.Reason && (!notFoundError.ResourceType || notFoundError.ResourceType === principalType);
+}
+
+/**
+ * Returns a key that identifies an account assignment.
+ * @param assignmentRequest Account assignment parameters
+ * @returns string
+ */
+function getAssignmentKey(assignmentRequest: DeleteAccountAssignmentRequest): string {
+  return [
+    assignmentRequest.InstanceArn,
+    assignmentRequest.PermissionSetArn,
+    assignmentRequest.TargetId,
+    assignmentRequest.PrincipalType,
+    assignmentRequest.PrincipalId,
+  ].join('|');
 }
 
 const POLL_MAX_ATTEMPTS = 10;
@@ -620,23 +733,6 @@ async function deleteAssignment(
 }
 
 /**
- * Returns the list of accounts IDs that need to have the account assignments deleted for.
- * @param previousAccountIdsList List of accounts IDs that Identity Center Assignments were previously created for
- * @returns string[]
- */
-async function retrieveAccountDeletions(previousAccountIdsList: string[], accountIds: string[]) {
-  const deletionList: string[] = [];
-  for (const accountId of previousAccountIdsList) {
-    if (accountIds.indexOf(accountId) === -1) {
-      if (!deletionList.includes(accountId)) {
-        deletionList.push(accountId);
-      }
-    }
-  }
-  return deletionList;
-}
-
-/**
  * Returns the principal ID of the User.
  * @param principal Incoming JSON object containing the name of the user/group as well as its type.
  * @param identityStoreId The Identity store id
@@ -664,7 +760,9 @@ async function getUserPrincipalId(
     );
     return response.UserId;
   } catch (error) {
-    throw new Error(`User '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`);
+    throw new Error(`User '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`, {
+      cause: error,
+    });
   }
 }
 
@@ -696,6 +794,8 @@ async function getGroupPrincipalId(
     );
     return response.GroupId;
   } catch (error) {
-    throw new Error(`Group '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`);
+    throw new Error(`Group '${principal.name}' not found in Identity Store '${identityStoreId}': ${error}`, {
+      cause: error,
+    });
   }
 }
