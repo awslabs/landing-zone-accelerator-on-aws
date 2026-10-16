@@ -77,7 +77,8 @@ describe('GuardDutyMembers', () => {
   ];
   const defaultFeatures = {
     s3DataEvents: false,
-    eksProtection: false,
+    auditLogs: false,
+    runtimeMonitoring: false,
     eksAgent: false,
     ec2Protection: false,
     rdsProtection: false,
@@ -364,7 +365,8 @@ describe('GuardDutyMembers', () => {
 
       const allFeatures = {
         s3DataEvents: true,
-        eksProtection: true,
+        auditLogs: true,
+        runtimeMonitoring: true,
         eksAgent: true,
         ec2Protection: true,
         rdsProtection: true,
@@ -653,7 +655,7 @@ describe('GuardDutyMembers', () => {
         mockDetectorId,
         false,
         logPrefix,
-        { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+        { ...defaultFeatures, s3DataEvents: true, auditLogs: true },
       );
 
       const updateDetectorCalls = mockExecuteApi.mock.calls.filter(
@@ -763,7 +765,7 @@ describe('GuardDutyMembers', () => {
         mockDetectorId,
         false,
         logPrefix,
-        { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+        { ...defaultFeatures, s3DataEvents: true, auditLogs: true },
       );
 
       const memberCalls = mockExecuteApi.mock.calls.filter(
@@ -801,7 +803,7 @@ describe('GuardDutyMembers', () => {
           mockDetectorId,
           false,
           logPrefix,
-          { ...defaultFeatures, s3DataEvents: true, eksProtection: true },
+          { ...defaultFeatures, s3DataEvents: true, auditLogs: true },
         ),
       ).rejects.toThrow('Network timeout');
 
@@ -1137,6 +1139,7 @@ describe('GuardDutyMembers', () => {
 
       const eksFeatures = {
         ...defaultFeatures,
+        runtimeMonitoring: true,
         eksAgent: true,
       };
 
@@ -1172,6 +1175,55 @@ describe('GuardDutyMembers', () => {
         logPrefix,
       );
     });
+
+    test('should enable EKS runtime monitoring with addon management disabled when eksAgent is false', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      const mockPaginator = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      };
+      mockPaginate.mockReturnValue(mockPaginator);
+
+      // Runtime monitoring on, agent management off: addon must decouple to NONE.
+      const eksFeatures = {
+        ...defaultFeatures,
+        runtimeMonitoring: true,
+        eksAgent: false,
+      };
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        eksFeatures,
+      );
+
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'UpdateOrganizationConfigurationCommand',
+        expect.objectContaining({
+          Features: expect.arrayContaining([
+            expect.objectContaining({
+              Name: 'EKS_RUNTIME_MONITORING',
+              AutoEnable: 'NEW',
+              AdditionalConfiguration: [
+                {
+                  Name: 'EKS_ADDON_MANAGEMENT',
+                  AutoEnable: 'NONE',
+                },
+              ],
+            }),
+          ]),
+        }),
+        expect.any(Function),
+        expect.anything(),
+        logPrefix,
+      );
+    });
   });
 
   describe('createDetectorFeatures', () => {
@@ -1186,7 +1238,8 @@ describe('GuardDutyMembers', () => {
 
       const allFeatures = {
         s3DataEvents: true,
-        eksProtection: true,
+        auditLogs: true,
+        runtimeMonitoring: true,
         eksAgent: true,
         ec2Protection: true,
         rdsProtection: true,
@@ -1260,7 +1313,7 @@ describe('GuardDutyMembers', () => {
       );
     });
 
-    test('should create detector features with undefined featuresToEnable (all DISABLED)', async () => {
+    test('should emit no features when featuresToEnable is undefined (nothing configured)', async () => {
       mockExecuteApi.mockResolvedValue({});
       const mockPaginator = {
         [Symbol.asyncIterator]: async function* () {
@@ -1280,15 +1333,100 @@ describe('GuardDutyMembers', () => {
         undefined,
       );
 
-      expect(mockExecuteApi).toHaveBeenCalledWith(
-        'UpdateMemberDetectorsCommand',
-        expect.objectContaining({
-          Features: expect.arrayContaining([expect.objectContaining({ Status: 'DISABLED' })]),
-        }),
-        expect.any(Function),
-        expect.anything(),
+      // Nothing configured -> no feature names sent to the API (not even as DISABLED), so GuardDuty
+      // is never asked about feature names that may not exist in the region/partition.
+      const memberCall = mockExecuteApi.mock.calls.find(call => call[0] === 'UpdateMemberDetectorsCommand');
+      expect(memberCall).toBeDefined();
+      expect(memberCall?.[1].Features).toEqual([]);
+    });
+
+    test('should omit unconfigured features and only send configured ones', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      const mockPaginator = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      };
+      mockPaginate.mockReturnValue(mockPaginator);
+
+      // Only S3 and EKS audit logs configured; runtime monitoring, agent, ec2, rds, lambda left undefined.
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
         logPrefix,
+        { s3DataEvents: true, auditLogs: true },
       );
+
+      const memberCall = mockExecuteApi.mock.calls.find(call => call[0] === 'UpdateMemberDetectorsCommand');
+      expect(memberCall).toBeDefined();
+      const sentNames = (memberCall?.[1].Features as { Name: string }[]).map(f => f.Name).sort();
+      // Only the two configured features are present; unconfigured names are omitted entirely.
+      expect(sentNames).toEqual(['EKS_AUDIT_LOGS', 'S3_DATA_EVENTS']);
+      expect(sentNames).not.toContain('EKS_RUNTIME_MONITORING');
+      expect(sentNames).not.toContain('RDS_LOGIN_EVENTS');
+      expect(sentNames).not.toContain('LAMBDA_NETWORK_LOGS');
+      expect(sentNames).not.toContain('EBS_MALWARE_PROTECTION');
+
+      // Organization configuration path (getOrganizationFeaturesEnabled) must also omit unconfigured
+      // features — unconfigured names must not reach UpdateOrganizationConfiguration (which would send
+      // unsupported feature names to GuardDuty in iso/partition regions and get the request rejected).
+      const orgCall = mockExecuteApi.mock.calls.find(call => call[0] === 'UpdateOrganizationConfigurationCommand');
+      expect(orgCall).toBeDefined();
+      const orgNames = (orgCall?.[1].Features as { Name: string }[]).map(f => f.Name).sort();
+      expect(orgNames).toEqual(['EKS_AUDIT_LOGS', 'S3_DATA_EVENTS']);
+      expect(orgNames).not.toContain('EKS_RUNTIME_MONITORING');
+      expect(orgNames).not.toContain('RDS_LOGIN_EVENTS');
+      expect(orgNames).not.toContain('LAMBDA_NETWORK_LOGS');
+      expect(orgNames).not.toContain('EBS_MALWARE_PROTECTION');
+    });
+
+    test('should omit EKS_RUNTIME_MONITORING when runtimeMonitoring is unconfigured even if eksAgent is defined', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      const mockPaginator = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      };
+      mockPaginate.mockReturnValue(mockPaginator);
+
+      // runtimeMonitoring omitted but eksAgent defined (false). The detector path must still omit
+      // EKS_RUNTIME_MONITORING entirely (gated on runtimeMonitoring only), matching the org path,
+      // so the unsupported feature name is never sent in regions/partitions that lack it.
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        { s3DataEvents: true, auditLogs: true, eksAgent: false },
+      );
+
+      const detectorNames = (
+        mockExecuteApi.mock.calls.find(call => call[0] === 'UpdateMemberDetectorsCommand')?.[1].Features as {
+          Name: string;
+        }[]
+      )
+        .map(f => f.Name)
+        .sort();
+      const orgNames = (
+        mockExecuteApi.mock.calls.find(call => call[0] === 'UpdateOrganizationConfigurationCommand')?.[1].Features as {
+          Name: string;
+        }[]
+      )
+        .map(f => f.Name)
+        .sort();
+
+      // Both paths agree: only configured features, no EKS_RUNTIME_MONITORING.
+      expect(detectorNames).toEqual(['EKS_AUDIT_LOGS', 'S3_DATA_EVENTS']);
+      expect(detectorNames).not.toContain('EKS_RUNTIME_MONITORING');
+      expect(orgNames).toEqual(['EKS_AUDIT_LOGS', 'S3_DATA_EVENTS']);
+      expect(orgNames).not.toContain('EKS_RUNTIME_MONITORING');
     });
 
     test('should create detector features with EKS agent addon management', async () => {
@@ -1302,7 +1440,8 @@ describe('GuardDutyMembers', () => {
 
       const eksFeatures = {
         ...defaultFeatures,
-        eksProtection: true,
+        auditLogs: true,
+        runtimeMonitoring: true,
         eksAgent: true,
       };
 
@@ -1326,6 +1465,52 @@ describe('GuardDutyMembers', () => {
               Status: 'ENABLED',
               AdditionalConfiguration: [{ Name: 'EKS_ADDON_MANAGEMENT', Status: 'ENABLED' }],
             }),
+          ]),
+        }),
+        expect.any(Function),
+        expect.anything(),
+        logPrefix,
+      );
+    });
+
+    test('should enable EKS runtime monitoring with addon management disabled when eksAgent is false', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      const mockPaginator = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      };
+      mockPaginate.mockReturnValue(mockPaginator);
+
+      // Runtime monitoring on, agent management off: addon must decouple to DISABLED.
+      const eksFeatures = {
+        ...defaultFeatures,
+        auditLogs: false,
+        runtimeMonitoring: true,
+        eksAgent: false,
+      };
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        eksFeatures,
+      );
+
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'UpdateMemberDetectorsCommand',
+        expect.objectContaining({
+          Features: expect.arrayContaining([
+            expect.objectContaining({
+              Name: 'EKS_RUNTIME_MONITORING',
+              Status: 'ENABLED',
+              AdditionalConfiguration: [{ Name: 'EKS_ADDON_MANAGEMENT', Status: 'DISABLED' }],
+            }),
+            expect.objectContaining({ Name: 'EKS_AUDIT_LOGS', Status: 'DISABLED' }),
           ]),
         }),
         expect.any(Function),
@@ -1545,7 +1730,8 @@ describe('GuardDutyMembers - enrollment waitUntil coverage', () => {
   ];
   const defaultFeatures = {
     s3DataEvents: false,
-    eksProtection: false,
+    auditLogs: false,
+    runtimeMonitoring: false,
     eksAgent: false,
     ec2Protection: false,
     rdsProtection: false,

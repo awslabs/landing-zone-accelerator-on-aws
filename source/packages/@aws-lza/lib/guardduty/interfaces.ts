@@ -70,12 +70,39 @@ export interface IGuardDutyBaseProtectionConfiguration {
 
 /**
  * Configuration for GuardDuty EKS Protection with agent management
+ *
+ * @remarks
+ * EKS Audit Log Monitoring (`EKS_AUDIT_LOGS`) and EKS Runtime Monitoring
+ * (`EKS_RUNTIME_MONITORING`) are distinct GuardDuty features with different
+ * prerequisites, pricing, and regional availability, so they are controlled
+ * independently here.
  */
-export interface IGuardDutyEksProtectionConfig extends IGuardDutyBaseProtectionConfiguration {
+export interface IGuardDutyEksProtectionConfig {
   /**
-   * Controls whether the GuardDuty EKS Agent is managed
+   * Controls whether GuardDuty EKS Audit Log Monitoring (`EKS_AUDIT_LOGS`) is enabled.
+   *
+   * @remarks
+   * Optional: when omitted (undefined), the feature is not included in the GuardDuty request at all
+   * (neither ENABLED nor DISABLED), so a feature the configuration does not address is left unmanaged
+   * and its name is never sent to a region/partition that may not support it.
+   */
+  readonly auditLogs?: boolean;
+  /**
+   * Controls whether GuardDuty EKS Runtime Monitoring (`EKS_RUNTIME_MONITORING`) is enabled.
+   *
+   * @remarks
+   * Optional: when omitted (undefined), the feature is not included in the GuardDuty request at all
+   * (neither ENABLED nor DISABLED).
+   */
+  readonly runtimeMonitoring?: boolean;
+  /**
+   * Controls whether the GuardDuty EKS Agent is managed (`EKS_ADDON_MANAGEMENT`)
    */
   readonly manageAgent?: boolean;
+  /**
+   * List of AWS regions where the given protection should not be enabled
+   */
+  readonly excludedRegions?: string[];
 }
 
 /**
@@ -186,11 +213,15 @@ export interface IGuardDutyFeatureFlags {
    */
   s3DataEvents?: boolean;
   /**
-   * Whether or not to enable EKS audit logs
+   * Whether or not to enable EKS Audit Log Monitoring (`EKS_AUDIT_LOGS`)
    */
-  eksProtection?: boolean;
+  auditLogs?: boolean;
   /**
-   * Whether or not to enable EKS runtime monitoring
+   * Whether or not to enable EKS Runtime Monitoring (`EKS_RUNTIME_MONITORING`)
+   */
+  runtimeMonitoring?: boolean;
+  /**
+   * Whether or not to manage the GuardDuty EKS Agent (`EKS_ADDON_MANAGEMENT`)
    */
   eksAgent?: boolean;
   /**

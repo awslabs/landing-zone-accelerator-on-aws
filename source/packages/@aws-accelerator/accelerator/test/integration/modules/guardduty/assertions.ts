@@ -498,7 +498,7 @@ async function assertRegionIgnored(
  *
  * Runs GetDetector on the delegated admin account and checks feature statuses.
  * expectedAssertions value: object with protection names and expected enabled state.
- * Example: { "s3Protection": true, "eksProtection": true, "ec2Protection": false }
+ * Example: { "s3Protection": true, "eksAuditLogs": true, "eksRuntimeMonitoring": false, "ec2Protection": false }
  */
 async function assertProtectionsEnabled(
   manifest: TestManifest,
@@ -534,7 +534,9 @@ async function assertProtectionsEnabled(
     // Map GuardDuty feature names to our config names
     const featureNameMap: Record<string, string> = {
       s3Protection: 'S3_DATA_EVENTS',
-      eksProtection: 'EKS_AUDIT_LOGS',
+      // EKS Audit Log Monitoring and EKS Runtime Monitoring are independent features.
+      eksAuditLogs: 'EKS_AUDIT_LOGS',
+      eksRuntimeMonitoring: 'EKS_RUNTIME_MONITORING',
       ec2Protection: 'EBS_MALWARE_PROTECTION',
       rdsProtection: 'RDS_LOGIN_EVENTS',
       lambdaProtection: 'LAMBDA_NETWORK_LOGS',
@@ -552,7 +554,18 @@ async function assertProtectionsEnabled(
       }
 
       const feature = features.find(f => f.Name === featureName);
-      const actualStatus = feature?.Status; // 'ENABLED' or 'DISABLED'
+      let actualStatus = feature?.Status; // 'ENABLED' or 'DISABLED'
+
+      // Fallback for EKS runtime monitoring: accounts using the newer consolidated
+      // RUNTIME_MONITORING feature report EKS runtime status under its
+      // EKS_ADDON_MANAGEMENT additional configuration rather than as a standalone
+      // EKS_RUNTIME_MONITORING feature. Only used when the standalone feature is absent.
+      if (actualStatus === undefined && featureName === 'EKS_RUNTIME_MONITORING') {
+        const consolidated = features.find(f => f.Name === 'RUNTIME_MONITORING');
+        const eksAddon = consolidated?.AdditionalConfiguration?.find(c => c.Name === 'EKS_ADDON_MANAGEMENT');
+        actualStatus = eksAddon?.Status;
+      }
+
       const isEnabled = actualStatus === 'ENABLED';
       const passed = isEnabled === expectedEnabled;
       const expectedLabel = expectedEnabled ? 'ENABLED' : 'DISABLED';

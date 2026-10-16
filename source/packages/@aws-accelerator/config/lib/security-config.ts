@@ -211,7 +211,9 @@ export class GuardDutyS3ProtectionConfig implements i.IGuardDutyS3ProtectionConf
 }
 
 export class GuardDutyEksProtectionConfig implements i.IGuardDutyEksProtectionConfig {
-  readonly enable: boolean = false;
+  readonly enable?: boolean | undefined = undefined;
+  readonly auditLogs?: boolean | undefined = undefined;
+  readonly runtimeMonitoring?: boolean | undefined = undefined;
   readonly manageAgent?: boolean | undefined = false;
   readonly excludeRegions: string[] = [];
 }

@@ -1,0 +1,49 @@
+{
+    "name": "eks-audit-logs-only",
+    "description": "Enable only EKS Audit Log Monitoring without EKS Runtime Monitoring — verifies the two EKS features are controlled independently (EKS_AUDIT_LOGS ENABLED, EKS_RUNTIME_MONITORING DISABLED)",
+    "order": 9,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "eksProtection": {
+            "auditLogs": true,
+            "runtimeMonitoring": false,
+            "manageAgent": false,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksAuditLogs": true,
+            "eksRuntimeMonitoring": false
+        }
+    },
+    "skipCleanup": true
+}

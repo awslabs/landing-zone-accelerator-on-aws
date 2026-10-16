@@ -632,9 +632,45 @@ export interface IGuardDutyS3ProtectionConfig {
  */
 export interface IGuardDutyEksProtectionConfig {
   /**
-   * Controls whether GuardDuty EKS Protection is enabled  to monitor your EKS clusters for security threats.
+   * Legacy switch that controls both EKS Audit Log Monitoring and EKS Runtime Monitoring together.
+   *
+   * @remarks
+   * This single flag drives both the `EKS_AUDIT_LOGS` and `EKS_RUNTIME_MONITORING` GuardDuty features.
+   * Use the granular `auditLogs` and `runtimeMonitoring` properties instead to control them independently.
+   * When `enable` is defined it takes precedence, and `auditLogs` / `runtimeMonitoring` must not also be set.
+   *
+   * @deprecated Use the granular `auditLogs` and `runtimeMonitoring` properties instead to control
+   * EKS Audit Log Monitoring and EKS Runtime Monitoring independently.
    */
-  readonly enable: boolean;
+  readonly enable?: boolean;
+  /**
+   * (OPTIONAL) Controls whether GuardDuty EKS Audit Log Monitoring (`EKS_AUDIT_LOGS`) is enabled.
+   *
+   * @remarks
+   * Used only when the legacy `enable` property is not set. When omitted, the feature is not included
+   * in the GuardDuty request at all (neither enabled nor disabled) — it is left unmanaged, and its
+   * feature name is not sent to Regions/partitions that may not support it. Set to `false` to
+   * explicitly disable it.
+   */
+  readonly auditLogs?: boolean;
+  /**
+   * (OPTIONAL) Controls whether GuardDuty EKS Runtime Monitoring (`EKS_RUNTIME_MONITORING`) is enabled.
+   *
+   * @remarks
+   * EKS Audit Log Monitoring and EKS Runtime Monitoring are distinct GuardDuty features with different
+   * prerequisites, pricing, and regional availability. Used only when the legacy `enable` property is not set.
+   * When omitted, the feature is not included in the GuardDuty request at all (neither enabled nor
+   * disabled) — it is left unmanaged, and its feature name is not sent to Regions/partitions that may
+   * not support it. Set to `false` to explicitly disable it (sends `EKS_RUNTIME_MONITORING` as
+   * DISABLED).
+   *
+   * In Regions/partitions where EKS Runtime Monitoring is not available (for example
+   * `us-iso-east-1`), OMIT this property rather than setting it to `false`: an explicit `false` still
+   * sends the `EKS_RUNTIME_MONITORING` feature name, which GuardDuty rejects there with "provided
+   * feature names are invalid", whereas omitting it keeps the name out of the request so other EKS
+   * features (such as EKS Audit Logs) can still be enabled.
+   */
+  readonly runtimeMonitoring?: boolean;
   /**
    * Controls whether the GuardDuty EKS Agent is managed.
    */

@@ -181,27 +181,42 @@ export function getFeaturesToEnable(
   logPrefix: string,
   config?: IGuardDutyProtectionsConfiguration,
 ): IGuardDutyFeatureFlags {
-  // Retrieve values from config, defaulting to false if not defined
+  // Feature-emission policy differs between the EKS granular features and the other protection plans:
+  //
+  // EKS features (auditLogs / runtimeMonitoring / manageAgent): carried through verbatim, so an
+  // unconfigured flag stays `undefined` and is OMITTED from the request downstream (never sent as
+  // DISABLED). EKS feature names do not exist in some partitions/Regions (e.g. EKS_RUNTIME_MONITORING
+  // in us-iso-east-1), where sending the name — even as DISABLED — is rejected. Omitting an
+  // unconfigured EKS feature keeps its name out of the request so an available EKS feature
+  // (e.g. EKS Audit Logs) is not blocked by an unconfigured, unavailable one.
+  //
+  // s3 / ec2 / rds / lambda: default to `false` when unconfigured, so they are sent as DISABLED.
+  // GuardDuty enables these protection plans ON a new detector by default (and bills them after the
+  // 30-day free trial), so LZA must actively disable the ones the customer did not configure. Their
+  // feature names are valid wherever those blocks apply, so sending DISABLED does not risk the
+  // unsupported-feature-name rejection that the EKS features face.
   const returnFlags: IGuardDutyFeatureFlags = {
     s3DataEvents: config?.s3Protection.enable,
-    eksProtection: config?.eksProtection?.enable ?? false,
-    eksAgent: config?.eksProtection?.manageAgent ?? false,
+    auditLogs: config?.eksProtection?.auditLogs,
+    runtimeMonitoring: config?.eksProtection?.runtimeMonitoring,
+    eksAgent: config?.eksProtection?.manageAgent,
     ec2Protection: config?.ec2Protection?.enable ?? false,
     rdsProtection: config?.rdsProtection?.enable ?? false,
     lambdaProtection: config?.lambdaProtection?.enable ?? false,
   };
 
-  // If the region is in the excluded regions list, disable
+  // Region exclusion forces a feature OFF for this Region. For EKS it is only applied to a configured
+  // (defined) flag so an unconfigured one stays undefined/omitted; the other plans are always defined.
   if (config?.s3Protection.excludedRegions?.includes(region)) {
     logger.info(`S3 Protection disabled for region ${region} as it is in the excluded regions list`, logPrefix);
     returnFlags.s3DataEvents = false;
   }
   if (config?.eksProtection?.excludedRegions?.includes(region)) {
     logger.info(`EKS Protection disabled for region ${region} as it is in the excluded regions list`, logPrefix);
-    returnFlags.eksAgent = false;
-    returnFlags.eksProtection = false;
+    if (returnFlags.eksAgent !== undefined) returnFlags.eksAgent = false;
+    if (returnFlags.auditLogs !== undefined) returnFlags.auditLogs = false;
+    if (returnFlags.runtimeMonitoring !== undefined) returnFlags.runtimeMonitoring = false;
   }
-
   if (config?.ec2Protection?.excludedRegions?.includes(region)) {
     logger.info(`EC2 Protection disabled for region ${region} as it is in the excluded regions list`, logPrefix);
     returnFlags.ec2Protection = false;

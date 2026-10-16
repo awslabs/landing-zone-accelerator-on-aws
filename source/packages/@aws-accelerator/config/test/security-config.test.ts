@@ -72,7 +72,9 @@ describe('SecurityConfig', () => {
 
     expect(new KeyConfig().name).toEqual('');
 
-    expect(new GuardDutyEksProtectionConfig().enable).toBe(false);
+    // Legacy `enable` is optional and defaults to undefined so the granular
+    // auditLogs/runtimeMonitoring flags apply unless `enable` is explicitly set.
+    expect(new GuardDutyEksProtectionConfig().enable).toBeUndefined();
 
     expect(new AuditManagerDefaultReportsDestinationConfig().enable).toBe(false);
 

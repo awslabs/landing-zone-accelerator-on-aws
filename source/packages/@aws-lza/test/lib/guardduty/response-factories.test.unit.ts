@@ -74,7 +74,7 @@ describe('GuardDutyDetectorResponseHandler', () => {
     test('should create detector response with full configuration', () => {
       const mockProtections: IGuardDutyProtectionsConfiguration = {
         s3Protection: { enable: true },
-        eksProtection: { enable: true, manageAgent: true },
+        eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: true },
         ec2Protection: { enable: true, keepSnapshots: false },
         rdsProtection: { enable: true },
         lambdaProtection: { enable: true },

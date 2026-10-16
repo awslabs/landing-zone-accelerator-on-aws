@@ -396,6 +396,33 @@ export class SecurityConfigValidator {
         `"autoEnableOrgMembers" should be set to "false" when using "deploymentTargets" property in guardDuty configuration`,
       );
     }
+
+    const eksProtection = guardDutyConfig.eksProtection;
+    if (
+      eksProtection?.enable !== undefined &&
+      (eksProtection.auditLogs !== undefined || eksProtection.runtimeMonitoring !== undefined)
+    ) {
+      errors.push(
+        `GuardDuty "eksProtection.enable" (legacy) cannot be combined with "eksProtection.auditLogs" or "eksProtection.runtimeMonitoring". Use the legacy "enable" flag or the granular flags, not both.`,
+      );
+    }
+
+    // EKS_ADDON_MANAGEMENT (manageAgent) is an additional configuration of EKS_RUNTIME_MONITORING.
+    // GuardDuty's UpdateDetector rejects enabling the addon while runtime monitoring is disabled
+    // ("the provided status, ENABLED is invalid for additional configuration, EKS_ADDON_MANAGEMENT
+    // when corresponding feature, EKS_RUNTIME_MONITORING has its status as DISABLED"), which fails
+    // the deployment (verified against the GuardDuty API). This is only checked on the new granular
+    // path (enable undefined): the legacy `enable` flag is left untouched to avoid changing the
+    // validation outcome for pre-existing configurations.
+    if (
+      eksProtection?.enable === undefined &&
+      eksProtection?.manageAgent === true &&
+      eksProtection?.runtimeMonitoring !== true
+    ) {
+      errors.push(
+        `GuardDuty "eksProtection.manageAgent" requires "eksProtection.runtimeMonitoring" to be true. Enable runtime monitoring, or remove "manageAgent".`,
+      );
+    }
   }
 
   /**

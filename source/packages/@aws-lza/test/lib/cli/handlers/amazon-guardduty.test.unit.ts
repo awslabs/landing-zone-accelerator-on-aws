@@ -329,15 +329,53 @@ describe('GuardDutyCommand', () => {
       );
     });
 
-    test('should return false for eksProtection missing enable', () => {
+    test('should return true for eksProtection without granular flags (features omitted)', () => {
+      // auditLogs/runtimeMonitoring are optional; when omitted the features are simply not sent
+      // to GuardDuty, so a block with only manageAgent is valid.
       expect(
         GuardDutyCommand.validConfig({
           ...validConfig,
-          protectionsConfiguration: { s3Protection: { enable: true }, eksProtection: { notEnable: true } },
+          protectionsConfiguration: { s3Protection: { enable: true }, eksProtection: { manageAgent: true } },
+        }),
+      ).toBe(true);
+    });
+
+    test('should return true for empty eksProtection (all features omitted)', () => {
+      expect(
+        GuardDutyCommand.validConfig({
+          ...validConfig,
+          protectionsConfiguration: { s3Protection: { enable: true }, eksProtection: {} },
+        }),
+      ).toBe(true);
+    });
+
+    test('should return false for eksProtection invalid auditLogs', () => {
+      expect(
+        GuardDutyCommand.validConfig({
+          ...validConfig,
+          protectionsConfiguration: {
+            s3Protection: { enable: true },
+            eksProtection: { auditLogs: 'invalid', runtimeMonitoring: false },
+          },
         }),
       ).toBe(false);
       expect(mockLogError).toHaveBeenCalledWith(
-        expect.stringContaining('config.protectionsConfiguration.eksProtection.enable'),
+        expect.stringContaining('config.protectionsConfiguration.eksProtection.auditLogs'),
+      );
+    });
+
+    test('should return false for eksProtection invalid runtimeMonitoring', () => {
+      expect(
+        GuardDutyCommand.validConfig({
+          ...validConfig,
+          protectionsConfiguration: {
+            s3Protection: { enable: true },
+            eksProtection: { auditLogs: true, runtimeMonitoring: 'invalid' },
+          },
+        }),
+      ).toBe(false);
+      expect(mockLogError).toHaveBeenCalledWith(
+        expect.stringContaining('config.protectionsConfiguration.eksProtection.runtimeMonitoring'),
       );
     });
 
@@ -347,7 +385,7 @@ describe('GuardDutyCommand', () => {
           ...validConfig,
           protectionsConfiguration: {
             s3Protection: { enable: true },
-            eksProtection: { enable: true, manageAgent: 'invalid' },
+            eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: 'invalid' },
           },
         }),
       ).toBe(false);
@@ -362,7 +400,7 @@ describe('GuardDutyCommand', () => {
           ...validConfig,
           protectionsConfiguration: {
             s3Protection: { enable: true },
-            eksProtection: { enable: true, manageAgent: true },
+            eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: true },
           },
         }),
       ).toBe(true);
@@ -374,7 +412,7 @@ describe('GuardDutyCommand', () => {
           ...validConfig,
           protectionsConfiguration: {
             s3Protection: { enable: true },
-            eksProtection: { enable: true },
+            eksProtection: { auditLogs: true, runtimeMonitoring: false },
           },
         }),
       ).toBe(true);
@@ -386,7 +424,7 @@ describe('GuardDutyCommand', () => {
           ...validConfig,
           protectionsConfiguration: {
             s3Protection: { enable: true },
-            eksProtection: { enable: true, excludedRegions: 'invalid' },
+            eksProtection: { auditLogs: true, runtimeMonitoring: true, excludedRegions: 'invalid' },
           },
         }),
       ).toBe(false);
@@ -536,7 +574,7 @@ describe('GuardDutyCommand', () => {
           ...validConfig,
           protectionsConfiguration: {
             s3Protection: { enable: true },
-            eksProtection: { enable: true, manageAgent: false },
+            eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: false },
             ec2Protection: { enable: true, keepSnapshots: true },
             rdsProtection: { enable: false },
             lambdaProtection: { enable: true },

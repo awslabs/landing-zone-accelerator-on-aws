@@ -48,7 +48,11 @@ interface GuardDutyManifestConfig {
     excludeRegions?: string[];
   };
   eksProtection?: {
-    enable: boolean;
+    // Legacy switch (drives both EKS features together). Mutually exclusive with the granular flags.
+    enable?: boolean;
+    // Granular flags for independent control of the two EKS features.
+    auditLogs?: boolean;
+    runtimeMonitoring?: boolean;
     manageAgent?: boolean;
     excludeRegions?: string[];
   };

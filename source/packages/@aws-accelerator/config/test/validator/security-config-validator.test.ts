@@ -519,6 +519,71 @@ describe('SecurityConfigValidator', () => {
     });
   });
 
+  describe('GuardDuty EKS protection validation', () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const proto = SecurityConfigValidator.prototype as any;
+    const validateGuardDuty = proto['validateGuardDutyConfiguration'].bind(proto);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    const eksConflictMessage =
+      'GuardDuty "eksProtection.enable" (legacy) cannot be combined with "eksProtection.auditLogs" or "eksProtection.runtimeMonitoring". Use the legacy "enable" flag or the granular flags, not both.';
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const guardDutyConfig = (eksProtection: any) => ({ eksProtection }) as any;
+
+    it('accepts legacy enable alone', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ enable: true, manageAgent: true }), errors);
+      expect(errors).not.toContain(eksConflictMessage);
+    });
+
+    it('accepts granular flags alone', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ auditLogs: true, runtimeMonitoring: false }), errors);
+      expect(errors).not.toContain(eksConflictMessage);
+    });
+
+    it('accepts config with no eksProtection', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig(undefined), errors);
+      expect(errors).not.toContain(eksConflictMessage);
+    });
+
+    it('rejects enable combined with auditLogs regardless of value', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ enable: false, auditLogs: false }), errors);
+      expect(errors).toContain(eksConflictMessage);
+    });
+
+    it('rejects enable combined with runtimeMonitoring regardless of value', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ enable: true, runtimeMonitoring: true }), errors);
+      expect(errors).toContain(eksConflictMessage);
+    });
+
+    const manageAgentMessage =
+      'GuardDuty "eksProtection.manageAgent" requires "eksProtection.runtimeMonitoring" to be true. Enable runtime monitoring, or remove "manageAgent".';
+
+    it('rejects granular manageAgent with runtimeMonitoring false', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ auditLogs: true, runtimeMonitoring: false, manageAgent: true }), errors);
+      expect(errors).toContain(manageAgentMessage);
+    });
+
+    it('accepts granular manageAgent with runtimeMonitoring true', () => {
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ auditLogs: false, runtimeMonitoring: true, manageAgent: true }), errors);
+      expect(errors).not.toContain(manageAgentMessage);
+    });
+
+    it('does not apply the manageAgent/runtimeMonitoring check to the legacy enable path', () => {
+      // Legacy enable: false + manageAgent: true was accepted before this feature; leave it unchanged.
+      const errors: string[] = [];
+      validateGuardDuty(guardDutyConfig({ enable: false, manageAgent: true }), errors);
+      expect(errors).not.toContain(manageAgentMessage);
+    });
+  });
+
   describe('validateConfigRuleAssets - lookupType and lookupKey validation', () => {
     const configDir = '/mock/config';
 

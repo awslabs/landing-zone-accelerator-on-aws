@@ -64,7 +64,14 @@ const guardDutyConfigSchema = z.object({
   protectionsConfiguration: z
     .object({
       s3Protection: baseProtectionSchema,
-      eksProtection: baseProtectionSchema.extend({ manageAgent: z.boolean().optional() }).optional(),
+      eksProtection: z
+        .object({
+          auditLogs: z.boolean().optional(),
+          runtimeMonitoring: z.boolean().optional(),
+          manageAgent: z.boolean().optional(),
+          excludedRegions: z.array(z.string()).optional(),
+        })
+        .optional(),
       ec2Protection: baseProtectionSchema.extend({ keepSnapshots: z.boolean() }).optional(),
       rdsProtection: baseProtectionSchema.optional(),
       lambdaProtection: baseProtectionSchema.optional(),

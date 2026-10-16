@@ -56,6 +56,85 @@ describe('unit tests', () => {
     expect(result[0]).toBeFalsy();
     expect(result[1]).toBeFalsy();
   });
+
+  test('processRegionExclusions resolves EKS protection from granular flags (no legacy enable)', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    // Granular-only config: legacy `enable` is undefined, so EKS protection must be
+    // resolved from `auditLogs`/`runtimeMonitoring`. result[1] is the EKS protection boolean.
+    const config = createConfig(false, []);
+    config.eksProtection = {
+      enable: undefined,
+      auditLogs: true,
+      runtimeMonitoring: false,
+      manageAgent: false,
+      excludeRegions: [],
+    } as unknown as GuardDutyConfig['eksProtection'];
+
+    const result = stack['processRegionExclusions'](config);
+    expect(result).toHaveLength(7);
+    expect(result[1]).toBeTruthy();
+  });
+
+  test('processRegionExclusions leaves EKS protection off when granular flags are all false', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    const config = createConfig(false, []);
+    config.eksProtection = {
+      enable: undefined,
+      auditLogs: false,
+      runtimeMonitoring: false,
+      manageAgent: false,
+      excludeRegions: [],
+    } as unknown as GuardDutyConfig['eksProtection'];
+
+    const result = stack['processRegionExclusions'](config);
+    expect(result).toHaveLength(7);
+    expect(result[1]).toBeFalsy();
+  });
+
+  test('configureGuardDuty throws for mixed granular EKS flags on the custom-resource path', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    const config = createConfig(false, []);
+    config.eksProtection = {
+      enable: undefined,
+      auditLogs: true,
+      runtimeMonitoring: false,
+      excludeRegions: [],
+    } as unknown as GuardDutyConfig['eksProtection'];
+
+    expect(() => stack['configureGuardDuty'](config)).toThrow(/mixed granular flags/);
+  });
+
+  test('configureGuardDuty does not throw for matched granular EKS flags (both true) on the custom-resource path', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    const config = createConfig(false, []);
+    config.eksProtection = {
+      enable: undefined,
+      auditLogs: true,
+      runtimeMonitoring: true,
+      manageAgent: true,
+      excludeRegions: [],
+    } as unknown as GuardDutyConfig['eksProtection'];
+
+    // Both-true collapses losslessly onto the single enableEksProtection boolean, so it is allowed.
+    expect(() => stack['configureGuardDuty'](config)).not.toThrow(/mixed granular flags/);
+  });
+
+  test('configureGuardDuty does not throw for legacy enable on the custom-resource path', () => {
+    const props = createAcceleratorStackProps();
+    const stack = new SecurityAuditStack(app, 'unit-test-stack', props);
+
+    // Legacy enable (single boolean) is always valid on the custom-resource path.
+    const config = createConfig(true, []);
+    expect(() => stack['configureGuardDuty'](config)).not.toThrow(/mixed granular flags/);
+  });
 });
 
 function createConfig(enable: boolean, excludedRegions: string[]): GuardDutyConfig {

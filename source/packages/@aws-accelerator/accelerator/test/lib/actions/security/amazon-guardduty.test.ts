@@ -473,7 +473,8 @@ describe('AmazonGuardDuty', () => {
               excludedRegions: [],
             },
             eksProtection: {
-              enable: true,
+              auditLogs: true,
+              runtimeMonitoring: true,
               manageAgent: true,
               excludedRegions: [],
             },
@@ -871,7 +872,8 @@ describe('AmazonGuardDuty', () => {
                 excludedRegions: ['us-west-1'],
               },
               eksProtection: {
-                enable: false,
+                auditLogs: false,
+                runtimeMonitoring: false,
                 manageAgent: false,
                 excludedRegions: ['us-west-1'],
               },
@@ -896,6 +898,67 @@ describe('AmazonGuardDuty', () => {
         }),
       );
       expect(result).toBe(mockResponse);
+    });
+
+    it('should pass through granular EKS auditLogs/runtimeMonitoring independently', async () => {
+      const { configureGuardDuty } = await import('aws-lza');
+      const mockResponse = {
+        status: MODULE_STATE_CODE.COMPLETED,
+        summary: 'GuardDuty configured successfully',
+        timestamp: new Date().toISOString(),
+        moduleName: AcceleratorModules.GUARDDUTY,
+        dryRun: false,
+      };
+      vi.mocked(configureGuardDuty).mockResolvedValue(mockResponse);
+
+      const granularGuardDutyConfig = {
+        enable: true,
+        excludeRegions: [] as string[],
+        autoEnableOrgMembers: 'ALL',
+        s3Protection: {
+          enable: true,
+          excludeRegions: [] as string[],
+        },
+        // Granular EKS: audit logs OFF, runtime monitoring ON, agent OFF.
+        eksProtection: {
+          auditLogs: false,
+          runtimeMonitoring: true,
+          manageAgent: false,
+          excludeRegions: [] as string[],
+        },
+        exportConfiguration: {
+          enable: true,
+          overrideExisting: false,
+          exportFrequency: 'FIFTEEN_MINUTES',
+        },
+      };
+
+      const params = createMockModuleParams({
+        configs: {
+          securityConfig: {
+            centralSecurityServices: {
+              guardduty: granularGuardDutyConfig,
+            },
+          } as unknown as SecurityConfig,
+        },
+      });
+
+      await AmazonGuardDuty.configure(params);
+
+      expect(configureGuardDuty).toHaveBeenCalledWith(
+        expect.objectContaining({
+          configuration: expect.objectContaining({
+            protectionsConfiguration: expect.objectContaining({
+              eksProtection: {
+                auditLogs: false,
+                runtimeMonitoring: true,
+                manageAgent: false,
+                excludedRegions: [],
+              },
+            }),
+          }),
+        }),
+      );
     });
 
     it('should handle overrideExisting flag in export configuration', async () => {

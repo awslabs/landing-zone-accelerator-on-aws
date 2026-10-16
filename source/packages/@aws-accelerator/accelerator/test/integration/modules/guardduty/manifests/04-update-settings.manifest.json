@@ -23,7 +23,8 @@
             "excludeRegions": []
         },
         "eksProtection": {
-            "enable": false,
+            "auditLogs": false,
+            "runtimeMonitoring": false,
             "manageAgent": false,
             "excludeRegions": []
         },
@@ -53,7 +54,8 @@
         "exportDestinationConfigured": true,
         "protectionsEnabled": {
             "s3Protection": true,
-            "eksProtection": false,
+            "eksAuditLogs": false,
+            "eksRuntimeMonitoring": false,
             "ec2Protection": false,
             "rdsProtection": false,
             "lambdaProtection": false

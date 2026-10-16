@@ -1,0 +1,48 @@
+{
+    "name": "eks-legacy-enable",
+    "description": "Enable EKS protection via the legacy `eksProtection.enable` flag — verifies the accelerator action resolves legacy `enable: true` into both granular features so EKS_AUDIT_LOGS and EKS_RUNTIME_MONITORING are both ENABLED (backwards compatibility)",
+    "order": 11,
+    "moduleConfig": {
+        "enable": true,
+        "delegatedAdminAccount": "Audit",
+        "boundary": {
+            "regions": [
+                "us-east-1",
+                "eu-west-1"
+            ]
+        },
+        "regionFilters": {
+            "ignoredRegions": [
+                "eu-west-1"
+            ],
+            "disabledRegions": []
+        },
+        "autoEnableOrgMembers": true,
+        "s3Protection": {
+            "enable": true,
+            "excludeRegions": []
+        },
+        "eksProtection": {
+            "enable": true,
+            "manageAgent": true,
+            "excludeRegions": []
+        },
+        "exportConfiguration": {
+            "enable": true,
+            "overrideExisting": false,
+            "exportFrequency": "FIFTEEN_MINUTES"
+        }
+    },
+    "expectedAssertions": {
+        "detectorEnabled": true,
+        "delegatedAdminConfigured": true,
+        "autoEnableOrgMembers": "ALL",
+        "exportDestinationConfigured": true,
+        "protectionsEnabled": {
+            "s3Protection": true,
+            "eksAuditLogs": true,
+            "eksRuntimeMonitoring": true
+        }
+    },
+    "skipCleanup": true
+}

@@ -49,7 +49,8 @@ interface IGuardDutyConfigForState {
   };
   /** EKS protection configuration */
   readonly eksProtection?: {
-    readonly enable: boolean;
+    readonly auditLogs: boolean | undefined;
+    readonly runtimeMonitoring: boolean | undefined;
     readonly manageAgent?: boolean;
     readonly excludeRegions: string[];
   };
@@ -166,6 +167,32 @@ export abstract class AmazonGuardDuty {
   }
 
   /**
+   * Resolves EKS Protection into the independent GuardDuty features (`EKS_AUDIT_LOGS` and
+   * `EKS_RUNTIME_MONITORING`) expected by the module.
+   *
+   * The legacy `enable` flag drives both features together for backwards compatibility (an explicit
+   * true/false for both). When `enable` is not set, the granular `auditLogs` / `runtimeMonitoring`
+   * flags are passed through verbatim — including `undefined` when a flag is not configured — so the
+   * module can omit an unconfigured feature from the API request instead of sending it as DISABLED.
+   * The config validator rejects configs that set both.
+   * @param eksProtection - EKS protection configuration object
+   * @returns Resolved `auditLogs` and `runtimeMonitoring` values (undefined when not configured)
+   */
+  private static resolveEksProtectionFeatures(eksProtection: {
+    enable?: boolean;
+    auditLogs?: boolean;
+    runtimeMonitoring?: boolean;
+  }): { auditLogs: boolean | undefined; runtimeMonitoring: boolean | undefined } {
+    if (eksProtection.enable !== undefined) {
+      return { auditLogs: eksProtection.enable, runtimeMonitoring: eksProtection.enable };
+    }
+    return {
+      auditLogs: eksProtection.auditLogs,
+      runtimeMonitoring: eksProtection.runtimeMonitoring,
+    };
+  }
+
+  /**
    * Extracts GuardDuty configuration for state comparison.
    * @param params - Module parameters containing security and account configuration
    * @param logPrefix - Prefix for logging messages
@@ -200,7 +227,7 @@ export abstract class AmazonGuardDuty {
       },
       ...(guardDutyConfig.eksProtection && {
         eksProtection: {
-          enable: guardDutyConfig.eksProtection.enable,
+          ...AmazonGuardDuty.resolveEksProtectionFeatures(guardDutyConfig.eksProtection),
           manageAgent: guardDutyConfig.eksProtection.manageAgent,
           excludeRegions: guardDutyConfig.eksProtection.excludeRegions ?? [],
         },
@@ -266,7 +293,7 @@ export abstract class AmazonGuardDuty {
           },
           ...(guardDutyConfig.eksProtection && {
             eksProtection: {
-              enable: guardDutyConfig.eksProtection.enable,
+              ...AmazonGuardDuty.resolveEksProtectionFeatures(guardDutyConfig.eksProtection),
               manageAgent: guardDutyConfig.eksProtection.manageAgent,
               excludedRegions: guardDutyConfig.eksProtection.excludeRegions,
             },

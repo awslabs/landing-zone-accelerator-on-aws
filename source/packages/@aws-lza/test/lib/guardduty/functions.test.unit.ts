@@ -280,10 +280,15 @@ describe('guardduty functions', () => {
   describe('getFeaturesToEnable', () => {
     test('should return default flags when no config provided', () => {
       const result = getFeaturesToEnable('us-east-1', logPrefix, undefined);
+      // EKS granular flags stay undefined (omitted downstream, so unsupported names are never sent).
+      // ec2/rds/lambda default to false (sent as DISABLED) because GuardDuty enables those protection
+      // plans on a new detector by default and they must be actively turned off when unconfigured.
+      // s3 carries s3Protection.enable, which is undefined when no config is provided.
       expect(result).toEqual({
         s3DataEvents: undefined,
-        eksProtection: false,
-        eksAgent: false,
+        auditLogs: undefined,
+        runtimeMonitoring: undefined,
+        eksAgent: undefined,
         ec2Protection: false,
         rdsProtection: false,
         lambdaProtection: false,
@@ -293,7 +298,7 @@ describe('guardduty functions', () => {
     test('should return flags from config', () => {
       const config = {
         s3Protection: { enable: true },
-        eksProtection: { enable: true, manageAgent: true },
+        eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: true },
         ec2Protection: { enable: true, keepSnapshots: false },
         rdsProtection: { enable: true },
         lambdaProtection: { enable: true },
@@ -302,12 +307,31 @@ describe('guardduty functions', () => {
       const result = getFeaturesToEnable('us-east-1', logPrefix, config);
       expect(result).toEqual({
         s3DataEvents: true,
-        eksProtection: true,
+        auditLogs: true,
+        runtimeMonitoring: true,
         eksAgent: true,
         ec2Protection: true,
         rdsProtection: true,
         lambdaProtection: true,
       });
+    });
+
+    test('should map EKS audit logs and runtime monitoring independently', () => {
+      const auditOnly = getFeaturesToEnable('us-east-1', logPrefix, {
+        s3Protection: { enable: false },
+        eksProtection: { auditLogs: true, runtimeMonitoring: false, manageAgent: false },
+      });
+      expect(auditOnly.auditLogs).toBe(true);
+      expect(auditOnly.runtimeMonitoring).toBe(false);
+      expect(auditOnly.eksAgent).toBe(false);
+
+      const runtimeOnly = getFeaturesToEnable('us-east-1', logPrefix, {
+        s3Protection: { enable: false },
+        eksProtection: { auditLogs: false, runtimeMonitoring: true, manageAgent: true },
+      });
+      expect(runtimeOnly.auditLogs).toBe(false);
+      expect(runtimeOnly.runtimeMonitoring).toBe(true);
+      expect(runtimeOnly.eksAgent).toBe(true);
     });
 
     test('should disable s3 protection for excluded region', () => {
@@ -331,12 +355,48 @@ describe('guardduty functions', () => {
     test('should disable eks protection for excluded region', () => {
       const config = {
         s3Protection: { enable: false },
-        eksProtection: { enable: true, manageAgent: true, excludedRegions: ['eu-west-1'] },
+        eksProtection: { auditLogs: true, runtimeMonitoring: true, manageAgent: true, excludedRegions: ['eu-west-1'] },
       };
 
       const result = getFeaturesToEnable('eu-west-1', logPrefix, config);
-      expect(result.eksProtection).toBe(false);
+      expect(result.auditLogs).toBe(false);
+      expect(result.runtimeMonitoring).toBe(false);
       expect(result.eksAgent).toBe(false);
+    });
+
+    test('unconfigured ec2/rds/lambda default to false (DISABLED) while unconfigured EKS stays undefined (omitted)', () => {
+      // Only S3 and EKS audit logs configured; EKS runtime/agent and ec2/rds/lambda all omitted.
+      const config = {
+        s3Protection: { enable: true },
+        eksProtection: { auditLogs: true },
+      };
+
+      const result = getFeaturesToEnable('us-east-1', logPrefix, config);
+      expect(result.s3DataEvents).toBe(true);
+      expect(result.auditLogs).toBe(true);
+      // EKS runtime/agent not configured -> undefined (omitted; unsupported names never sent).
+      expect(result.runtimeMonitoring).toBeUndefined();
+      expect(result.eksAgent).toBeUndefined();
+      // ec2/rds/lambda not configured -> false (sent as DISABLED to turn off default-on plans).
+      expect(result.ec2Protection).toBe(false);
+      expect(result.rdsProtection).toBe(false);
+      expect(result.lambdaProtection).toBe(false);
+    });
+
+    test('should force configured EKS flags off in excluded region but keep unconfigured ones undefined', () => {
+      // Partial config: only auditLogs set; runtimeMonitoring and manageAgent omitted.
+      const config = {
+        s3Protection: { enable: false },
+        eksProtection: { auditLogs: true, excludedRegions: ['eu-west-1'] },
+      };
+
+      const result = getFeaturesToEnable('eu-west-1', logPrefix, config);
+      // Configured flag is forced OFF for the excluded region...
+      expect(result.auditLogs).toBe(false);
+      // ...but unconfigured flags must stay undefined (omitted), not coerced to false, so their
+      // feature names are never sent to a region/partition that may not support them.
+      expect(result.runtimeMonitoring).toBeUndefined();
+      expect(result.eksAgent).toBeUndefined();
     });
 
     test('should disable ec2 protection for excluded region', () => {

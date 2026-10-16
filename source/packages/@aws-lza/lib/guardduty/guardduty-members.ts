@@ -286,7 +286,7 @@ export abstract class GuardDutyMembers {
     const featureList: OrganizationFeatureConfiguration[] = [];
     const featureNameMap: Record<string, OrgFeature> = {
       s3DataEvents: OrgFeature.S3_DATA_EVENTS,
-      eksProtection: OrgFeature.EKS_AUDIT_LOGS,
+      auditLogs: OrgFeature.EKS_AUDIT_LOGS,
       ec2Protection: OrgFeature.EBS_MALWARE_PROTECTION,
       rdsProtection: OrgFeature.RDS_LOGIN_EVENTS,
       lambdaProtection: OrgFeature.LAMBDA_NETWORK_LOGS,
@@ -297,15 +297,27 @@ export abstract class GuardDutyMembers {
     }
 
     for (const [key, value] of Object.entries(featuresToEnable)) {
-      // Provide additional configuration for EKS Runtime Monitoring
+      // A feature the configuration does not address is left undefined upstream — omit it from the
+      // organization configuration entirely rather than sending it as AutoEnable: NONE. This keeps
+      // feature names the customer never configured (and that may not exist in the region/partition)
+      // out of the request.
+      if (value === undefined) {
+        continue;
+      }
+      // EKS_ADDON_MANAGEMENT is emitted as additional configuration of
+      // EKS_RUNTIME_MONITORING (handled with the runtimeMonitoring key), not as a feature of its own.
       if (key === 'eksAgent') {
+        continue;
+      }
+      // Provide additional configuration for EKS Runtime Monitoring
+      if (key === 'runtimeMonitoring') {
         const feature: OrganizationFeatureConfiguration = {
           AutoEnable: value ? autoEnableOrgMembers : AutoEnableMembers.NONE,
           Name: 'EKS_RUNTIME_MONITORING',
           AdditionalConfiguration: [
             {
               Name: 'EKS_ADDON_MANAGEMENT',
-              AutoEnable: value ? autoEnableOrgMembers : AutoEnableMembers.NONE,
+              AutoEnable: featuresToEnable.eksAgent ? autoEnableOrgMembers : AutoEnableMembers.NONE,
             },
           ],
         };
@@ -572,29 +584,49 @@ export abstract class GuardDutyMembers {
 
   private static createDetectorFeatures(featuresToEnable?: IGuardDutyFeatureFlags): DetectorFeatureConfiguration[] {
     const addFeatures: DetectorFeatureConfiguration[] = [];
-    const eksRuntimeFeature = GuardDutyMembers.createFeature(
-      DetectorFeature.EKS_RUNTIME_MONITORING,
-      featuresToEnable?.eksProtection,
-    );
 
-    eksRuntimeFeature.AdditionalConfiguration = [
-      {
-        Name: FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT,
-        Status: featuresToEnable?.eksAgent ? FeatureStatus.ENABLED : FeatureStatus.DISABLED,
-      },
-    ];
+    // Only emit features the configuration actually addresses (defined flags). A feature left
+    // undefined (not in config) is omitted from the request entirely rather than sent as DISABLED,
+    // so unconfigured feature names that may not exist in the region/partition are never sent.
+    // EKS Runtime Monitoring is gated solely on runtimeMonitoring (matching the organization path):
+    // EKS_ADDON_MANAGEMENT is an additional configuration of EKS_RUNTIME_MONITORING, so when runtime
+    // monitoring is not configured the whole feature — and the addon — is omitted. The addon status
+    // follows the agent (manageAgent) flag only when the runtime feature is emitted.
+    if (featuresToEnable?.runtimeMonitoring !== undefined) {
+      const eksRuntimeFeature = GuardDutyMembers.createFeature(
+        DetectorFeature.EKS_RUNTIME_MONITORING,
+        featuresToEnable.runtimeMonitoring,
+      );
+      eksRuntimeFeature.AdditionalConfiguration = [
+        {
+          Name: FeatureAdditionalConfiguration.EKS_ADDON_MANAGEMENT,
+          Status: featuresToEnable?.eksAgent ? FeatureStatus.ENABLED : FeatureStatus.DISABLED,
+        },
+      ];
+      addFeatures.push(eksRuntimeFeature);
+    }
 
-    addFeatures.push(eksRuntimeFeature);
-
-    addFeatures.push(GuardDutyMembers.createFeature(DetectorFeature.EKS_AUDIT_LOGS, featuresToEnable?.eksProtection));
-    addFeatures.push(GuardDutyMembers.createFeature(DetectorFeature.S3_DATA_EVENTS, featuresToEnable?.s3DataEvents));
-    addFeatures.push(
-      GuardDutyMembers.createFeature(DetectorFeature.EBS_MALWARE_PROTECTION, featuresToEnable?.ec2Protection),
-    );
-    addFeatures.push(GuardDutyMembers.createFeature(DetectorFeature.RDS_LOGIN_EVENTS, featuresToEnable?.rdsProtection));
-    addFeatures.push(
-      GuardDutyMembers.createFeature(DetectorFeature.LAMBDA_NETWORK_LOGS, featuresToEnable?.lambdaProtection),
-    );
+    if (featuresToEnable?.auditLogs !== undefined) {
+      addFeatures.push(GuardDutyMembers.createFeature(DetectorFeature.EKS_AUDIT_LOGS, featuresToEnable.auditLogs));
+    }
+    if (featuresToEnable?.s3DataEvents !== undefined) {
+      addFeatures.push(GuardDutyMembers.createFeature(DetectorFeature.S3_DATA_EVENTS, featuresToEnable.s3DataEvents));
+    }
+    if (featuresToEnable?.ec2Protection !== undefined) {
+      addFeatures.push(
+        GuardDutyMembers.createFeature(DetectorFeature.EBS_MALWARE_PROTECTION, featuresToEnable.ec2Protection),
+      );
+    }
+    if (featuresToEnable?.rdsProtection !== undefined) {
+      addFeatures.push(
+        GuardDutyMembers.createFeature(DetectorFeature.RDS_LOGIN_EVENTS, featuresToEnable.rdsProtection),
+      );
+    }
+    if (featuresToEnable?.lambdaProtection !== undefined) {
+      addFeatures.push(
+        GuardDutyMembers.createFeature(DetectorFeature.LAMBDA_NETWORK_LOGS, featuresToEnable.lambdaProtection),
+      );
+    }
 
     return addFeatures;
   }

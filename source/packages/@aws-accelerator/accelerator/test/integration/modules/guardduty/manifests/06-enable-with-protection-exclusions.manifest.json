@@ -21,7 +21,8 @@
             "excludeRegions": ["us-west-2"]
         },
         "eksProtection": {
-            "enable": true,
+            "auditLogs": true,
+            "runtimeMonitoring": true,
             "manageAgent": true,
             "excludeRegions": ["us-west-2"]
         },
@@ -51,7 +52,8 @@
         "exportDestinationConfigured": true,
         "protectionsEnabled": {
             "s3Protection": true,
-            "eksProtection": true,
+            "eksAuditLogs": true,
+            "eksRuntimeMonitoring": true,
             "ec2Protection": true,
             "rdsProtection": true,
             "lambdaProtection": true

@@ -905,8 +905,13 @@
       "additionalProperties": false,
       "description": "Configuration for GuardDuty EKS (Elastic Kubernetes Service) protection that monitors Amazon Elastic Kubernetes Service clusters for security threats.\nEKS Protection helps you detect potential security risks in Amazon EKS clusters.",
       "properties": {
+        "auditLogs": {
+          "description": "(OPTIONAL) Controls whether GuardDuty EKS Audit Log Monitoring (`EKS_AUDIT_LOGS`) is enabled.",
+          "type": "boolean"
+        },
         "enable": {
-          "description": "Controls whether GuardDuty EKS Protection is enabled  to monitor your EKS clusters for security threats.",
+          "deprecated": "Use the granular `auditLogs` and `runtimeMonitoring` properties instead to control\nEKS Audit Log Monitoring and EKS Runtime Monitoring independently.",
+          "description": "Legacy switch that controls both EKS Audit Log Monitoring and EKS Runtime Monitoring together.",
           "type": "boolean"
         },
         "excludeRegions": {
@@ -919,11 +924,12 @@
         "manageAgent": {
           "description": "Controls whether the GuardDuty EKS Agent is managed.",
           "type": "boolean"
+        },
+        "runtimeMonitoring": {
+          "description": "(OPTIONAL) Controls whether GuardDuty EKS Runtime Monitoring (`EKS_RUNTIME_MONITORING`) is enabled.",
+          "type": "boolean"
         }
       },
-      "required": [
-        "enable"
-      ],
       "type": "object"
     },
     "IGuardDutyExportFindingsConfig": {

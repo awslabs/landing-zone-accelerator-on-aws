@@ -184,6 +184,22 @@ export class SecurityAuditStack extends AcceleratorStack {
   private configureGuardDuty(guardDutyConfig: GuardDutyConfig) {
     this.logger.debug(`centralSecurityServices.guardduty.enable: ${guardDutyConfig.enable}`);
 
+    // The legacy custom-resource path exposes a single enableEksProtection boolean that drives both
+    // EKS features together. When the granular flags agree (both true or both false) they collapse
+    // onto that boolean losslessly, so those configs are allowed on this path (and SKIP_GUARDDUTY_MODULE
+    // stays a usable rollback escape hatch for them). Only mixed values (exactly one of auditLogs /
+    // runtimeMonitoring enabled) cannot be represented by a single boolean — fail synth for that case
+    // rather than silently widening to enable both features.
+    const eksConfig = guardDutyConfig.eksProtection;
+    if (eksConfig && eksConfig.enable === undefined && !!eksConfig.auditLogs !== !!eksConfig.runtimeMonitoring) {
+      throw new Error(
+        'GuardDuty eksProtection with mixed granular flags (auditLogs !== runtimeMonitoring) is not supported on the ' +
+          'CloudFormation custom-resource fallback path (SKIP_GUARDDUTY_MODULE or skipResourcesRetentionModule is set); ' +
+          'the custom resource can only enable or disable both EKS features together. Set auditLogs and runtimeMonitoring ' +
+          'to the same value, use the legacy eksProtection.enable flag, or remove the module-skip setting to use the SDK module path.',
+      );
+    }
+
     if (this.validateExcludeRegionsAndDeploymentTargets(guardDutyConfig)) {
       const guardDutyMemberAccountIds: string[] = [];
       if (guardDutyConfig.deploymentTargets) {
@@ -258,7 +274,12 @@ export class SecurityAuditStack extends AcceleratorStack {
    */
   private processRegionExclusions(guardDutyConfig: GuardDutyConfig): boolean[] {
     let s3Protection = guardDutyConfig.s3Protection.enable;
-    let eksProtection = guardDutyConfig.eksProtection?.enable ?? false;
+    // Resolve EKS protection from either the legacy `enable` flag or the granular
+    // `auditLogs`/`runtimeMonitoring` flags. The legacy custom resource exposes EKS protection as a
+    // single boolean, so it is enabled when either granular feature is requested (mirrors the
+    // SDK module's resolveEksProtectionFeatures). The config validator rejects setting both styles.
+    const eksConfig = guardDutyConfig.eksProtection;
+    let eksProtection = eksConfig?.enable ?? !!(eksConfig?.auditLogs || eksConfig?.runtimeMonitoring);
     let enableEksAgent = guardDutyConfig.eksProtection?.manageAgent ?? false;
     let enableEc2MalwareProtection = guardDutyConfig.ec2Protection?.enable ?? false;
     let keepMalwareProtectionSnapshots = guardDutyConfig.ec2Protection?.keepSnapshots ?? false;
