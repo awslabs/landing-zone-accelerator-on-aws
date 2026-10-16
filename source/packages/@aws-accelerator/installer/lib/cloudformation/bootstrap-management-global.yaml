@@ -65,6 +65,14 @@ Parameters:
       - "true"
       - "false"
     Description: Whether to deny AssumeRole calls with an ExternalId. This prevents calls that are intended to be deputized from accidentally assuming CDK Roles.
+Conditions:
+  ## __ORGANIZATION_ID__ is replaced at runtime by bootstrap-management.sh with the organization ID, or with an
+  ## empty string when the account is not in an organization
+  HasOrganizationId:
+    Fn::Not:
+      - Fn::Equals:
+          - "__ORGANIZATION_ID__"
+          - ""
 Resources:
   StagingBucket:
     Type: AWS::S3::Bucket
@@ -104,16 +112,43 @@ Resources:
         Id: AccessControl
         Version: "2012-10-17"
         Statement:
-          - Sid: AllowSSLRequestsOnly
-            Action: s3:*
+          ## The stack-resources-retention module stages templates under cfn-retention/ in this bucket, and
+          ## CloudFormation in each target account fetches them with that account's credentials. The global
+          ## region is not bootstrapped by the accelerator bootstrap stack unless it is an enabled region, so
+          ## this grant is the only cross-account access the bucket has.
+          - Fn::If:
+              - HasOrganizationId
+              - Sid: cfn-retention-read-access
+                Effect: Allow
+                Principal:
+                  AWS: "*"
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource:
+                  - Fn::Sub: ${StagingBucket.Arn}/*
+                Condition:
+                  StringEquals:
+                    aws:PrincipalOrgID: "__ORGANIZATION_ID__"
+                  ArnLike:
+                    aws:PrincipalARN:
+                      - Fn::Sub: arn:${AWS::Partition}:iam::*:role/cdk-${Qualifier}*
+                      - Fn::Sub: arn:${AWS::Partition}:iam::*:role/OrganizationAccountAccessRole
+                      - Fn::Sub: arn:${AWS::Partition}:iam::*:role/AWSControlTowerExecution
+                      - Fn::Sub: arn:${AWS::Partition}:iam::*:role/AWSAccelerator-Deployment-Role
+                      - Fn::Sub: arn:${AWS::Partition}:iam::*:role/AWSAccelerator-Management-Deployment-Role
+              - Ref: AWS::NoValue
+          - Sid: deny-insecure-connections
             Effect: Deny
+            Principal:
+              AWS: "*"
+            Action: s3:*
             Resource:
               - Fn::Sub: ${StagingBucket.Arn}
               - Fn::Sub: ${StagingBucket.Arn}/*
             Condition:
               Bool:
                 aws:SecureTransport: "false"
-            Principal: "*"
   CdkBootstrapVersion:
     Type: AWS::SSM::Parameter
     Properties:
@@ -134,6 +169,15 @@ Outputs:
     Export:
       Name:
         Fn::Sub: CdkBootstrap-${Qualifier}-FileAssetKeyArn
+  ## Checked by bootstrap-management.sh to decide whether an existing global region stack predates the
+  ## cross-account retention template read grant and must be re-bootstrapped
+  CfnRetentionReadAccess:
+    Description: The organization granted read access to cfn-retention templates, or none
+    Value:
+      Fn::If:
+        - HasOrganizationId
+        - "__ORGANIZATION_ID__"
+        - none
   BootstrapVersion:
     Description: The version of the bootstrap resources that are currently mastered in this stack
     Value:

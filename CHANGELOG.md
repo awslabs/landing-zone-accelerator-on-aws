@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(deps): update adm-zip 0.6.0->0.6.1 to remediate CVE-2026-77301 (HIGH, denial of service via uncontrolled memory allocation) flagged by the daily vulnerability scan
 - fix(organizations): reduce Organizations API calls made by the Prepare stage SCP count validation so it no longer exceeds the 15 minute Lambda limit on large organizations; attached policy details from `ListPoliciesForTarget` are used directly instead of re-listing every SCP in the organization once per attached policy per target, `ListTagsForResource` results are cached per policy for the invocation, and phase start/end timing is logged so a timeout identifies the responsible validation phase
 - fix(scp): apply `quarantineNewAccounts` in all partitions instead of commercial `aws` only
+- fix(installer): grant organization-scoped cross-account read access to stack-resources-retention templates staged in the global region CDK assets bucket, so CloudFormation in member accounts can fetch them when the global region is not an enabled region; the grant is omitted when the management account is not in an organization, and existing global region toolkit stacks that predate the grant are re-bootstrapped on the next installer run
 
 ## [1.17.0] - 
 
