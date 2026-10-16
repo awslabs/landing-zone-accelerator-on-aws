@@ -138,7 +138,7 @@ export abstract class AmazonGuardDuty {
    * @returns Resolved operation timeout in milliseconds
    */
   private static resolveOperationTimeoutMs(): number {
-    const DEFAULT_OPERATION_TIMEOUT_MS = 900000; // 15 minutes; must exceed the ~14 min enrollment wait
+    const DEFAULT_OPERATION_TIMEOUT_MS = 900000; // 15 minutes; must exceed the ~11.5 min CreateMembers settle (~2.5 min) + member enrollment wait (~9 min)
     const raw = process.env['GUARDDUTY_OPERATION_TIMEOUT'];
     if (!raw) {
       return DEFAULT_OPERATION_TIMEOUT_MS;
@@ -355,8 +355,9 @@ export abstract class AmazonGuardDuty {
           maxConcurrentEnvironments: 50,
           // Allow operators to extend the per-environment timeout in slower partitions (e.g. GovCloud/China)
           // or large organizations where member association takes longer (via GUARDDUTY_OPERATION_TIMEOUT).
-          // Default is 15 minutes so the member-enrollment verification wait (~14 min) can complete before
-          // this outer timeout; previously 5 minutes, which pre-empted enrollment verification on slow setups.
+          // Default is 15 minutes so the CreateMembers settle (~2.5 min) plus the member-enrollment
+          // verification wait (~9 min) — ~11.5 min total — can complete before this outer timeout;
+          // previously 5 minutes, which pre-empted enrollment verification on slow setups.
           operationTimeoutMs: AmazonGuardDuty.resolveOperationTimeoutMs(),
         },
         protectionsConfiguration,

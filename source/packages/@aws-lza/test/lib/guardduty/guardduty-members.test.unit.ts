@@ -57,6 +57,26 @@ vi.mock('../../../lib/common/logger', () => {
   };
 });
 
+// waitUntil fake that actually runs the predicate (up to retryLimit + 1 times), matching real semantics so
+// a predicate-driven path can be exercised. Applied with mockImplementationOnce to a single waitUntil call
+// (e.g. the CreateMembers settle loop, which is the first waitUntil enable() makes) so the downstream
+// verification waitUntil calls fall back to the beforeEach default (resolve immediately) — no coupling to
+// production error-message wording. No real delay is incurred.
+const predicateRunningWaitUntil = async (
+  predicate: () => Promise<boolean>,
+  errorMessage: string,
+  _logger: unknown,
+  _logPrefix: string,
+  retryLimit = 5,
+): Promise<void> => {
+  for (let attempt = 0; attempt <= retryLimit; attempt++) {
+    if (await predicate()) {
+      return;
+    }
+  }
+  throw new Error(`ServiceException: ${errorMessage}`);
+};
+
 describe('GuardDutyMembers', () => {
   let mockExecuteApi: ReturnType<typeof vi.fn>;
   let mockWaitUntil: ReturnType<typeof vi.fn>;
@@ -252,6 +272,9 @@ describe('GuardDutyMembers', () => {
 
     test('should create members in batches', async () => {
       mockExecuteApi.mockResolvedValue({});
+      // Run the predicate for the settle loop (the first waitUntil enable() makes) so CreateMembers is
+      // actually issued; downstream verification waitUntil calls use the beforeEach default.
+      mockWaitUntil.mockImplementationOnce(predicateRunningWaitUntil as unknown as typeof mockWaitUntil);
       const mockPaginator = {
         [Symbol.asyncIterator]: async function* () {
           yield { Members: [] };
@@ -733,6 +756,164 @@ describe('GuardDutyMembers', () => {
 
       // Must not have attempted an S3-only retry — only the single failing call.
       expect(updateDetectorCallCount).toBe(1);
+    });
+
+    test('settle waitUntil uses the CreateMembers retry budget (5 retries, 0.5 minute interval)', async () => {
+      // Pins the settle-loop budget. Combined with the enrollment budget (9 x 1 min), this must stay under
+      // operationTimeoutMs (~2.5 + ~9 = ~11.5 min < 15 min). A regression that enlarges either budget would
+      // otherwise re-introduce the enrollment pre-emption bug with every functional test still passing.
+      mockExecuteApi.mockResolvedValue({});
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        defaultFeatures,
+      );
+
+      // The settle waitUntil is identified by its terminal error message; assert it is invoked with the
+      // CREATE_MEMBERS_RETRY_LIMIT (5) / CREATE_MEMBERS_QUERY_INTERVAL_MINUTES (0.5) budget.
+      expect(mockWaitUntil).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.stringContaining('CreateMembers after retries'),
+        expect.anything(),
+        logPrefix,
+        5,
+        0.5,
+      );
+    });
+
+    test('should retry only the unprocessed accounts and succeed once they clear', async () => {
+      // CreateMembers is partial-success: a transient "Internal error" on a cold org clears on retry.
+      // The module must re-issue CreateMembers for ONLY the still-unprocessed accounts, then proceed.
+      // Run the predicate only for the settle loop (the first waitUntil enable() makes); downstream
+      // verification waitUntil calls use the beforeEach default (resolve immediately).
+      mockWaitUntil.mockImplementationOnce(predicateRunningWaitUntil as unknown as typeof mockWaitUntil);
+      let createCall = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'CreateMembersCommand') {
+          createCall++;
+          // First attempt: two accounts fail transiently. Second attempt: they clear.
+          if (createCall === 1) {
+            return {
+              UnprocessedAccounts: [
+                { AccountId: '222222222222', Result: 'Internal error' },
+                { AccountId: '333333333333', Result: 'Internal error' },
+              ],
+            };
+          }
+          return { UnprocessedAccounts: [] };
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          defaultFeatures,
+        ),
+      ).resolves.not.toThrow();
+
+      const createCalls = mockExecuteApi.mock.calls.filter((call: unknown[]) => call[0] === 'CreateMembersCommand');
+      expect(createCalls).toHaveLength(2);
+      // The retry must re-submit ONLY the two accounts that were unprocessed, not the whole batch.
+      const retryParams = createCalls[1][1] as { AccountDetails: { AccountId: string }[] };
+      expect(retryParams.AccountDetails.map(account => account.AccountId)).toEqual(['222222222222', '333333333333']);
+    });
+
+    test('should throw with per-account reason when CreateMembers never clears within the budget', async () => {
+      // Non-transient reasons (bad email, region opt-in, not an org member) never settle. After the retry
+      // budget is exhausted, the module must throw with the ServiceException prefix and remediation hint,
+      // and the per-account reasons must have been logged.
+      // Run the predicate only for the settle loop (the first waitUntil enable() makes).
+      mockWaitUntil.mockImplementationOnce(predicateRunningWaitUntil as unknown as typeof mockWaitUntil);
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'CreateMembersCommand') {
+          return {
+            UnprocessedAccounts: [
+              { AccountId: '111111111111', Result: 'The account is not a member of the organization' },
+            ],
+          };
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      const enablePromise = GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        defaultFeatures,
+      );
+
+      await expect(enablePromise).rejects.toThrow('ServiceException');
+      await expect(enablePromise).rejects.toThrow('CreateMembers after retries');
+      // The raw per-account reason is surfaced via the warn log on each attempt.
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('111111111111 (The account is not a member of the organization)'),
+        logPrefix,
+      );
+    });
+
+    test('should not retry when CreateMembers returns an empty UnprocessedAccounts list', async () => {
+      // The happy path: a 200 with no unprocessed accounts means every account enrolled — one call, no retry.
+      // Run the predicate only for the settle loop (the first waitUntil enable() makes).
+      mockWaitUntil.mockImplementationOnce(predicateRunningWaitUntil as unknown as typeof mockWaitUntil);
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'CreateMembersCommand') {
+          return { UnprocessedAccounts: [] };
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      });
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          defaultFeatures,
+        ),
+      ).resolves.not.toThrow();
+
+      const createCalls = mockExecuteApi.mock.calls.filter((call: unknown[]) => call[0] === 'CreateMembersCommand');
+      expect(createCalls).toHaveLength(1);
     });
 
     test('should fall back to S3-only when UpdateMemberDetectors throws BadRequestException', async () => {
@@ -1780,7 +1961,7 @@ describe('GuardDutyMembers - enrollment waitUntil coverage', () => {
     expect(results[0]).toBe(true);
   });
 
-  test('enrollment waitUntil uses the extended retry budget (13 retries, 1 minute interval)', async () => {
+  test('enrollment waitUntil uses the extended retry budget (9 retries, 1 minute interval)', async () => {
     mockExecuteApi.mockResolvedValue({});
     mockPaginate.mockReturnValue({
       [Symbol.asyncIterator]: async function* () {
@@ -1800,13 +1981,14 @@ describe('GuardDutyMembers - enrollment waitUntil coverage', () => {
     );
 
     // The enrollment-verification wait must be given a budget larger than the default (5 retries),
-    // sized to fit under the batch operationTimeoutMs so slow member association is tolerated.
+    // sized so this plus the CreateMembers settle loop stays under the batch operationTimeoutMs while
+    // still tolerating slow member association.
     expect(mockWaitUntil).toHaveBeenCalledWith(
       expect.any(Function),
       'Could not verify all accounts were enrolled in GuardDuty',
       expect.anything(),
       logPrefix,
-      13,
+      9,
       1,
     );
   });

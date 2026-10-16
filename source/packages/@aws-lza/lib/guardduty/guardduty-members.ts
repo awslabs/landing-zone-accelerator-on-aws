@@ -62,10 +62,22 @@ function isUnsupportedFeatureError(error: unknown): error is BadRequestException
 // Budget for verifying member enrollment after CreateMembers. Member association can take several minutes
 // in slower partitions (e.g. GovCloud/China) and on new installations with freshly created accounts, so the
 // default 5-check (~5 min) budget is too short and caused enrollment verification to fail on the first run.
-// ~14 checks at 1-minute intervals gives roughly a 14-minute budget, which must stay below the batch
-// operation timeout (operationTimeoutMs, default 15 min) so this wait can complete before the outer timeout.
-const MEMBER_ENROLLMENT_RETRY_LIMIT = 13;
+// This runs AFTER the CreateMembers settle loop below, so the two budgets are additive and must TOGETHER
+// stay under the batch operation timeout (operationTimeoutMs, default 15 min / 900000 ms). ~9 checks at
+// 1-minute intervals (~9 min) plus the settle loop's ~2.5 min worst case is ~11.5 min total, leaving
+// headroom for API latency and additional 50-account batches. The long verification is partly redundant
+// now that the settle loop already confirms CreateMembers succeeded (members are created; this only waits
+// for ListMembers to observe them), so the reduced budget is safe.
+const MEMBER_ENROLLMENT_RETRY_LIMIT = 9;
 const MEMBER_ENROLLMENT_QUERY_INTERVAL_MINUTES = 1;
+
+// Budget for the CreateMembers settle/retry (see createMembersWithRetry for the rationale). waitUntil
+// sleeps between attempts, so this is ~2.5 min worst case (5 retries x 0.5 min). Combined with the ~9-min
+// MEMBER_ENROLLMENT verification below (~11.5 min total), this stays under the batch operationTimeoutMs
+// (default 15 min / 900000 ms), with margin for API latency and organizations with more than 50 accounts
+// (each additional 50-account batch adds its own settle loop).
+const CREATE_MEMBERS_RETRY_LIMIT = 5;
+const CREATE_MEMBERS_QUERY_INTERVAL_MINUTES = 0.5;
 
 function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   const chunks: T[][] = [];
@@ -431,6 +443,77 @@ export abstract class GuardDutyMembers {
   }
 
   /**
+   * Creates GuardDuty members for one batch and settles on partial failures.
+   *
+   * CreateMembers is a partial-success API: it returns HTTP 200 even when some or all accounts fail,
+   * reporting those in UnprocessedAccounts rather than throwing. On a newly-created organization or
+   * delegated admin the admin relationship may not have fully propagated yet, so the accounts come back
+   * unprocessed (typically "Internal error"). We retry only the still-unprocessed accounts until they
+   * clear, giving propagation time to settle — mirroring the delay the legacy custom resource got for free
+   * from running admin-enable and CreateMembers in separate CloudFormation stages. If the accounts never
+   * clear within the budget, waitUntil throws with the per-account reason so the real cause is surfaced
+   * immediately instead of the downstream ListMembers verification timing out minutes later.
+   *
+   * @param client - GuardDutyClient
+   * @param detectorId - The detector ID to enroll members under
+   * @param accounts - The batch of accounts (max 50) to enroll
+   * @param logPrefix - Prefix for logging messages
+   */
+  private static async createMembersWithRetry(
+    client: GuardDutyClient,
+    detectorId: string,
+    accounts: AccountDetail[],
+    logPrefix: string,
+  ): Promise<void> {
+    // Accounts still needing enrollment; narrowed to the unprocessed set after each attempt.
+    let pendingAccounts = accounts;
+
+    await waitUntil(
+      async () => {
+        const parameters = { AccountDetails: pendingAccounts, DetectorId: detectorId };
+        const result = await executeApi(
+          'CreateMembersCommand',
+          parameters,
+          () => client.send(new CreateMembersCommand(parameters)),
+          logger,
+          logPrefix,
+        );
+
+        const unprocessed = result.UnprocessedAccounts ?? [];
+        if (unprocessed.length === 0) {
+          return true;
+        }
+
+        const unprocessedDetail = unprocessed.map(account => `${account.AccountId} (${account.Result})`).join('; ');
+        // Retry only the accounts that did not get processed.
+        const stillPending = new Set(
+          unprocessed.map(account => account.AccountId).filter((id): id is string => id !== undefined),
+        );
+        pendingAccounts = pendingAccounts.filter(account => account.AccountId && stillPending.has(account.AccountId));
+
+        logger.warn(
+          `GuardDuty CreateMembers left ${unprocessed.length} account(s) unprocessed: ${unprocessedDetail}. ` +
+            `This is commonly transient on a newly-created organization or delegated admin whose admin ` +
+            `relationship has not fully propagated yet — retrying the unprocessed account(s).`,
+          logPrefix,
+        );
+        return false;
+      },
+      // Terminal message (thrown by waitUntil only if the accounts never clear within the budget). The
+      // per-account reasons are logged on every attempt above; the non-transient ones (bad email, region
+      // opt-in, not an org member) will never settle no matter how long we wait, so point at those.
+      `GuardDuty could not enroll member account(s) via CreateMembers after retries (see the account-level ` +
+        `reasons logged above). If this persists, verify that each account has a valid, unique root email, ` +
+        `that GuardDuty is available and opted-in for the target region, and that the account is an active ` +
+        `member of the organization.`,
+      logger,
+      logPrefix,
+      CREATE_MEMBERS_RETRY_LIMIT,
+      CREATE_MEMBERS_QUERY_INTERVAL_MINUTES,
+    );
+  }
+
+  /**
    * For every account, will enable within GuardDuty then configure what GuardDuty features are enabled
    *
    * @param client - GuardDutyClient
@@ -471,18 +554,11 @@ export abstract class GuardDutyMembers {
 
     // Create new members in batches of 50
     for (const accounts of batchedAccounts) {
-      const parameters = { AccountDetails: accounts, DetectorId: detectorId };
       if (dryRun) {
-        logger.dryRun('CreateMembersCommand', parameters, logPrefix);
-      } else {
-        await executeApi(
-          'CreateMembersCommand',
-          parameters,
-          () => client.send(new CreateMembersCommand(parameters)),
-          logger,
-          logPrefix,
-        );
+        logger.dryRun('CreateMembersCommand', { AccountDetails: accounts, DetectorId: detectorId }, logPrefix);
+        continue;
       }
+      await GuardDutyMembers.createMembersWithRetry(client, detectorId, accounts, logPrefix);
     }
 
     // Verify all accounts were enrolled (skip in dry-run since no members were actually created)
