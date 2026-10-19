@@ -27,6 +27,7 @@ import {
 import { AccountConfig, AccountsConfig } from '../../lib/accounts-config';
 import {
   CloudTrailConfig,
+  CloudWatchFirehoseLamdaProcessorConfig,
   ControlTowerConfig,
   GlobalConfig,
   LoggingConfig,
@@ -74,6 +75,52 @@ describe('SecurityConfigValidator', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('validateFirehoseLambdaProcessorConfiguration', () => {
+    it.each([
+      undefined,
+      {},
+      { destinationBufferSize: 1, destinationBufferInterval: 0 },
+      { destinationBufferSize: 63, destinationBufferInterval: 59 },
+      { destinationBufferSize: 64, destinationBufferInterval: 60 },
+      { destinationBufferSize: 128, destinationBufferInterval: 900 },
+      { destinationBufferSize: 96 },
+      { destinationBufferInterval: 300 },
+    ])('accepts valid destination buffering %j', lambdaProcessor => {
+      const errors: string[] = [];
+      globalConfigValidator['validateFirehoseLambdaProcessorConfiguration'](
+        lambdaProcessor === undefined
+          ? undefined
+          : { ...new CloudWatchFirehoseLamdaProcessorConfig(), ...lambdaProcessor },
+        errors,
+      );
+      expect(errors).toEqual([]);
+    });
+
+    it.each([
+      ['destinationBufferSize', 0],
+      ['destinationBufferSize', -1],
+      ['destinationBufferSize', 129],
+      ['destinationBufferSize', 64.5],
+      ['destinationBufferSize', NaN],
+      ['destinationBufferSize', Infinity],
+      ['destinationBufferInterval', -1],
+      ['destinationBufferInterval', 0.5],
+      ['destinationBufferInterval', 901],
+      ['destinationBufferInterval', 60.5],
+      ['destinationBufferInterval', NaN],
+      ['destinationBufferInterval', Infinity],
+    ] as const)('rejects %s = %s', (property, value) => {
+      const errors: string[] = [];
+      const lambdaProcessor: CloudWatchFirehoseLamdaProcessorConfig = {
+        ...new CloudWatchFirehoseLamdaProcessorConfig(),
+        [property]: value,
+      };
+      globalConfigValidator['validateFirehoseLambdaProcessorConfiguration'](lambdaProcessor, errors);
+      expect(errors).toHaveLength(1);
+      expect(errors[0]).toContain(`globalConfig.logging.cloudwatchLogs.firehose.lambdaProcessor.${property}:`);
+    });
   });
 
   describe('validateAccessLogBucket', () => {

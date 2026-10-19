@@ -432,6 +432,8 @@ export class CloudWatchFirehoseLamdaProcessorConfig implements i.ICloudWatchFire
   readonly retries: number | undefined = undefined;
   readonly bufferInterval: number | undefined = undefined;
   readonly bufferSize: number | undefined = undefined;
+  readonly destinationBufferSize: number | undefined = undefined;
+  readonly destinationBufferInterval: number | undefined = undefined;
 }
 export class CloudWatchFirehoseConfig implements i.ICloudWatchFirehoseConfig {
   readonly fileExtension: string | undefined = undefined;

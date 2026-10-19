@@ -20,6 +20,55 @@ import { SNAPSHOT_CONFIG } from '../../../config/test/config-test-helper';
 const testNamePrefix = 'Construct(CloudWatchToS3Firehose): ';
 const stack = new cdk.Stack();
 
+describe('S3 destination buffering', () => {
+  test.each([
+    { size: undefined, interval: undefined, expectedSize: 64, expectedInterval: 60 },
+    { size: 128, interval: 900, expectedSize: 128, expectedInterval: 900 },
+    { size: 1, interval: 0, expectedSize: 1, expectedInterval: 0 },
+    { size: 96, interval: undefined, expectedSize: 96, expectedInterval: 60 },
+    { size: undefined, interval: 300, expectedSize: 64, expectedInterval: 300 },
+  ])('uses destination hints $expectedSize MiB / $expectedInterval seconds', options => {
+    const testStack = new cdk.Stack();
+    new CloudWatchToS3Firehose(testStack, 'Firehose', {
+      firehoseKmsKey: new cdk.aws_kms.Key(testStack, 'FirehoseKey'),
+      kinesisStream: new cdk.aws_kinesis.Stream(testStack, 'Stream'),
+      kinesisKmsKey: new cdk.aws_kms.Key(testStack, 'KinesisKey'),
+      bucketName: 'test-logs-bucket',
+      homeRegion: 'us-east-1',
+      configDir: SNAPSHOT_CONFIG,
+      acceleratorPrefix: 'AWSAccelerator',
+      useExistingRoles: false,
+      firehoseRecordsProcessorFunctionName: 'test',
+      logsRetentionInDaysValue: '7',
+      firehoseLambdaProcessorBufferInterval: '120',
+      firehoseLambdaProcessorBufferSize: '1',
+      firehoseLambdaProcessorRetries: '3',
+      firehoseDestinationBufferSize: options.size,
+      firehoseDestinationBufferInterval: options.interval,
+    });
+
+    cdk.assertions.Template.fromStack(testStack).hasResourceProperties('AWS::KinesisFirehose::DeliveryStream', {
+      ExtendedS3DestinationConfiguration: {
+        BufferingHints: {
+          SizeInMBs: options.expectedSize,
+          IntervalInSeconds: options.expectedInterval,
+        },
+        ProcessingConfiguration: {
+          Processors: [
+            {
+              Type: 'Lambda',
+              Parameters: cdk.assertions.Match.arrayWith([
+                { ParameterName: 'BufferSizeInMBs', ParameterValue: '1' },
+                { ParameterName: 'BufferIntervalInSeconds', ParameterValue: '120' },
+              ]),
+            },
+          ],
+        },
+      },
+    });
+  });
+});
+
 /**
  * CloudWatchDestination construct test
  */
