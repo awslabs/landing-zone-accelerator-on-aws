@@ -109,6 +109,14 @@ export interface CloudWatchToS3FirehoseProps {
    */
   firehoseLambdaProcessorBufferInterval: string;
   /**
+   * Firehose S3 destination buffer size in MBs. Defaults to 64.
+   */
+  firehoseDestinationBufferSize?: number;
+  /**
+   * Firehose S3 destination buffer interval in seconds. Defaults to 60.
+   */
+  firehoseDestinationBufferInterval?: number;
+  /**
    *
    * Log Extension type for firehose-delivered log files in S3 bucket
    */
@@ -204,8 +212,8 @@ export class CloudWatchToS3Firehose extends Construct {
       extendedS3DestinationConfiguration: {
         bucketArn: logsStorageBucket.bucketArn,
         bufferingHints: {
-          intervalInSeconds: 60,
-          sizeInMBs: 64, // Minimum value that this can take
+          intervalInSeconds: props.firehoseDestinationBufferInterval ?? 60,
+          sizeInMBs: props.firehoseDestinationBufferSize ?? 64,
         },
         cloudWatchLoggingOptions: {
           enabled: true,

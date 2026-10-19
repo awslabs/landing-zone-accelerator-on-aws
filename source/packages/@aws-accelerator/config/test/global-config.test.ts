@@ -37,6 +37,7 @@ import {
   externalLandingZoneResourcesConfig,
 } from '../lib/global-config';
 import { ReplacementsConfig } from '../lib/replacements-config';
+import { parseGlobalConfig } from '../lib/common';
 import { describe, it, expect, afterEach } from 'vitest';
 import { CachingCredentialProvider } from '@aws-accelerator/utils';
 import { SSMClient } from '@aws-sdk/client-ssm';
@@ -47,6 +48,27 @@ import { SNAPSHOT_CONFIG } from './config-test-helper';
 const configDir = SNAPSHOT_CONFIG;
 
 describe('GlobalConfig', () => {
+  it('parses destination buffering separately from Lambda invocation buffering', () => {
+    const values = GlobalConfig.loadRawGlobalConfig(configDir);
+    const lambdaProcessor = {
+      bufferSize: 1,
+      bufferInterval: 120,
+      destinationBufferSize: 128,
+      destinationBufferInterval: 900,
+    };
+    const parsed = parseGlobalConfig({
+      ...values,
+      logging: {
+        ...values.logging,
+        cloudwatchLogs: {
+          ...values.logging.cloudwatchLogs,
+          firehose: { lambdaProcessor },
+        },
+      },
+    });
+    expect(parsed.logging.cloudwatchLogs?.firehose?.lambdaProcessor).toEqual(lambdaProcessor);
+  });
+
   describe('Test config', () => {
     it('has loaded successfully', () => {
       const globalConfigFromFile = GlobalConfig.loadRawGlobalConfig(configDir);

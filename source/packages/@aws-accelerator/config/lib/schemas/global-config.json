@@ -515,7 +515,7 @@
     },
     "ICloudWatchFirehoseConfig": {
       "additionalProperties": false,
-      "description": "## CloudWatch Firehose Configuration\n\nConfiguration for the CloudWatch Logs Firehose.\n\n### Example ```yaml logging:  cloudwatchLogs:    firehose:      fileExtension: json.gz      lambdaProcessor:        retries: 3        bufferSize: 0.2        bufferInterval: 60 ```",
+      "description": "## CloudWatch Firehose Configuration\n\nConfiguration for the CloudWatch Logs Firehose.\n\n### Example ```yaml logging:  cloudwatchLogs:    firehose:      fileExtension: json.gz      lambdaProcessor:        retries: 3        bufferSize: 0.2        bufferInterval: 60        destinationBufferSize: 64        destinationBufferInterval: 60 ```",
       "properties": {
         "fileExtension": {
           "$ref": "#/definitions/NonEmptyString",
@@ -540,6 +540,16 @@
         "bufferSize": {
           "default": 0.2,
           "description": "**Buffer Size** *(Optional)*\n\nThe AWS Lambda function has a 6 MB invocation payload quota. Your data can expand in size after it's processed. A smaller buffer size allows for more room should the data expand after processing.\n\nValid values range from 0.2 - 3 MB.",
+          "type": "number"
+        },
+        "destinationBufferInterval": {
+          "default": 60,
+          "description": "**Destination Buffer Interval** *(Optional)*\n\nThe time in seconds Firehose buffers data per dynamic partition before delivering it to S3. This is separate from bufferInterval, which controls buffering before Lambda invocation. Delivery occurs when either the destination buffer size or interval is reached.\n\nValid values range from 0 - 900 seconds.",
+          "type": "number"
+        },
+        "destinationBufferSize": {
+          "default": 64,
+          "description": "**Destination Buffer Size** *(Optional)*\n\nThe size in MBs that Firehose buffers per dynamic partition before delivering it to S3. This is separate from bufferSize, which controls buffering before Lambda invocation. Delivery occurs when either the destination buffer size or interval is reached.\n\nValid values range from 1 - 128 MBs.",
           "type": "number"
         },
         "retries": {

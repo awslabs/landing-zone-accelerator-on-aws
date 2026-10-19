@@ -2776,6 +2776,8 @@ export interface ICloudWatchLogSkipBulkUpdateConfig {
  *        retries: 3
  *        bufferSize: 0.2
  *        bufferInterval: 60
+ *        destinationBufferSize: 64
+ *        destinationBufferInterval: 60
  * ```
  *
  * @category Global Configuration
@@ -2819,6 +2821,8 @@ export interface ICloudWatchFirehoseConfig {
  *   retries: 3
  *   bufferSize: 0.2
  *   bufferInterval: 60
+ *   destinationBufferSize: 64
+ *   destinationBufferInterval: 60
  * ```
  *
  * @see {@link https://docs.aws.amazon.com/firehose/latest/dev/data-transformation.html | Transform source data in Amazon Data Firehose} for more information on the Firehose/Lambda integration.
@@ -2854,6 +2858,30 @@ export interface ICloudWatchFirehoseLambdaProcessorConfig {
    * @default 60
    */
   readonly bufferInterval?: number;
+  /**
+   * **Destination Buffer Size** *(Optional)*
+   *
+   * The size in MBs that Firehose buffers per dynamic partition before delivering it to S3.
+   * This is separate from bufferSize, which controls buffering before Lambda invocation.
+   * Delivery occurs when either the destination buffer size or interval is reached.
+   *
+   * Valid values range from 1 - 128 MBs.
+   *
+   * @default 64
+   */
+  readonly destinationBufferSize?: number;
+  /**
+   * **Destination Buffer Interval** *(Optional)*
+   *
+   * The time in seconds Firehose buffers data per dynamic partition before delivering it to S3.
+   * This is separate from bufferInterval, which controls buffering before Lambda invocation.
+   * Delivery occurs when either the destination buffer size or interval is reached.
+   *
+   * Valid values range from 0 - 900 seconds.
+   *
+   * @default 60
+   */
+  readonly destinationBufferInterval?: number;
 }
 
 /**

@@ -1542,6 +1542,22 @@ export class GlobalConfigValidator {
           `Specified globalConfig.logging.cloudwatch.firehose.lambdaProcessor.bufferInterval: ${bufferInterval}. It should be between 60 and 900.`,
         );
       }
+      const destinationBufferSize = lambdaProcessor.destinationBufferSize ?? 64;
+      const destinationBufferInterval = lambdaProcessor.destinationBufferInterval ?? 60;
+      if (!Number.isInteger(destinationBufferSize) || destinationBufferSize < 1 || destinationBufferSize > 128) {
+        errors.push(
+          `Specified globalConfig.logging.cloudwatchLogs.firehose.lambdaProcessor.destinationBufferSize: ${destinationBufferSize}. It should be between 1 and 128.`,
+        );
+      }
+      if (
+        !Number.isInteger(destinationBufferInterval) ||
+        destinationBufferInterval < 0 ||
+        destinationBufferInterval > 900
+      ) {
+        errors.push(
+          `Specified globalConfig.logging.cloudwatchLogs.firehose.lambdaProcessor.destinationBufferInterval: ${destinationBufferInterval}. It should be between 0 and 900.`,
+        );
+      }
     }
   }
 

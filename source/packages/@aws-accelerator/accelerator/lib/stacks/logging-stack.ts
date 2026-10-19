@@ -1114,6 +1114,10 @@ export class LoggingStack extends AcceleratorStack {
       firehoseLambdaProcessorBufferInterval: (
         this.props.globalConfig.logging.cloudwatchLogs?.firehose?.lambdaProcessor?.bufferInterval ?? 60
       ).toString(),
+      firehoseDestinationBufferSize:
+        this.props.globalConfig.logging.cloudwatchLogs?.firehose?.lambdaProcessor?.destinationBufferSize ?? 64,
+      firehoseDestinationBufferInterval:
+        this.props.globalConfig.logging.cloudwatchLogs?.firehose?.lambdaProcessor?.destinationBufferInterval ?? 60,
     });
 
     if (this.centralLogsBucket) {
