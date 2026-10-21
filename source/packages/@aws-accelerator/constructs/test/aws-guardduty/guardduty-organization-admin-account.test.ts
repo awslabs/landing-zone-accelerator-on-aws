@@ -12,8 +12,11 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { describe } from 'vitest';
-import { GuardDutyOrganizationAdminAccount } from '../../lib/aws-guardduty/guardduty-organization-admin-account';
+import { describe, expect, test } from 'vitest';
+import {
+  GuardDutyOrganizationAdminAccount,
+  GuardDutyEnableOrganizationAdminAccountPolicyStatements,
+} from '../../lib/aws-guardduty/guardduty-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(GuardDutyOrganizationAdminAccount): ';
@@ -32,4 +35,15 @@ new GuardDutyOrganizationAdminAccount(stack, 'GuardDutyOrganizationAdminAccount'
  */
 describe('GuardDutyOrganizationAdminAccount', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+describe('GuardDuty organization administrator IAM permissions', () => {
+  test('includes organizations:ListRoots permission', () => {
+    const organizationActions = GuardDutyEnableOrganizationAdminAccountPolicyStatements.find(
+      statement => statement.Sid === 'GuardDutyEnableOrganizationAdminAccountTaskOrganizationActions',
+    );
+
+    expect(organizationActions).toBeDefined();
+    expect(organizationActions?.Action).toContain('organizations:ListRoots');
+  });
 });

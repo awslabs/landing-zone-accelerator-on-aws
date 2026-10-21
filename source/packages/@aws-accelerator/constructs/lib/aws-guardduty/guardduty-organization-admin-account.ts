@@ -46,6 +46,7 @@ export const GuardDutyEnableOrganizationAdminAccountPolicyStatements: PolicyStat
       'organizations:ListAWSServiceAccessForOrganization',
       'organizations:ListAccounts',
       'organizations:ListDelegatedAdministrators',
+      'organizations:ListRoots',
       'organizations:RegisterDelegatedAdministrator',
     ],
     Resource: '*',
