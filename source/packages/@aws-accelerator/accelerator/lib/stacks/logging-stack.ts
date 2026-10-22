@@ -2287,7 +2287,6 @@ export class LoggingStack extends AcceleratorStack {
         kmsAliasName: this.acceleratorResourceNames.customerManagedKeys.centralLogsBucket.alias,
         kmsDescription: this.acceleratorResourceNames.customerManagedKeys.centralLogsBucket.description,
         principalOrgIdCondition: this.getPrincipalOrgIdCondition(this.organizationId),
-        orgPrincipals: this.getOrgPrincipals(this.organizationId),
         s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.centralLogBucket?.lifecycleRules),
         awsPrincipalAccesses: centralLogsBucketPrincipalAndPrefixes.awsPrincipalAccesses,
         bucketPrefixProps,

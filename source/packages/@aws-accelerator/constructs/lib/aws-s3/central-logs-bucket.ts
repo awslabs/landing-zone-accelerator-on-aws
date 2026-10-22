@@ -24,7 +24,6 @@ export interface CentralLogsBucketProps {
   kmsAliasName: string;
   kmsDescription: string;
   principalOrgIdCondition: { [key: string]: string | string[] };
-  orgPrincipals: cdk.aws_iam.IPrincipal;
   serverAccessLogsBucket: cdk.aws_s3.IBucket;
   s3LifeCycleRules?: S3LifeCycleRule[];
   /**
@@ -430,19 +429,20 @@ export class CentralLogsBucket extends Construct {
         stringValue: this.bucket.getKey().keyArn,
       },
     );
-    // const roleArns = [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`];
-    // SSM parameter access IAM Role for
+    const roleArns = [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`];
+    // SSM parameter access IAM Role for cross-account lookups of the central log bucket CMK ARN.
+    // Callers must be restricted in the trust policy: once assumed, aws:PrincipalArn is this role's
+    // own ARN, so conditions in the permissions policy below cannot filter the original caller.
     new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
       roleName: props.crossAccountAccessRoleName,
-      assumedBy: props.orgPrincipals,
-      // assumedBy: new cdk.aws_iam.AnyPrincipal().withConditions({
-      //   StringEquals: {
-      //     ...props.principalOrgIdCondition,
-      //   },
-      //   ArnLike: {
-      //     'aws:PrincipalArn': roleArns,
-      //   },
-      // }),
+      assumedBy: new cdk.aws_iam.AnyPrincipal().withConditions({
+        StringEquals: {
+          ...props.principalOrgIdCondition,
+        },
+        ArnLike: {
+          'aws:PrincipalArn': roleArns,
+        },
+      }),
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
           statements: [
@@ -450,21 +450,11 @@ export class CentralLogsBucket extends Construct {
               effect: cdk.aws_iam.Effect.ALLOW,
               actions: ['ssm:GetParameters', 'ssm:GetParameter'],
               resources: [centralLogBucketKmsKeyArnSsmParameter.parameterArn],
-              conditions: {
-                ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`],
-                },
-              },
             }),
             new cdk.aws_iam.PolicyStatement({
               effect: cdk.aws_iam.Effect.ALLOW,
               actions: ['ssm:DescribeParameters'],
               resources: ['*'],
-              conditions: {
-                ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`],
-                },
-              },
             }),
           ],
         }),

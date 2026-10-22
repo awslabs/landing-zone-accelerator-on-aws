@@ -35,7 +35,6 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
   kmsAliasName: 'alias/accelerator/central-logs/s3',
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
   principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
-  orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
   acceleratorPrefix: 'AWSAccelerator',
   crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
   cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
@@ -68,7 +67,6 @@ describe('CentralLogsBucket regional service principals (#4918)', () => {
     kmsAliasName: 'alias/accelerator/central-logs/s3',
     kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
     principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
-    orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
     acceleratorPrefix: 'AWSAccelerator',
     crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
     cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
@@ -176,7 +174,6 @@ describe('CentralLogsBucket regional service principals (#4918)', () => {
       kmsAliasName: 'alias/accelerator/central-logs/s3',
       kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
       principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
-      orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
       acceleratorPrefix: 'AWSAccelerator',
       crossAccountAccessRoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
       cmkArnSsmParameterName: '/accelerator/logging/central-bucket/kms/arn',
@@ -214,6 +211,36 @@ describe('CentralLogsBucket regional service principals (#4918)', () => {
             },
           }),
         ]),
+      },
+    });
+  });
+});
+
+/**
+ * The cross-account KMS ARN SSM parameter role must restrict callers in its trust policy. Conditions
+ * on aws:PrincipalArn in the role's own permissions policy see the role's ARN, not the caller's,
+ * so an org-wide trust policy would let any principal in the organization assume it.
+ */
+describe('CentralLogsBucket cross-account SSM parameter role trust policy', () => {
+  it('restricts sts:AssumeRole to accelerator-prefixed roles in the organization', () => {
+    cdk.assertions.Template.fromStack(stack).hasResourceProperties('AWS::IAM::Role', {
+      RoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
+      AssumeRolePolicyDocument: {
+        Statement: [
+          {
+            Action: 'sts:AssumeRole',
+            Effect: 'Allow',
+            Principal: { AWS: '*' },
+            Condition: {
+              StringEquals: { 'aws:PrincipalOrgID': organizationId },
+              ArnLike: {
+                'aws:PrincipalArn': [
+                  { 'Fn::Join': ['', ['arn:', { Ref: 'AWS::Partition' }, ':iam::*:role/AWSAccelerator*']] },
+                ],
+              },
+            },
+          },
+        ],
       },
     });
   });

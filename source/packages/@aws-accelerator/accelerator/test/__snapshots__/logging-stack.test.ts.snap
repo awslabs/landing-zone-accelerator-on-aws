@@ -13125,6 +13125,22 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
             {
               "Action": "sts:AssumeRole",
               "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalArn": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
                 "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
@@ -13146,24 +13162,6 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                   ],
-                  "Condition": {
-                    "ArnLike": {
-                      "aws:PrincipalARN": [
-                        {
-                          "Fn::Join": [
-                            "",
-                            [
-                              "arn:",
-                              {
-                                "Ref": "AWS::Partition",
-                              },
-                              ":iam::*:role/AWSAccelerator-*",
-                            ],
-                          ],
-                        },
-                      ],
-                    },
-                  },
                   "Effect": "Allow",
                   "Resource": {
                     "Fn::Join": [
@@ -13183,24 +13181,6 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
                 },
                 {
                   "Action": "ssm:DescribeParameters",
-                  "Condition": {
-                    "ArnLike": {
-                      "aws:PrincipalARN": [
-                        {
-                          "Fn::Join": [
-                            "",
-                            [
-                              "arn:",
-                              {
-                                "Ref": "AWS::Partition",
-                              },
-                              ":iam::*:role/AWSAccelerator-*",
-                            ],
-                          ],
-                        },
-                      ],
-                    },
-                  },
                   "Effect": "Allow",
                   "Resource": "*",
                 },
