@@ -88,6 +88,7 @@ exports[`GuardDutyOrganizationAdminAccount > Construct(GuardDutyOrganizationAdmi
                     "organizations:ListAWSServiceAccessForOrganization",
                     "organizations:ListAccounts",
                     "organizations:ListDelegatedAdministrators",
+                    "organizations:ListRoots",
                     "organizations:RegisterDelegatedAdministrator",
                   ],
                   "Condition": {
