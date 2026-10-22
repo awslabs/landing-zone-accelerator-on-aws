@@ -138,7 +138,12 @@ import { getCredentials } from '../../../lib/common/sts-functions';
 import { ensureOrganizationsTrustedAccess } from '../../../lib/common/organizations-functions';
 import { MODULE_STATE_CODE, SecurityModuleOperationAction } from '../../../lib/common/types';
 import { FindingsExportConfiguration } from '../../../lib/guardduty/findings-export-configuration';
-import { createDetector, getDetectorId, getOrganizationAdminAccountId } from '../../../lib/guardduty/functions';
+import {
+  createDetector,
+  getDetectorId,
+  getFeaturesToEnable,
+  getOrganizationAdminAccountId,
+} from '../../../lib/guardduty/functions';
 import {
   configureGuardDuty,
   guardDutyAccountSetup,
@@ -292,6 +297,16 @@ describe('configureGuardDuty', () => {
     (getOrganizationAdminAccountId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     (getDetectorId as ReturnType<typeof vi.fn>).mockResolvedValue('detector-123');
     (createDetector as ReturnType<typeof vi.fn>).mockResolvedValue('new-detector-123');
+    // getFeaturesToEnable returns the feature flags that mirror baseRequest.protectionsConfiguration.
+    (getFeaturesToEnable as ReturnType<typeof vi.fn>).mockReturnValue({
+      s3DataEvents: true,
+      auditLogs: true,
+      runtimeMonitoring: true,
+      eksAgent: true,
+      ec2Protection: true,
+      rdsProtection: true,
+      lambdaProtection: true,
+    });
     (OrganizationsDelegatedAdminAccount.enableOrganizationAdminAccount as ReturnType<typeof vi.fn>).mockResolvedValue(
       undefined,
     );
@@ -1083,6 +1098,45 @@ describe('Handler Functions', () => {
 
       // disableAccounts = org (minus admin) − boundary → only the out-of-boundary workload 2.
       expect(disableAccounts.map(a => a.AccountId)).toEqual([WORKLOAD_2]);
+    });
+
+    it('forwards ec2ProtectionConfigured in additionalOptions to GuardDutyMembers.enable', async () => {
+      // Integration glue of the UpdateMalwareScanSettings fix: enableService must forward the configured
+      // ec2Protection.enable value in the additionalOptions.ec2ProtectionConfigured field to
+      // GuardDutyMembers.enable, where it gates the malware call. If this forwarding regressed (dropped or
+      // left undefined), enable would silently skip UpdateMalwareScanSettings for every EC2-protection
+      // customer — this test fails the moment that happens.
+      const requestWithBoundary = {
+        ...baseRequest,
+        configuration: {
+          ...baseRequest.configuration,
+          autoEnableOrgMembers: 'NONE' as OrgFeatureStatus,
+          boundary: { accounts: [MGMT, DELEGATED_ADMIN, WORKLOAD_1] },
+          // ec2Protection configured (enable: true) so the forwarded gate value is true.
+          protectionsConfiguration: {
+            s3Protection: { enable: true },
+            ec2Protection: { enable: true, keepSnapshots: false },
+          },
+        },
+        collectedResponses: [] as CollectedResponse[],
+      };
+
+      await guardDutyEnableHandler(
+        MGMT,
+        delegatedAdminAccount,
+        'us-east-1',
+        false,
+        'test',
+        requestWithBoundary,
+        orgAccountsWithEmail,
+      );
+
+      expect(GuardDutyMembers.enable).toHaveBeenCalledTimes(1);
+      const call = (GuardDutyMembers.enable as ReturnType<typeof vi.fn>).mock.calls[0];
+      // additionalOptions is the 9th positional arg (index 8), after featuresToEnable (7).
+      const additionalOptions = call[8] as { ec2ProtectionConfigured?: boolean };
+      // Mirrors the configured ec2Protection.enable value from the request.
+      expect(additionalOptions.ec2ProtectionConfigured).toBe(true);
     });
 
     it('never places the management account in disableAccounts even if boundary omits it', async () => {

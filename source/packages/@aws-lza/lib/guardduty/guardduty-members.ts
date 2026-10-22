@@ -101,7 +101,10 @@ export abstract class GuardDutyMembers {
    * @param dryRun - Whether to perform a dry-run without making changes
    * @param logPrefix - Prefix for logging messages
    * @param featuresToEnable - Boolean flags specifying which GuardDuty features to enable
-   * @param additionalOptions - Optional settings for export frequency and malware snapshot retention
+   * @param additionalOptions - Optional settings: export frequency, malware snapshot retention, and
+   *   `ec2ProtectionConfigured` (the configured `ec2Protection.enable` value, `undefined` when EC2 protection
+   *   is not configured, so check with `=== undefined`; `false` means configured-and-off) which gates
+   *   UpdateMalwareScanSettings
    * @returns Promise that resolves when required actions are completed
    */
   public static async enable(
@@ -116,6 +119,7 @@ export abstract class GuardDutyMembers {
     additionalOptions?: {
       exportFrequency?: FindingPublishingFrequency;
       enableKeepMalwareSnapshots?: boolean;
+      ec2ProtectionConfigured?: boolean;
     },
   ) {
     // Update Main Detector
@@ -175,22 +179,41 @@ export abstract class GuardDutyMembers {
       }
     }
 
-    const updateDetectorMalwareParameters = {
-      DetectorId: detectorId,
-      EbsSnapshotPreservation: additionalOptions?.enableKeepMalwareSnapshots
-        ? EbsSnapshotPreservation.RETENTION_WITH_FINDING
-        : EbsSnapshotPreservation.NO_RETENTION,
-    };
-    if (dryRun) {
-      logger.dryRun('UpdateMalwareScanSettingsCommand', updateDetectorMalwareParameters, logPrefix);
-    } else {
-      await executeApi(
-        'UpdateMalwareScanSettingsCommand',
-        updateDetectorMalwareParameters,
-        () => client.send(new UpdateMalwareScanSettingsCommand(updateDetectorMalwareParameters)),
-        logger,
+    // UpdateMalwareScanSettings only configures EbsSnapshotPreservation, a sub-setting of EBS Malware
+    // Protection (EC2 Protection). Only touch it when the configuration addresses EC2 protection — the same
+    // "only send what is configured" rule the feature list uses. Gate on additionalOptions.ec2ProtectionConfigured
+    // (the raw config value, undefined when not configured) rather than featuresToEnable.ec2Protection, which
+    // is coerced to false when unconfigured and so cannot distinguish "not configured" from "configured off".
+    // When EC2 protection is not configured, configuring its snapshot setting would be a no-op, so skip the
+    // call entirely. This gate also keeps the call out of partitions without EBS Malware Protection (e.g. ADC)
+    // for the common "not configured there" case. A configured value of false still sends it (NO_RETENTION):
+    // the customer explicitly addressed the feature, so the setting is normalized. If EC2 protection IS
+    // configured in a partition that does not support EBS Malware Protection, the call fails with
+    // BadRequestException and the run surfaces it — that is a config error for the customer to fix (remove
+    // ec2Protection for that partition), not an error LZA silently swallows.
+    if (additionalOptions?.ec2ProtectionConfigured === undefined) {
+      logger.info(
+        'Skipping UpdateMalwareScanSettings on the delegated admin detector: EC2 protection is not configured.',
         logPrefix,
       );
+    } else {
+      const updateDetectorMalwareParameters = {
+        DetectorId: detectorId,
+        EbsSnapshotPreservation: additionalOptions?.enableKeepMalwareSnapshots
+          ? EbsSnapshotPreservation.RETENTION_WITH_FINDING
+          : EbsSnapshotPreservation.NO_RETENTION,
+      };
+      if (dryRun) {
+        logger.dryRun('UpdateMalwareScanSettingsCommand', updateDetectorMalwareParameters, logPrefix);
+      } else {
+        await executeApi(
+          'UpdateMalwareScanSettingsCommand',
+          updateDetectorMalwareParameters,
+          () => client.send(new UpdateMalwareScanSettingsCommand(updateDetectorMalwareParameters)),
+          logger,
+          logPrefix,
+        );
+      }
     }
 
     // Enable and configure GuardDuty members
@@ -537,6 +560,7 @@ export abstract class GuardDutyMembers {
     additionalOptions?: {
       exportFrequency?: FindingPublishingFrequency;
       enableKeepMalwareSnapshots?: boolean;
+      ec2ProtectionConfigured?: boolean;
     },
   ) {
     const features = GuardDutyMembers.getOrganizationFeaturesEnabled(autoEnableOrgMembers, featuresToEnable);
@@ -639,22 +663,33 @@ export abstract class GuardDutyMembers {
     }
 
     // Update malware scan settings
-    const parameters = {
-      DetectorId: detectorId,
-      EbsSnapshotPreservation: additionalOptions?.enableKeepMalwareSnapshots
-        ? EbsSnapshotPreservation.RETENTION_WITH_FINDING
-        : EbsSnapshotPreservation.NO_RETENTION,
-    };
-    if (dryRun) {
-      logger.dryRun('UpdateMalwareScanSettingsCommand', parameters, logPrefix);
-    } else {
-      await executeApi(
-        'UpdateMalwareScanSettingsCommand',
-        parameters,
-        () => client.send(new UpdateMalwareScanSettingsCommand(parameters)),
-        logger,
+    // See enable(): gate on additionalOptions.ec2ProtectionConfigured (undefined = EC2 protection not
+    // configured) so the call is skipped when EC2 protection is not configured. A configured value of false
+    // still sends it (NO_RETENTION). If EC2 protection is configured in a partition without EBS Malware
+    // Protection, the call fails with BadRequestException and the run surfaces it as a config error to fix.
+    if (additionalOptions?.ec2ProtectionConfigured === undefined) {
+      logger.info(
+        'Skipping UpdateMalwareScanSettings for member detectors: EC2 protection is not configured.',
         logPrefix,
       );
+    } else {
+      const parameters = {
+        DetectorId: detectorId,
+        EbsSnapshotPreservation: additionalOptions?.enableKeepMalwareSnapshots
+          ? EbsSnapshotPreservation.RETENTION_WITH_FINDING
+          : EbsSnapshotPreservation.NO_RETENTION,
+      };
+      if (dryRun) {
+        logger.dryRun('UpdateMalwareScanSettingsCommand', parameters, logPrefix);
+      } else {
+        await executeApi(
+          'UpdateMalwareScanSettingsCommand',
+          parameters,
+          () => client.send(new UpdateMalwareScanSettingsCommand(parameters)),
+          logger,
+          logPrefix,
+        );
+      }
     }
   }
 

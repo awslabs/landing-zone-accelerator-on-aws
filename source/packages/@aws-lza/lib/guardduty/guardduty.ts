@@ -765,6 +765,10 @@ async function enableService(
       {
         exportFrequency: props.configuration.exportFrequency,
         enableKeepMalwareSnapshots: props.configuration.enableKeepMalwareSnapshots,
+        // The configured ec2Protection.enable value (undefined when EC2 protection is not configured) gates
+        // UpdateMalwareScanSettings downstream. Uses the raw config value, not the feature flag, which is
+        // coerced to false when unconfigured and so cannot distinguish "not configured" from "configured off".
+        ec2ProtectionConfigured: props.configuration.protectionsConfiguration?.ec2Protection?.enable,
       },
     );
 

@@ -509,7 +509,8 @@ describe('GuardDutyMembers', () => {
         false,
         logPrefix,
         defaultFeatures,
-        { enableKeepMalwareSnapshots: true },
+        // EC2 protection configured -> the gate passes and the malware settings call fires.
+        { enableKeepMalwareSnapshots: true, ec2ProtectionConfigured: true },
       );
 
       expect(mockExecuteApi).toHaveBeenCalledWith(
@@ -522,6 +523,181 @@ describe('GuardDutyMembers', () => {
         expect.anything(),
         logPrefix,
       );
+    });
+
+    // UpdateMalwareScanSettings is gated on additionalOptions.ec2ProtectionConfigured being defined
+    // (!== undefined), because it only sets a sub-property of EBS Malware Protection and that API does not
+    // exist in partitions without the feature (e.g. ADC). A configured value of false still sends it
+    // (explicit opt-out); undefined (EC2 protection not configured) skips it. The gate reads from the
+    // additionalOptions.ec2ProtectionConfigured field, NOT from featuresToEnable.ec2Protection (which is
+    // coerced to false upstream and so cannot distinguish "not configured" from "configured off").
+    const emptyMembersPaginator = () => ({
+      [Symbol.asyncIterator]: async function* () {
+        yield { Members: [] };
+      },
+    });
+
+    const callNames = () => mockExecuteApi.mock.calls.map((call: unknown[]) => call[0]);
+    const malwareCalls = () =>
+      mockExecuteApi.mock.calls.filter((call: unknown[]) => call[0] === 'UpdateMalwareScanSettingsCommand');
+
+    test('should NOT call UpdateMalwareScanSettings when ec2Protection is not configured (both detectors)', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      // No ec2ProtectionConfigured in additionalOptions -> undefined -> EC2 protection was not configured,
+      // so the gate skips UpdateMalwareScanSettings on both the delegated-admin detector and the member
+      // detectors.
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        defaultFeatures,
+        { enableKeepMalwareSnapshots: true },
+      );
+
+      // Neither the delegated-admin detector nor the member detectors should receive the malware settings call.
+      expect(callNames()).not.toContain('UpdateMalwareScanSettingsCommand');
+    });
+
+    test('should call UpdateMalwareScanSettings with NO_RETENTION when ec2ProtectionConfigured:true and snapshots not kept', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        { ...defaultFeatures, ec2Protection: true },
+        // EC2 protection configured and enabled -> gate passes.
+        { ec2ProtectionConfigured: true },
+      );
+
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'UpdateMalwareScanSettingsCommand',
+        expect.objectContaining({ DetectorId: mockDetectorId, EbsSnapshotPreservation: 'NO_RETENTION' }),
+        expect.any(Function),
+        expect.anything(),
+        logPrefix,
+      );
+    });
+
+    test('should still call UpdateMalwareScanSettings (NO_RETENTION) when ec2ProtectionConfigured is false', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        { ...defaultFeatures, ec2Protection: false },
+        // false is an explicit opt-out, not "unconfigured": the field is defined so the gate passes.
+        { ec2ProtectionConfigured: false },
+      );
+
+      // false is an explicit opt-out, not "unconfigured", so the setting is still normalized to NO_RETENTION.
+      expect(mockExecuteApi).toHaveBeenCalledWith(
+        'UpdateMalwareScanSettingsCommand',
+        expect.objectContaining({ DetectorId: mockDetectorId, EbsSnapshotPreservation: 'NO_RETENTION' }),
+        expect.any(Function),
+        expect.anything(),
+        logPrefix,
+      );
+    });
+
+    test('should NOT log a dry-run UpdateMalwareScanSettings line when ec2Protection is not configured', async () => {
+      mockExecuteApi.mockResolvedValue({});
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      // No ec2ProtectionConfigured in additionalOptions -> undefined -> gate skips even the dry-run log line.
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        true, // dryRun
+        logPrefix,
+        defaultFeatures,
+        { enableKeepMalwareSnapshots: true },
+      );
+
+      expect(mockLogger.dryRun).not.toHaveBeenCalledWith(
+        'UpdateMalwareScanSettingsCommand',
+        expect.anything(),
+        logPrefix,
+      );
+    });
+
+    test('should propagate a BadRequestException from UpdateMalwareScanSettings (no longer swallowed)', async () => {
+      const { BadRequestException } = await import('@aws-sdk/client-guardduty');
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateMalwareScanSettingsCommand') {
+          throw new BadRequestException({
+            message: 'The request is rejected because the operation is not supported in this region',
+            $metadata: {},
+          });
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      // ec2Protection configured in a partition that does not support EBS Malware Protection: the gate passes
+      // (it only knows "configured"), the call is made, and GuardDuty rejects it with BadRequestException.
+      // The module does NOT swallow this — the run fails so the customer removes ec2Protection for that
+      // partition. (The config gate already handles the common "not configured there" case without a call.)
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          { ...defaultFeatures, ec2Protection: true },
+          { ec2ProtectionConfigured: true },
+        ),
+      ).rejects.toThrow('not supported in this region');
+
+      // The call was attempted (gate passed) before the error propagated.
+      expect(malwareCalls().length).toBeGreaterThanOrEqual(1);
+    });
+
+    test('should propagate a non-BadRequestException from UpdateMalwareScanSettings', async () => {
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateMalwareScanSettingsCommand') {
+          throw new Error('Network timeout');
+        }
+        return {};
+      });
+      mockPaginate.mockReturnValue(emptyMembersPaginator());
+
+      await expect(
+        GuardDutyMembers.enable(
+          mockClient,
+          mockAccounts,
+          [],
+          'NEW' as OrgFeatureStatus,
+          mockDetectorId,
+          false,
+          logPrefix,
+          { ...defaultFeatures, ec2Protection: true },
+          { ec2ProtectionConfigured: true },
+        ),
+      ).rejects.toThrow('Network timeout');
     });
 
     test('should call waitUntil to verify disable accounts removed', async () => {
@@ -1862,6 +2038,8 @@ describe('GuardDutyMembers', () => {
         false,
         logPrefix,
         defaultFeatures,
+        // EC2 protection configured so the gate passes and the UpdateMalwareScanSettings callback runs.
+        { ec2ProtectionConfigured: true },
       );
 
       expect(mockClient.send).toHaveBeenCalled();
