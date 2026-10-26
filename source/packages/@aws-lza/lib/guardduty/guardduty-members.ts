@@ -405,14 +405,19 @@ export abstract class GuardDutyMembers {
         logPrefix,
       );
     } catch (error: unknown) {
-      if (
+      // Two recoverable cases fall back to S3-only org configuration:
+      //  - Missing Organizations trusted access for malware-protection.guardduty.amazonaws.com
+      //    ("do not have required AWS Organization master permission").
+      //  - A feature name that does not exist in this region/partition (e.g. EBS_MALWARE_PROTECTION in LCK)
+      //    ("provided feature names are invalid"). The organization configuration carries the same feature
+      //    names as UpdateDetector/UpdateMemberDetectors, so it gets the same fallback those calls already have.
+      // Any other BadRequestException is re-thrown so a genuine error is not silently downgraded to S3-only.
+      const missingMalwareTrustedAccess =
         error instanceof BadRequestException &&
-        error.message?.includes('do not have required AWS Organization master permission') &&
-        features &&
-        features.length > 0
-      ) {
+        (error.message ?? '').includes('do not have required AWS Organization master permission');
+      if ((missingMalwareTrustedAccess || isUnsupportedFeatureError(error)) && features && features.length > 0) {
         logger.warn(
-          `UpdateOrganizationConfigurationCommand failed with all features, retrying with S3 protection only.`,
+          `UpdateOrganizationConfigurationCommand failed with all features ("${(error as BadRequestException).message}"), retrying with S3 protection only.`,
           logPrefix,
         );
         const s3OnlyFeatures = features.filter(feat => feat.Name === 'S3_DATA_EVENTS');

@@ -238,6 +238,56 @@ describe('GuardDutyMembers', () => {
       );
     });
 
+    test('should fallback to S3-only org config when UpdateOrganizationConfiguration rejects unsupported feature names', async () => {
+      const { BadRequestException } = await import('@aws-sdk/client-guardduty');
+      let orgConfigCallCount = 0;
+      mockExecuteApi.mockImplementation(async (commandName: string) => {
+        if (commandName === 'UpdateOrganizationConfigurationCommand') {
+          orgConfigCallCount++;
+          if (orgConfigCallCount === 1) {
+            // Message GuardDuty returns when a feature name does not exist in the region/partition (e.g. LCK).
+            throw new BadRequestException({
+              message: 'The request failed because one or more provided feature names are invalid.',
+              $metadata: {},
+            });
+          }
+        }
+        return {};
+      });
+      const mockPaginator = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { Members: [] };
+        },
+      };
+      mockPaginate.mockReturnValue(mockPaginator);
+
+      await GuardDutyMembers.enable(
+        mockClient,
+        mockAccounts,
+        [],
+        'NEW' as OrgFeatureStatus,
+        mockDetectorId,
+        false,
+        logPrefix,
+        defaultFeatures,
+      );
+
+      const orgConfigCalls = mockExecuteApi.mock.calls.filter(
+        (call: unknown[]) => call[0] === 'UpdateOrganizationConfigurationCommand',
+      );
+      expect(orgConfigCalls).toHaveLength(2);
+      // The first call carried the full feature list, including names that may not exist in the partition.
+      const firstNames = (orgConfigCalls[0][1].Features as { Name: string }[]).map(f => f.Name);
+      expect(firstNames).toContain('EBS_MALWARE_PROTECTION');
+      // The retry carries S3 only.
+      const fallbackNames = (orgConfigCalls[1][1].Features as { Name: string }[]).map(f => f.Name);
+      expect(fallbackNames).toEqual(['S3_DATA_EVENTS']);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('provided feature names are invalid'),
+        logPrefix,
+      );
+    });
+
     test('should rethrow non-SLR BadRequestException during enable without fallback', async () => {
       const { BadRequestException } = await import('@aws-sdk/client-guardduty');
       mockExecuteApi.mockImplementation(async (commandName: string) => {
