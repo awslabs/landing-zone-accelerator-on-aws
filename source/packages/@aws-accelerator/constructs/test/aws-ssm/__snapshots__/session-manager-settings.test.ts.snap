@@ -16,7 +16,7 @@ exports[`SsmSessionManagerSettings > Construct(SsmSessionManagerSettings):  Snap
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.7",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -244,7 +244,7 @@ exports[`SsmSessionManagerSettingsWithSessionPreferences > Construct(SsmSessionM
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.7",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
           },
         },
         "Handler": "__entrypoint__.handler",
