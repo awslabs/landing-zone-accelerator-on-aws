@@ -54,7 +54,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "index.handler",
@@ -155,7 +155,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -295,7 +295,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -385,7 +385,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -690,7 +690,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 1`
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.17.0-rc.8",
+        "Value": "1.17.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -723,7 +723,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "index.handler",
@@ -824,7 +824,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -964,7 +964,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1176,7 +1176,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 2`
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.17.0-rc.8",
+        "Value": "1.17.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1246,7 +1246,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "index.handler",
@@ -1347,7 +1347,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-111111111111-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -1487,7 +1487,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1577,7 +1577,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -1882,7 +1882,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 3`
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.17.0-rc.8",
+        "Value": "1.17.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1915,7 +1915,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "index.handler",
@@ -2016,7 +2016,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`
         "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/Custom::PortfolioAssociationsRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
                 "CustomPortfolioAssociationsRoleArnProviderCustomPortfolioAssociationsRoleArnProviderProviderLambda303083B3",
@@ -2149,7 +2149,7 @@ exports[`CustomizationsStack > Construct(CustomizationsStack):  Snapshot Test 4`
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
         "Type": "String",
-        "Value": "1.17.0-rc.8",
+        "Value": "1.17.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

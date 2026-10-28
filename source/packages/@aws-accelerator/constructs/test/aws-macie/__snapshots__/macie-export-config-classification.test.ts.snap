@@ -81,7 +81,7 @@ exports[`MacieExportConfigClassification > Construct(MacieExportConfigClassifica
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0-rc.8",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
         "Handler": "__entrypoint__.handler",

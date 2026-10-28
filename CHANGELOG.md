@@ -5,31 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.18.0] - 
-
-### Added
-
-- feat(installer-container): publish the installer ECS task's VPC, subnet, and security group IDs to stack-scoped SSM parameters under `/<prefix>/<stackName>/network/` (qualifier-scoped when using an external pipeline account); values resolve to the created resources or the customer-provided IDs when UseExistingVpc is Yes
-
-### Changed
-
-- chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide
-- chore(organizations): drop unread account status and name fields in move-account handler
-- chore(guardduty): scope the module session policy's `s3:PutObject`/`s3:GetObject` to the findings-export destination instead of `Resource: "*"`
-
-### Fixed
-
-- fix(control-tower): skip the AWS Control Tower Account Factory portfolio association during OU registration and stop creating the `<prefix>-CrossAccount-ServiceCatalog-Role` IAM role (`<prefix>` is the accelerator prefix, `AWSAccelerator` by default) in the `aws-eusc` partition, where AWS Service Catalog is not available; on upgrade, existing `aws-eusc` deployments delete this unused role from the Operations stack. If a policy was attached to or added on the role outside the accelerator, IAM rejects the delete with `DeleteConflict` and the Operations stack update rolls back in that account; remove that policy before upgrading
-- fix(nfw): add stateful default action types drop_established_app_layer_to_server and alert_established_app_layer_to_server
-- fix(networking): create the subnet IPv4 CIDR SSM parameter in share-target accounts for IPAM-allocated subnets when useV2Stacks is enabled, restoring V1 behavior
-- fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
-- fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded by a shared per-invocation deadline) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
-- fix(deps): update adm-zip 0.6.0->0.6.1 to remediate CVE-2026-77301 (HIGH, denial of service via uncontrolled memory allocation) flagged by the daily vulnerability scan
-- fix(organizations): reduce Organizations API calls made by the Prepare stage SCP count validation so it no longer exceeds the 15 minute Lambda limit on large organizations; attached policy details from `ListPoliciesForTarget` are used directly instead of re-listing every SCP in the organization once per attached policy per target, `ListTagsForResource` results are cached per policy for the invocation, and phase start/end timing is logged so a timeout identifies the responsible validation phase
-- fix(scp): apply `quarantineNewAccounts` in all partitions instead of commercial `aws` only
-- fix(installer): grant organization-scoped cross-account read access to stack-resources-retention templates staged in the global region CDK assets bucket, so CloudFormation in member accounts can fetch them when the global region is not an enabled region; the grant is omitted when the management account is not in an organization, and existing global region toolkit stacks that predate the grant are re-bootstrapped on the next installer run
-
-## [1.17.0] - 
+## [1.17.0] - 2026-10-28
 
 ### Added
 
@@ -46,24 +22,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(iam): add `accessAnalyzer.accountAnalyzer` to create an account level IAM Access Analyzer external access analyzer in every account and enabled region. Optional `accountAnalyzer.deploymentTargets` scopes which accounts and regions receive the analyzer
 - feat(data-perimeter): detect tampering of resource policies for the subset-check resource types (S3, KMS, IAM trust, Secrets Manager, ECR, SNS, SQS, OpenSearch, EventBridge, EFS, Backup vault, CodeArtifact, API Gateway). Duplicate-Sid and mandated-baseline drift are always detected; the statement-level check that flags appended permissive statements runs only when the `SourceAccount` allowlist is configured on the policy set. Detection only — remediation still never removes a statement
 - feat(ssm): add optional `idleSessionTimeout`, `maxSessionDuration`, `cloudWatchStreamingEnabled`, and `shellProfile` to `logging.sessionManager`, written to the Session Manager document only when configured
+- feat(installer-container): publish the installer ECS task's VPC, subnet, and security group IDs to stack-scoped SSM parameters under `/<prefix>/<stackName>/network/` (qualifier-scoped when using an external pipeline account); values resolve to the created resources or the customer-provided IDs when UseExistingVpc is Yes
+- feat(customizations): add an optional `type` (`String`, `Number`, `List<Number>`, or `CommaDelimitedList`) to customization CloudFormation stack parameters so each value is passed to the template as the declared type; defaults to `String`
+- feat(guardduty): enable the AWS Organizations trusted access that GuardDuty Malware Protection for EC2 requires (`malware-protection.guardduty.amazonaws.com`) from the management account when that protection is enabled in at least one Region
+- feat(modules): add the `GUARDDUTY_OPERATION_TIMEOUT` (default 900000 ms) and `MACIE_OPERATION_TIMEOUT` (default 300000 ms) environment variables to raise the per-operation timeout of the GuardDuty and Macie modules in slower partitions or large organizations, and extend the GuardDuty member enrollment wait
+- feat(account-tagging): add optional `tags` to accounts in `accounts-config.yaml`, applied to each account through AWS Organizations; LZA adds and updates these tags but does not remove them
 
 ### Fixed
+
 - fix(control-tower): include the operation status message in the error and warning when an AWS Control Tower landing zone create, update or reset operation fails, so the pipeline log shows why the operation failed
 - fix(guardduty): grant `organizations:ListRoots` to the GuardDuty delegated-admin enablement principal, which GuardDuty now requires for `EnableOrganizationAdminAccount`; without it greenfield installs with `guardduty.enable: true` failed at the Organization stage with an `organizations:ListRoots` AccessDeniedException
 - fix(iam): set `SAML:aud` to the regional sign-in endpoint (`https://<region>.signin.amazonaws-eusc.eu/saml`) for `iam-config.yaml` `roleSets[].roles[].assumedBy[].type: provider` roles in the `aws-eusc` partition; previously the trust policy rendered an empty `SAML:aud` and `AssumeRoleWithSAML` could not succeed. Configure the identity provider with the regional SAML metadata from the same Region as the LZA home Region
 - fix(networking): emit the transit gateway VPC attachment `options` block (`applianceModeSupport`, `dnsSupport`, `ipv6Support`, `securityGroupReferencingSupport`) in partitions other than `aws` and `aws-us-gov` (`aws-iso`, `aws-iso-b`, `aws-iso-e`, `aws-iso-f`, `aws-cn`, `aws-eusc`); previously these options were parsed and validated but silently dropped at synth, so the attachment was created with EC2 API defaults (`ApplianceModeSupport: disable`), breaking multi-AZ Network Firewall inspection VPCs. Only options explicitly set in config are emitted, so deployments that do not set `options` render an unchanged template
-- fix(logging): honor `vpcFlowLogs` and `transitGatewayFlowLogs` custom `LogFormat` and tags in the `aws-iso` and `aws-iso-b` partitions; previously the ISO/ISO-B synth aspects unconditionally stripped `LogFormat`, `Tags`, and `MaxAggregationInterval` from every `AWS::EC2::FlowLog`, so `defaultFormat: false`/`customFields` and accelerator tags were silently discarded and flow logs fell back to the 14-field default format. Now that ADC CloudFormation supports `LogFormat` and `Tags` they are passed through. `MaxAggregationInterval` is still not supported in these partitions and continues to be stripped, so flow logs there keep the 600-second default aggregation interval. On upgrade, changing `LogFormat` replaces existing VPC and TGW flow logs; the retained `FlowLogsGroup` log group is not modified, so no log data is lost (issue #4997)
+- fix(logging): honor `vpcFlowLogs` and `transitGatewayFlowLogs` custom `LogFormat` and tags in the `aws-iso` and `aws-iso-b` partitions; previously the ISO/ISO-B synth aspects unconditionally stripped `LogFormat`, `Tags`, and `MaxAggregationInterval` from every `AWS::EC2::FlowLog`, so `defaultFormat: false`/`customFields` and accelerator tags were silently discarded and flow logs fell back to the 14-field default format. Now that ADC CloudFormation supports `LogFormat` and `Tags` they are passed through. `MaxAggregationInterval` is still not supported in these partitions and continues to be stripped, so flow logs there keep the 600-second default aggregation interval. On upgrade, changing `LogFormat` replaces existing VPC and TGW flow logs; the retained `FlowLogsGroup` log group is not modified, so no log data is lost
 - fix(deps): remediate CVEs flagged by the daily vulnerability scan by updating js-yaml 4.3.1->4.3.2 (CVE-2026-84375, HIGH), postcss 8.5.18->8.5.28 (CVE-2026-69153), vitest and @vitest/mocker 4.1.8->4.1.11 (CVE-2026-84373), and @humanfs/node 0.16.7->0.16.8 (GHSA-p498-v437-472g); @vitest/coverage-v8 is bumped to 4.1.11 to stay aligned with the vitest core version
 - fix(deps): remediate HIGH CVEs (markdown-it, undici, vite)
 - fix(networking): in external deployments, resolve Transit Gateway attachment SSM parameters for VPCs owned by the pipeline account by assuming into that account instead of reading with management-account credentials; previously the tgw-associations-and-propagations module failed with `SSM parameter not found` for any TGW-attached VPC owned by the account the pipeline runs in
-- fix(logging): grant the log delivery service principal account-wide `s3:PutObject` on the VPC flow logs bucket so every VPC's S3 flow logs deliver; previously LZA relied on the VPC Flow Logs service to auto-attach the write permission per flow log, and concurrent creation of multiple VPCs' S3 flow logs in one account raced on the bucket policy and silently dropped some VPC path prefixes, causing AccessDenied on delivery (issue #3604)
+- fix(logging): grant the log delivery service principal account-wide `s3:PutObject` on the VPC flow logs bucket so every VPC's S3 flow logs deliver; previously LZA relied on the VPC Flow Logs service to auto-attach the write permission per flow log, and concurrent creation of multiple VPCs' S3 flow logs in one account raced on the bucket policy and silently dropped some VPC path prefixes, causing AccessDenied on delivery
 - fix(networking): synthesize Route 53 Resolver forward rules defined under `vpcRoute53Resolver.endpoints[].rules` at the VPC level, matching the existing `centralNetworkServices.route53Resolver` behavior
 - fix(tagging): apply global-config tags as overridable defaults so a resource-level tag with the same key (e.g. on a VPC or route table) takes precedence
 - fix(asea): import ASEA-created Customer Gateways and Site-to-Site VPN connections so their Transit Gateway VPN attachments can be referenced for route table association and propagation in network-config
 - fix(prepare): defer stack-resources-retention for disabled opt-in Regions instead of failing the Prepare stage with `InvalidClientTokenId` when an added account has not yet enabled an opt-in Region listed in `enabledRegions`; the affected account/Region is skipped without persisting a terminal retention state and is retried on a later run once the Region is enabled
 - fix(security-hub): fail the manage-automation-rules module when the Security Hub API rejects a rule instead of reporting the stage as successful
 - fix(networking): look up a RAM-shared VPC's ID consumed and reconcile shared SSM parameters against live state
-- fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper (issue #4882)
+- fix(accelerator): surface the underlying cause and stack errors when CDK app assembly/synth fails, instead of logging only the generic `Assembly builder failed` wrapper
 - fix(guardduty): auto-include the management and delegated-admin (Audit) accounts when guardduty.deploymentTargets omits them
 - fix(macie): default `automatedDiscoveryEnabled` to `false` so Amazon Macie automated sensitive data discovery is opt-in. It defaulted to on in the SDK Macie module across the 1.16.x releases (1.16.0 through the last 1.16.x before 1.17.0); deployments on those versions that left the field unset had discovery enabled and it will be turned off on the first pipeline run after upgrading to 1.17.0. Set `centralSecurityServices.macie.automatedDiscoveryEnabled: true` to keep it enabled (also required when `classificationScopeExcludedBuckets` is set, otherwise config validation fails). Deployments before 1.16.0 are unaffected — the earlier Macie custom resource never enabled automated discovery
 - fix(logging): only add the GuardDuty central-logs bucket prefix once — an inverted `useCustomPrefix` check in the opt-in-region loop added an unwanted `guardduty` prefix when a custom GuardDuty export prefix was configured alongside an opt-in region
@@ -73,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(lambda): remove unused rolePolicyFile from targetDocumentLambda remediation config
 - fix(networking): make ALB listener targetGroup optional for redirect and fixed-response, and reject it where not allowed
 - fix(idc): missing org id for Identity Center dependency policy replacement
-- fix(networking): validate transit gateway and IPAM pool shareTargets cover VPC deployment-target accounts (issue #831)
+- fix(networking): validate transit gateway and IPAM pool shareTargets cover VPC deployment-target accounts
 - fix(lambda): correct misleading SCP references in organization policy remediation lambda. SNS notification Subject lines changed from `Service Control Policy Remediation Failure/Success` to `Organization Policy Remediation Failure/Success`. Customers with email rules or automation matching the old Subject strings should update them after upgrade.
 - fix(service-quotas): tolerate existing request on quota reapply
 - fix(service-catalog): prefix portfolio propagation role to satisfy cross-account trust policy
@@ -83,25 +65,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(constructs): retry RAM resource share invitation fetch on UnauthorizedException to handle eventual consistency
 - fix(config): make custom Config rule frequency and triggering resources optional
 - fix(scp): honor OU ignore flag when reverting SCP changes
-- fix(identity-center): grant iam:CreateSAMLProvider to the assignment custom resource so management account assignments succeed with an external IdP (issue #2357)
-- fix(diagnostics): read configuration from S3 source for the diagnostics pack report
-- fix(diagnostics): read configuration from codeconnection source for the diagnostics pack report
+- fix(identity-center): grant iam:CreateSAMLProvider to the assignment custom resource so management account assignments succeed with an external IdP
 - fix(uninstaller): scope retained resources cleanup to owner stack
 - fix(uninstaller): scope retained resource cleanup for the CDKToolkit bootstrap stack per account/region
-- fix(networking): validate IPAM pool allocationResourceTags are satisfied by consuming VPCs (issue #955)
+- fix(networking): validate IPAM pool allocationResourceTags are satisfied by consuming VPCs
 - fix(service-quotas): retry quota increase requests on active-request capacity exhaustion
 - fix(config): make acceleratorMetadata readOnlyAccessRoleArns optional so it can be removed once added
-- fix(identity-center): retry account assignment create and delete on ConflictException so concurrent assignments no longer fail the deployment (issue #2437)
+- fix(identity-center): retry account assignment create and delete on ConflictException so concurrent assignments no longer fail the deployment
 - fix(s3): add explicit DependsOn between bucket policy and bucket to prevent CloudFormation race condition (issue #402)
 - fix(securityhub): skip deploymentTargets validation for disabled standards (issue #537)
 - fix(customizations): support optional autoScalingGroupName for firewall and application auto scaling groups (note: setting this value on an existing auto scaling group forces resource replacement)
-- docs(installer-container): document the Fargate On-Demand vCPU quota the deployment task needs (8 vCPU against an AWS default of 6) in the container guide and the cost and quotas page, and add AWS European Sovereign Cloud steps to the container guide: host the installer template in Amazon S3 in the partition (it is larger than the 51,200-byte inline limit) and copy the container image into a private Amazon ECR repository in the partition
-- docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
 - fix(s3): allow expired object delete marker only lifecycle rules
-- chore: upgrade to node24
 - fix(cloudwatch): skip metric filters referencing the organization CloudTrail log group when the organization trail is not enabled, preventing `The specified log group does not exist` failures (issue #327)
 - fix(logging): default the account-level CloudWatch Logs subscription selectionCriteria to exclude LZA's own Firehose records-processor log group in the Log Archive account, preventing a log-delivery recursion when `subscription.type` is `ACCOUNT` and `selectionCriteria` is omitted. Operator-supplied selectionCriteria is unchanged (issue #1193)
-- docs(logging): call out on the `cloudwatchLogs.subscription` `type` and `selectionCriteria` properties that ACCOUNT mode auto-excludes the Firehose records-processor log group only when `selectionCriteria` is omitted, so an operator-supplied `selectionCriteria` must include that exclusion itself to avoid the recursion (issue #1193)
 - fix(identity-center): enable Identity Center delegated admin registration in the aws-eusc partition (issue #1160)
 - fix(config): reject Identity Center assignment principalId values that are not identity store ids
 - fix(pipeline): derive generated organization-config organizational units from the generated accounts instead of hard-coded names
@@ -109,12 +85,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(customizations): stop injecting the SOLUTION_ID environment variable into Lambda functions defined in customization CloudFormation templates.
 - fix(networking): honor an explicit crossZoneLoadBalancing: false for Gateway and Network Load Balancers. This attribute was previously always rendered as true, so any existing GWLB/NLB configured with crossZoneLoadBalancing: false is currently running with cross-zone load balancing enabled; upgrading renders false and turns it off in place on the next deploy (mutable attribute, no resource replacement). Before upgrading, confirm targets/appliances are registered in every enabled Availability Zone so an AZ node with no healthy local target does not black-hole traffic.
 - fix(sts): stop hardcoding the STS endpoint in the accelerator pipeline/CLI execution environment and the `@aws-lza` modules, so the AWS SDK resolves the regional endpoint natively and honors the standard `AWS_ENDPOINT_URL_STS` / `AWS_ENDPOINT_URL` and `AWS_USE_FIPS_ENDPOINT` overrides where those variables are present. This does not cover STS clients invoked inside Lambda custom resources, which do not receive these environment variables at runtime (issue #1183)
-- fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later (issue #4188)
+- fix(config): reject cdkOptions.centralizeBuckets set to false, which makes the accelerator bootstrap with the default CDK template instead of its custom template so the deployment roles the Prepare stage assumes are never created; this setting is unsupported in 1.14.0 and later
 - fix(deps): remediate HIGH CVEs (brace-expansion, fast-uri, js-yaml, nanoid, postcss, ip-address, undici)
 - fix(deps): remediate HIGH/CRITICAL CVEs (handlebars, fast-uri, undici, brace-expansion, source-map-js, ip-address, basic-ftp, markdown-it)
 - fix(networking): create the wildcard record in the private hosted zone for centralized ecr-fips.dkr and bedrock-agentcore.gateway interface endpoints, matching ecr.dkr
-- fix(accelerator): wait for each stack's `.diff` file to finish writing before the diff step counts them, so the review diff no longer fails intermittently with "Number of template files N does not match number of diff files M" (issue #5011)
-- fix(logging): keep `KmsKeyId` and `Tags` on CloudWatch Logs log groups in the `aws-us-gov` partition so the configured CMK is applied at creation. Breaking change for existing GovCloud deployments: on upgrade, existing log groups are updated in place to associate the CMK and apply tags, and log groups that were not yet CMK-encrypted start encrypting new log data with it; already ingested data is unchanged. Before upgrading, grant KMS permissions on the CMK to any principal outside the accelerator that reads or writes these log groups (issue #5013)
+- fix(accelerator): wait for each stack's `.diff` file to finish writing before the diff step counts them, so the review diff no longer fails intermittently with "Number of template files N does not match number of diff files M"
+- fix(logging): keep `KmsKeyId` and `Tags` on CloudWatch Logs log groups in the `aws-us-gov` partition so the configured CMK is applied at creation. Breaking change for existing GovCloud deployments: on upgrade, existing log groups are updated in place to associate the CMK and apply tags, and log groups that were not yet CMK-encrypted start encrypting new log data with it; already ingested data is unchanged. Before upgrading, grant KMS permissions on the CMK to any principal outside the accelerator that reads or writes these log groups
+- fix(control-tower): skip the AWS Control Tower Account Factory portfolio association during OU registration and stop creating the `<prefix>-CrossAccount-ServiceCatalog-Role` IAM role (`<prefix>` is the accelerator prefix, `AWSAccelerator` by default) in the `aws-eusc` partition, where AWS Service Catalog is not available; on upgrade, existing `aws-eusc` deployments delete this unused role from the Operations stack. If a policy was attached to or added on the role outside the accelerator, IAM rejects the delete with `DeleteConflict` and the Operations stack update rolls back in that account; remove that policy before upgrading
+- fix(nfw): add stateful default action types drop_established_app_layer_to_server and alert_established_app_layer_to_server
+- fix(networking): create the subnet IPv4 CIDR SSM parameter in share-target accounts for IPAM-allocated subnets when useV2Stacks is enabled, restoring V1 behavior
+- fix(deps): update adm-zip 0.6.0->0.6.1 to remediate CVE-2026-77301 (HIGH, denial of service via uncontrolled memory allocation) flagged by the daily vulnerability scan
+- fix(organizations): reduce Organizations API calls made by the Prepare stage SCP count validation so it no longer exceeds the 15 minute Lambda limit on large organizations; attached policy details from `ListPoliciesForTarget` are used directly instead of re-listing every SCP in the organization once per attached policy per target, `ListTagsForResource` results are cached per policy for the invocation, and phase start/end timing is logged so a timeout identifies the responsible validation phase
+- fix(scp): apply `quarantineNewAccounts` in all partitions instead of commercial `aws` only
+- fix(installer): grant organization-scoped cross-account read access to stack-resources-retention templates staged in the global region CDK assets bucket, so CloudFormation in member accounts can fetch them when the global region is not an enabled region; the grant is omitted when the management account is not in an organization, and existing global region toolkit stacks that predate the grant are re-bootstrapped on the next installer run
+- fix(identity-center): report the Identity Center assignment custom resource as FAILED when a user or group lookup in the identity store fails; previously CloudFormation received SUCCESS and the assignment was silently not applied, so a deployment whose assignment references a missing principal now fails with the lookup error
+- fix(identity-center): when a permission set is renamed or replaced, delete the account assignments that belonged to the previous permission set and create only the assignments that do not already exist
+- fix(control-tower): allow in-place landing zone updates and resets when `controlTower.landingZone.version` matches the deployed landing zone version (3.1 and later), reusing the deployed manifest and overlaying only the accelerator-managed fields (governed Regions, Identity Center access, organization trail enablement, and log bucket retention); a version that matches neither the deployed nor the latest available version still fails
+- fix(control-tower): grant `aws-controltower-ReadOnlyExecutionRole` in the Log Archive account `kms:Decrypt` on the centralized logging KMS key through an inline role policy and a key policy statement, reapplied on every run so the access survives a Control Tower repair that recreates the role
+- fix(networking): create Route 53 hosted zones and record sets for VPC interface endpoints in dependency-ordered batches of five to avoid Route 53 `Rate exceeded` throttling
+- fix(installer): set execute permissions on the solution's shell scripts when the source code is staged from Amazon S3
+- fix(config): accept rule variables such as `$HOME_NET` or `[$HOME_NET]` in Network Firewall stateful rule header `source` and `destination`, including the built-in `HOME_NET` and `EXTERNAL_NET` variables, which no longer need a `ruleVariables.ipSets` declaration
+- fix(security-hub): treat an omitted `excludeRegions` as an empty list when resolving the Security Hub module's target Regions instead of failing
+- fix(iam): retry throttling and transient errors when creating service-linked roles and while waiting for the new role to become visible
+- fix(scp): match only the IAM role name of the calling principal when deciding whether to skip reverting an SCP change
+
+### Changed
+
+- chore: upgrade to node24
+- chore: replace Lerna with Yarn 4 (`packageManager: yarn@4.10.3`) for building and testing the solution packages
+- chore(diagnostics): remove the installer-deployed Diagnostics Pack (stack, per-account cross-account access role, and report Lambda) now that pipeline failure diagnostics are collected automatically; the installer parameter EnableDiagnosticsPack is removed, so any deployment automation that passes that parameter must drop it before upgrading, and while the per-account DiagnosticsPackAccessRole is deleted on the next pipeline run, the termination-protected DiagnosticsPackStack in the pipeline account must be removed manually as documented in the troubleshooting guide
+- chore(organizations): drop unread account status and name fields in move-account handler
+- chore(guardduty): scope the module session policy's `s3:PutObject`/`s3:GetObject` to the findings-export destination instead of `Resource: "*"`
+- docs(installer-container): document the Fargate On-Demand vCPU quota the deployment task needs (8 vCPU against an AWS default of 6) in the container guide and the cost and quotas page, and add AWS European Sovereign Cloud steps to the container guide: host the installer template in Amazon S3 in the partition (it is larger than the 51,200-byte inline limit) and copy the container image into a private Amazon ECR repository in the partition
+- docs(customizations): correct misleading description of the auto scaling group `name` field (it is a logical config identifier, not the physical AWS auto scaling group name)
+- docs(logging): call out on the `cloudwatchLogs.subscription` `type` and `selectionCriteria` properties that ACCOUNT mode auto-excludes the Firehose records-processor log group only when `selectionCriteria` is omitted, so an operator-supplied `selectionCriteria` must include that exclusion itself to avoid the recursion (issue #1193)
+
+## [1.16.3] - 2026-09-14
+
+### Fixed
+
+- fix(accounts): wait for a newly created account to reach the ACTIVE lifecycle state before completing account creation, so provisioning succeeds in partitions/regions where a new account remains non-ACTIVE (e.g. PENDING_ACTIVATION) for several minutes after creation
+- fix(accounts): in Prepare environment validation, poll a newly created account that is in the transient PENDING_ACTIVATION state until it becomes ACTIVE (bounded) before allowing the pipeline to proceed, and fail if it does not activate within the wait window; all other non-ACTIVE states still fail validation immediately
+- fix(deps): remediate HIGH CVEs (js-yaml, fast-uri, smol-toml)
 
 ## [1.16.2] - 2026-08-31
 
@@ -388,7 +400,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(networking): add support for transit gateway flow logs
 - feat(pipeline): replace codestar notification with EventBridge and SNS
 - feat(security-hub): added support for AWS Security Hub automation rules
-- feat(account-tagging): added support for account tagging
 
 ### Fixed
 
