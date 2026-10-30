@@ -615,8 +615,8 @@ export abstract class Accelerator {
         }),
       );
       if (promises.length > 100) {
-        await Promise.all(promises);
-        promises.length = 0;
+        await Promise.any(promises);
+        promises.length -= 1;
       }
     }
     await Promise.all(promises);
@@ -694,8 +694,8 @@ export abstract class Accelerator {
             }),
           );
           if (promises.length >= maxStacks) {
-            await Promise.all(promises);
-            promises.length = 0;
+            await Promise.any(promises);
+            promises.length -= 1;
           }
           break;
         //
@@ -711,8 +711,8 @@ export abstract class Accelerator {
             }),
           );
           if (promises.length >= maxStacks) {
-            await Promise.all(promises);
-            promises.length = 0;
+            await Promise.any(promises);
+            promises.length -= 1;
           }
           break;
       }
@@ -841,8 +841,8 @@ export abstract class Accelerator {
           );
 
           if (promises.length >= maxStacks) {
-            await Promise.all(promises);
-            promises.length = 0;
+            await Promise.any(promises);
+            promises.length -= 1;
           }
         }
       }
@@ -935,8 +935,8 @@ export abstract class Accelerator {
         }),
       );
       if (promises.length >= maxStacks) {
-        await Promise.all(promises);
-        promises.length = 0;
+        await Promise.any(promises);
+        promises.length -= 1;
       }
     }
     // exhaust each runOrder before proceeding to the next
@@ -1004,8 +1004,8 @@ export abstract class Accelerator {
           }),
         );
         if (promises.length >= maxStacks) {
-          await Promise.all(promises);
-          promises.length = 0;
+          await Promise.any(promises);
+          promises.length -= 1;
         }
       }
     }
@@ -1076,11 +1076,11 @@ export abstract class Accelerator {
             }),
           );
           if (promises.length >= maxStacks) {
-            await Promise.all(promises).catch(err => {
+            await Promise.any(promises).catch(err => {
               logger.error(err);
               throw new Error(`Configuration validation failed at runtime.`);
             });
-            promises.length = 0;
+            promises.length -= 1;
           }
         }
       }
