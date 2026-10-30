@@ -32,7 +32,7 @@ Check for both of these shapes before upgrading:
 
 | Removed in | Parameter | Action |
 | ---------- | --------- | ------ |
-| 1.18.0 | `EnableDiagnosticsPack` | Drop the parameter from any installer stack update automation. The Diagnostics Pack it enabled has been removed; failure diagnostics are now collected automatically on every failed pipeline run. See [Removing the deprecated Diagnostics Pack](./troubleshooting.md#removing-the-deprecated-diagnostics-pack) for the leftover resources. |
+| 1.17.0 | `EnableDiagnosticsPack` | Drop the parameter from any installer stack update automation. The Diagnostics Pack it enabled has been removed; failure diagnostics are now collected automatically on every failed pipeline run. See [Removing the deprecated Diagnostics Pack](./troubleshooting.md#removing-the-deprecated-diagnostics-pack) for the leftover resources. |
 
 ## Configuration Changes That Replace Resources
 
