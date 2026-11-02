@@ -1,0 +1,39 @@
+
+      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+              <marker id="arrowhead-_aws-accelerator_modules" markerWidth="10" markerHeight="7" 
+              refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#000"/>
+              </marker>
+          </defs>
+          <g>
+  
+      <circle cx="200" cy="100" r="60" fill="#ADD8E6" stroke="#000"/>
+      <text x="200" y="92.5"
+                 text-anchor="middle" font-family="Arial" font-size="12">@aws-accelerator</text><text x="200" y="107.5"
+                 text-anchor="middle" font-family="Arial" font-size="12">/modules</text>
+  
+          <circle cx="100" cy="260" r="60" fill="#90EE90" stroke="#000"/>
+          <text x="100" y="252.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">@aws-accelerator</text><text x="100" y="267.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">/config</text>
+          
+          <!-- Add curved arrow -->
+          <path d="M200 160 
+                   Q200 180,
+                     100 200"
+                fill="none" stroke="#000" stroke-width="2" 
+                marker-end="url(#arrowhead-_aws-accelerator_modules)"/>
+      
+          <circle cx="300" cy="260" r="60" fill="#90EE90" stroke="#000"/>
+          <text x="300" y="252.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">@aws-accelerator</text><text x="300" y="267.5"
+                     text-anchor="middle" font-family="Arial" font-size="12">/utils</text>
+          
+          <!-- Add curved arrow -->
+          <path d="M200 160 
+                   Q200 180,
+                     300 200"
+                fill="none" stroke="#000" stroke-width="2" 
+                marker-end="url(#arrowhead-_aws-accelerator_modules)"/>
+      </g></svg>
