@@ -392,29 +392,30 @@ describe('SecurityStack - Accelerator Metadata', () => {
     expect(securityStack.metadataRule).toBeDefined();
   });
 
-  it('should use the bucket name prefix for metadata Lambda S3 permissions', () => {
-    const props = createMetadataEnabledProps({ qualifier: 'custom-qualifier' });
-    const { template } = createSecurityStackWithTemplate('test-security-stack-metadata-bucket-prefix', props);
-    const policies = template.findResources('AWS::IAM::Policy');
-    const statements = Object.values(policies)[0].Properties.PolicyDocument.Statement;
-    const s3Statement = statements.find((statement: any) => statement.Action.includes('s3:GetObject*'));
-    const resourceSuffixes = s3Statement.Resource.map((resource: any) => resource['Fn::Join'][1][2]);
+  it.each([
+    { qualifier: undefined, expectedBucketPrefix: 'test-bucket' },
+    { qualifier: 'aws-accelerator', expectedBucketPrefix: 'test-bucket' },
+    { qualifier: 'custom-qualifier', expectedBucketPrefix: 'custom-qualifier' },
+  ])(
+    'should use $expectedBucketPrefix for metadata Lambda S3 permissions when qualifier is $qualifier',
+    ({ qualifier, expectedBucketPrefix }) => {
+      const props = createMetadataEnabledProps({ qualifier });
+      const { template } = createSecurityStackWithTemplate('test-security-stack-metadata-bucket-prefix', props);
+      const policies = template.findResources('AWS::IAM::Policy');
+      const statements = Object.values(policies).flatMap((policy: any) => policy.Properties.PolicyDocument.Statement);
+      const s3Statement = statements.find((statement: any) => statement.Action.includes('s3:GetObject*'));
+      const resourceSuffixes = s3Statement.Resource.map((resource: any) => resource['Fn::Join'][1][2]);
 
-    expect(resourceSuffixes).toEqual(
-      expect.arrayContaining([
-        ':s3:::test-bucket-config-234567890-us-east-1',
-        ':s3:::test-bucket-config-234567890-us-east-1/*',
-        ':s3:::test-bucket-pipeline-234567890-us-east-1',
-        ':s3:::test-bucket-pipeline-234567890-us-east-1/*',
-      ]),
-    );
-    expect(resourceSuffixes).not.toEqual(
-      expect.arrayContaining([
-        ':s3:::custom-qualifier-config-234567890-us-east-1',
-        ':s3:::custom-qualifier-pipeline-234567890-us-east-1',
-      ]),
-    );
-  });
+      expect(resourceSuffixes).toEqual(
+        expect.arrayContaining([
+          `:s3:::${expectedBucketPrefix}-config-234567890-us-east-1`,
+          `:s3:::${expectedBucketPrefix}-config-234567890-us-east-1/*`,
+          `:s3:::${expectedBucketPrefix}-pipeline-234567890-us-east-1`,
+          `:s3:::${expectedBucketPrefix}-pipeline-234567890-us-east-1/*`,
+        ]),
+      );
+    },
+  );
 
   it('should not create metadata rule in non-management account', () => {
     const props = createMetadataEnabledProps({ env: { region: 'us-east-1', account: '00000001' } });

@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(metadata): use the configured bucket name prefix for Accelerator Metadata Lambda access when the pipeline qualifier defaults to `aws-accelerator`, while preserving custom qualifiers that name buckets in external-pipeline deployments
 - fix(control-tower): include the operation status message in the error and warning when an AWS Control Tower landing zone create, update or reset operation fails, so the pipeline log shows why the operation failed
 - fix(guardduty): grant `organizations:ListRoots` to the GuardDuty delegated-admin enablement principal, which GuardDuty now requires for `EnableOrganizationAdminAccount`; without it greenfield installs with `guardduty.enable: true` failed at the Organization stage with an `organizations:ListRoots` AccessDeniedException
 - fix(iam): set `SAML:aud` to the regional sign-in endpoint (`https://<region>.signin.amazonaws-eusc.eu/saml`) for `iam-config.yaml` `roleSets[].roles[].assumedBy[].type: provider` roles in the `aws-eusc` partition; previously the trust policy rendered an empty `SAML:aud` and `AssumeRoleWithSAML` could not succeed. Configure the identity provider with the regional SAML metadata from the same Region as the LZA home Region

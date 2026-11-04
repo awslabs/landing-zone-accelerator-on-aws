@@ -464,6 +464,11 @@ export class SecurityStack extends AcceleratorStack {
       this.props.globalConfig.homeRegion
     }`;
 
+    const pipelineBucketNamePrefix =
+      this.props.qualifier && this.props.qualifier !== 'aws-accelerator'
+        ? this.props.qualifier
+        : this.props.prefixes.bucketName;
+
     return new AcceleratorMetadata(this, 'AcceleratorMetadata', {
       acceleratorConfigRepositoryName: acceleratorProps.configRepositoryName,
       acceleratorPrefix: this.props.prefixes.accelerator,
@@ -471,10 +476,8 @@ export class SecurityStack extends AcceleratorStack {
       assumeRole: acceleratorProps.globalConfig.managementAccountAccessRole,
       centralLogBucketName,
       configRepositoryLocation: acceleratorProps.configRepositoryLocation,
-      configBucketName: `${this.props.prefixes.bucketName}-config-${cdk.Stack.of(this).account}-${
-        cdk.Stack.of(this).region
-      }`,
-      secureBucketName: `${this.props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+      configBucketName: `${pipelineBucketNamePrefix}-config-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      secureBucketName: `${pipelineBucketNamePrefix}-pipeline-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`,
       elbLogBucketName,

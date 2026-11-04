@@ -75,7 +75,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "existing-central-log-bucket",
-            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_BUCKET_NAME": "aws-accelerator-config-111111111111-us-east-1",
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
@@ -278,7 +278,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -290,7 +290,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -302,7 +302,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -314,7 +314,7 @@ exports[`SecurityStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -1153,7 +1153,7 @@ exports[`SecurityStack with SkipGuardDuty > Construct(SecurityStack with SkipGua
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "existing-central-log-bucket",
-            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_BUCKET_NAME": "aws-accelerator-config-111111111111-us-east-1",
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
@@ -1356,7 +1356,7 @@ exports[`SecurityStack with SkipGuardDuty > Construct(SecurityStack with SkipGua
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -1368,7 +1368,7 @@ exports[`SecurityStack with SkipGuardDuty > Construct(SecurityStack with SkipGua
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -1380,7 +1380,7 @@ exports[`SecurityStack with SkipGuardDuty > Construct(SecurityStack with SkipGua
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -1392,7 +1392,7 @@ exports[`SecurityStack with SkipGuardDuty > Construct(SecurityStack with SkipGua
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -2394,7 +2394,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "existing-central-log-bucket",
-            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_BUCKET_NAME": "aws-accelerator-config-111111111111-us-east-1",
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
@@ -2597,7 +2597,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -2609,7 +2609,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -2621,7 +2621,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -2633,7 +2633,7 @@ exports[`SecurityStack with SkipMacie > Construct(SecurityStack with SkipMacie):
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -3619,7 +3619,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
-            "CONFIG_BUCKET_NAME": "undefined-config-111111111111-us-east-1",
+            "CONFIG_BUCKET_NAME": "aws-accelerator-config-111111111111-us-east-1",
             "CONFIG_REPOSITORY_LOCATION": "codecommit",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
@@ -3822,7 +3822,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -3834,7 +3834,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-config-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-config-111111111111-us-east-1/*",
                     ],
                   ],
                 },
@@ -3846,7 +3846,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1",
                     ],
                   ],
                 },
@@ -3858,7 +3858,7 @@ exports[`delegatedAdminStack > Construct(SecurityStack):  Snapshot Test 1`] = `
                       {
                         "Ref": "AWS::Partition",
                       },
-                      ":s3:::undefined-pipeline-111111111111-us-east-1/*",
+                      ":s3:::aws-accelerator-pipeline-111111111111-us-east-1/*",
                     ],
                   ],
                 },
