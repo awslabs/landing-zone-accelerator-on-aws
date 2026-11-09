@@ -142,7 +142,7 @@ export interface IImportedS3ManagedEncryptionKeyBucketConfig {
    * # Let accelerator manage policies (recommended for new imports)
    * applyAcceleratorManagedBucketPolicy: true
    *
-   * # Preserve existing policies (use for buckets with custom policies)
+   * # Do not apply accelerator-managed policies (use for buckets with custom policies)
    * applyAcceleratorManagedBucketPolicy: false
    * ```
    *
@@ -155,10 +155,11 @@ export interface IImportedS3ManagedEncryptionKeyBucketConfig {
    * - **WARNING**: Removes any existing custom S3 policies on the bucket
    *
    * **When `false` (default):**
-   * - Preserves existing bucket resource policy
-   * - Only adds policies from external s3ResourcePolicyAttachments files
-   * - No changes if no external policy files are provided
-   * - Existing policies remain intact
+   * - If no external policy files (s3ResourcePolicyAttachments or a customPolicyOverrides bucket policy file) are
+   *   provided, the existing bucket resource policy stays unchanged
+   * - If external policy files are provided, the accelerator **REPLACES** the existing bucket resource policy on every
+   *   pipeline run with only the statements from those files, so include any existing statements you want to keep in
+   *   the files
    *
    * ### Best Practices
    *
@@ -166,6 +167,19 @@ export interface IImportedS3ManagedEncryptionKeyBucketConfig {
    * - Set to `false` for buckets with critical existing policies
    * - Review existing policies before enabling accelerator management
    * - Test policy changes in non-production environments first
+   *
+   * ### Changing from `true` to `false`
+   *
+   * When you change this property from `true` to `false`, the result depends on whether external policy files
+   * (s3ResourcePolicyAttachments files, or a customPolicyOverrides bucket policy file, which replaces them) are configured:
+   * - Without external policy files, the accelerator leaves the existing bucket policy, including the
+   *   accelerator-managed statements, unchanged. After the pipeline completes, review the bucket policy on the
+   *   bucket's **Permissions** tab in the Amazon S3 console, or with `aws s3api get-bucket-policy`, and remove any
+   *   statements you no longer want with `aws s3api put-bucket-policy` or `aws s3api delete-bucket-policy`.
+   * - With external policy files, the accelerator replaces the bucket policy on every pipeline run with only the
+   *   statements from those files. This removes the accelerator-managed statements, including the log delivery
+   *   permissions. Add any statements you need to keep to the files instead of editing the bucket
+   *   policy manually, because manual edits are overwritten on the next pipeline run.
    *
    * @default false
    */
@@ -304,6 +318,25 @@ export interface IImportedCustomerManagedEncryptionKeyBucketConfig {
    * Controls whether the accelerator should apply its generated resource policies
    * to the imported bucket. When enabled, the accelerator will manage the bucket's
    * resource policy based on enabled security services and configurations.
+   *
+   * When you change this property from `true` to `false`, the result depends on whether external policy files
+   * (s3ResourcePolicyAttachments files, or a customPolicyOverrides bucket policy file, which replaces them) are configured:
+   * - Without external policy files, the accelerator leaves the existing bucket policy, including the
+   *   accelerator-managed statements, unchanged. After the pipeline completes, review the bucket policy on the
+   *   bucket's **Permissions** tab in the Amazon S3 console, or with `aws s3api get-bucket-policy`, and remove any
+   *   statements you no longer want with `aws s3api put-bucket-policy` or `aws s3api delete-bucket-policy`.
+   * - With external policy files, the accelerator replaces the bucket policy on every pipeline run with only the
+   *   statements from those files. This removes the accelerator-managed statements, including TLS enforcement,
+   *   for the central log bucket the log delivery permissions, and for the assets bucket the statement that grants the
+   *   firewall roles read access. Add any statements you need to keep to the files instead of editing the bucket
+   *   policy manually, because manual edits are overwritten on the next pipeline run.
+   * - For the central log bucket with `createAcceleratorManagedKey` set to `true` and no `customPolicyOverrides.kmsPolicy`
+   *   file, the accelerator also removes the key policy statements it generates for the bucket from the
+   *   accelerator-created KMS key, whether or not external policy files are configured. The statement that allows the
+   *   `${AcceleratorPrefix}-AssetsAccessRole` to use the key stays. Add any other key policy statements you need to keep
+   *   with `kmsResourcePolicyAttachments`. When `customPolicyOverrides.kmsPolicy` is set, that file replaces
+   *   `kmsResourcePolicyAttachments` and the generated statements regardless of this property, so add the statements
+   *   you need to keep to that file instead.
    *
    * @default false
    */

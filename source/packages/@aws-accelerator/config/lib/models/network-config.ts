@@ -353,6 +353,11 @@ export interface ITransitGatewayPeeringRequesterConfig {
   readonly routeTableAssociations: t.NonEmptyString;
   /**
    * (OPTIONAL) An array of tag objects for the Transit Gateway Peering.
+   * Note: When the accepter `applyTags` flag is `true`, the accelerator adds or updates these tags on the accepter
+   * attachment but never removes tags from it. When you remove a tag here, the accelerator removes it from the
+   * requester attachment only. Remove the tag from the accepter attachment yourself in the accepter account, using the
+   * Transit gateway attachments page of the Amazon VPC console. Do not remove the `Name` tag, because the accelerator
+   * uses it to look up the attachment.
    */
   readonly tags?: t.ITag[];
 }
@@ -421,6 +426,10 @@ export interface ITransitGatewayPeeringAccepterConfig {
    * (OPTIONAL) Peering request apply tags flag.
    * Note: When this flag is set to `true`, the requester attachment tags are replicated
    * to the accepter attachment.
+   * The accelerator only adds or updates tags on the accepter attachment and never removes them. When you change this
+   * flag from `true` to `false`, or remove a requester tag, the replicated tags stay on the accepter attachment.
+   * Remove them yourself in the accepter account, using the Transit gateway attachments page of the Amazon VPC console.
+   * Do not remove the `Name` tag, because the accelerator uses it to look up the attachment.
    */
   readonly applyTags?: boolean;
 }
@@ -3638,12 +3647,28 @@ export interface IVpnLoggingConfig {
   /**
    * (OPTIONAL) Enable site-to-site VPN tunnel logging to CloudWatch Logs.
    *
-   * @remarks
+   * When a customer gateway references an EC2 firewall instance and is in a different account or Region than the
+   * firewall instance, LZA creates the tunnel log group in the customer gateway account and Region through a custom
+   * resource. LZA deletes that log group and all of its log data when you set this property to `false`, remove the
+   * tunnel's `logging` settings, change `logGroupName`, remove an entry from `tunnelSpecifications`, rename or remove the VPN
+   * connection, point the customer gateway at a firewall instance in a different account or Region, replace the firewall
+   * instance reference in `ipAddress` with an IP address, or move the customer gateway into the account and Region of the
+   * firewall instance. Pointing the customer gateway at a different firewall instance in the same account and Region
+   * leaves the log group in place. When you change only the `account` or `region` of such a
+   * customer gateway, and not into the account and Region of the firewall instance, LZA does not move the log group or
+   * its log data and leaves the previous log group in place. Before you deploy any of these changes, export any tunnel log data you
+   * need to keep. After the deployment, delete any log group left in the previous account and Region with
+   * `aws logs delete-log-group --log-group-name <name> --region <previous-region>`, using credentials for the previous
+   * account, once you no longer need it.
+   *
    * If you enable this property, a log group will be created along with the VPN connection.
    * You may customize the name of the log group using the `logGroupName` property.
    *
-   * The global {@link cloudwatchLogRetentionInDays} configuration and accelerator-provisioned KMS key
-   * will be applied to the log group.
+   * The global {@link cloudwatchLogRetentionInDays} configuration is applied to the log group.
+   * When the customer gateway references an EC2 firewall instance in a different account or Region, LZA creates the
+   * log group through the custom resource described above and does not associate a KMS key, so the log group uses
+   * CloudWatch Logs default encryption. In all other cases, LZA encrypts the log group with the accelerator-provisioned
+   * CloudWatch Logs KMS key, if one is configured.
    */
   readonly enable?: boolean;
   /**
@@ -7610,10 +7635,15 @@ export interface ICertificateConfig {
    * Fully qualified domain name (FQDN), such as www.example.com, that you want to secure with an ACM certificate. Use an asterisk (*) to create a wildcard certificate that protects several sites in the same domain. For example, *.example.com protects www.example.com, site.example.com, and images.example.com.
    * In compliance with RFC 5280, the length of the domain name (technically, the Common Name) that you provide cannot exceed 64 octets (characters), including periods. To add a longer domain name, specify it in the Subject Alternative Name field, which supports names up to 253 octets in length.
    * This value should be provided when type is set to request or else validation fails.
+   * When you change `domain`, `san`, or `validation` on a deployed `request` certificate, LZA requests a new certificate and points the `/<prefix>/acm/<name>/arn` SSM parameter (`/accelerator/acm/<name>/arn` by default) at it, but does not delete the previous certificate, because it can still be in use by load balancers, CloudFront distributions, or API Gateway custom domains.
+   * Before you deploy the change, record the previous certificate ARN from that SSM parameter. After the new certificate is issued and no resource uses the previous one, delete it in the ACM console or with `aws acm delete-certificate --certificate-arn <previous-arn>`.
+   * When you rename or remove the certificate, or remove an account or Region from its deployment targets, LZA deletes the previous certificate and its SSM parameter.
+   * ACM does not delete a certificate that is still in use by another AWS service.
    */
   readonly domain?: t.NonEmptyString;
   /**
    * Additional FQDNs to be included in the Subject Alternative Name extension of the ACM certificate. For example, add the name www.example.net to a certificate for which the DomainName field is www.example.com if users can reach your site by using either name.
+   * When you change this value on a deployed `request` certificate, LZA requests a new certificate but does not delete the previous one. See `domain` for the manual cleanup steps.
    */
   readonly san?: t.NonEmptyString[];
   /**

@@ -2118,7 +2118,16 @@ export interface IEc2FirewallInstanceConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the configuration file.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous transformed configuration file
+   * from the `${AcceleratorPrefix}-firewall-config` bucket.
+   * These objects can contain resolved replacement values, such as VPN pre-shared keys or Secrets Manager secret values.
+   * When LZA rewrites the transformed file under the same key, for example after a change to `staticReplacements` or to a VPN
+   * connection, the previous content, including resolved secret values, stays in the bucket as a noncurrent object version.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * Setting this property allows you to make use of firewall configuration replacements. This allows you to
    * configure your firewall instance dynamically using values determined at CDK runtime.
    *
@@ -2199,7 +2208,16 @@ export interface IEc2FirewallInstanceConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the configuration directory.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous transformed configuration files
+   * from the `${AcceleratorPrefix}-firewall-config` bucket. A file that you remove from the directory also stays in the bucket.
+   * These objects can contain resolved replacement values, such as VPN pre-shared keys or Secrets Manager secret values.
+   * When LZA rewrites a transformed file under the same key, for example after a change to `staticReplacements` or to a VPN
+   * connection, the previous content, including resolved secret values, stays in the bucket as a noncurrent object version.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * Setting this property allows you to make use of firewall configuration replacements. This allows you to
    * configure your firewall instance dynamically using values determined at CDK runtime.
    *
@@ -2284,7 +2302,13 @@ export interface IEc2FirewallInstanceConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the license file.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous license file
+   * from the `${AcceleratorPrefix}-firewall-config` bucket.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * The license file must be uploaded to the accelerator-created assets bucket in the home region of
    * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
    *
@@ -2421,7 +2445,16 @@ export interface IEc2FirewallAutoScalingGroupConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the configuration file.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous transformed configuration file
+   * from the `${AcceleratorPrefix}-firewall-config` bucket.
+   * These objects can contain resolved replacement values, such as VPN pre-shared keys or Secrets Manager secret values.
+   * When LZA rewrites the transformed file under the same key, for example after a change to `staticReplacements`,
+   * the previous content, including resolved secret values, stays in the bucket as a noncurrent object version.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * Setting this property allows you to make use of firewall configuration replacements. This allows you to
    * configure your firewall instance dynamically using values determined at CDK runtime.
    *
@@ -2466,7 +2499,16 @@ export interface IEc2FirewallAutoScalingGroupConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the configuration directory.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous transformed configuration files
+   * from the `${AcceleratorPrefix}-firewall-config` bucket. A file that you remove from the directory also stays in the bucket.
+   * These objects can contain resolved replacement values, such as VPN pre-shared keys or Secrets Manager secret values.
+   * When LZA rewrites a transformed file under the same key, for example after a change to `staticReplacements`,
+   * the previous content, including resolved secret values, stays in the bucket as a noncurrent object version.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * Setting this property allows you to make use of firewall configuration replacements. This allows you to
    * configure your firewall instance dynamically using values determined at CDK runtime.
    *
@@ -2547,7 +2589,13 @@ export interface IEc2FirewallAutoScalingGroupConfig {
    * **NOTE:** The custom resource backing this feature does not force update on every core pipeline run. To update the resource,
    * update the name of the license file.
    *
-   * @remarks
+   * **NOTE:** When you change this property or remove the firewall, LZA does not delete the previous license file
+   * from the `${AcceleratorPrefix}-firewall-config` bucket.
+   * After you deploy the change and confirm that no firewall user data references the old key, delete the old object(s) manually
+   * in the Amazon S3 console or with `aws s3api delete-object`. The bucket is versioned, so also delete the previous object versions
+   * (`aws s3api list-object-versions`, then `aws s3api delete-object --version-id`) to remove the content permanently.
+   * LZA also does not delete the bucket itself when it is no longer used.
+   *
    * The license file must be uploaded to the accelerator-created assets bucket in the home region of
    * your Management account. This is the `${AcceleratorPrefix}-assets` bucket, not the `cdk-accel-assets` bucket.
    *

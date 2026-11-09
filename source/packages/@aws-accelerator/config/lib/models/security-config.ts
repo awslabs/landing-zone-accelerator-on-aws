@@ -857,6 +857,14 @@ export interface IGuardDutyExportFindingsConfig {
   readonly exportFrequency: 'FIFTEEN_MINUTES' | 'ONE_HOUR' | 'SIX_HOURS';
   /**
    * Custom prefix configuration for organizing GuardDuty findings in your centralized logging S3 bucket.
+   *
+   * When you change or remove this prefix, LZA creates the new prefix but does not delete the previous prefix's
+   * zero-byte folder marker object or the GuardDuty findings already exported under it. To clean up after the pipeline completes, archive any findings
+   * you must keep, then delete the old objects in the Amazon S3 console (select the old folder in the central log bucket and
+   * choose Delete), or delete only the folder marker with
+   * `aws s3api delete-object --bucket <central-log-bucket> --key <old-prefix>/`. If the bucket is versioned, these
+   * deletes add delete markers, so remove the noncurrent versions separately to stop storage charges.
+   * When `useCustomPrefix` is `true` and `customOverride` is not set, LZA does not create a prefix.
    */
   readonly overrideGuardDutyPrefix?: t.IPrefixConfig;
 }
@@ -2040,6 +2048,41 @@ export interface ICentralSecurityServicesConfig {
    * security services are performed only by users or roles in the organization's management account.
    * This helps you to separate management of the organization from management of these security services.
    * Accelerator currently supports using the Audit account **only** as the delegated administrator account.
+   *
+   * If the AWS account behind this name changes (for example, you point the Audit account in accounts-config.yaml at a
+   * different AWS account), the accelerator handles the existing delegated administrator for the following services as
+   * follows:
+   * - Amazon Detective and AWS Security Hub: the accelerator does not remove the existing delegated administrator and does
+   *   not register the new account. Removing the existing administrator deletes the Detective organization behavior graph,
+   *   disassociates the Security Hub member accounts, and, if you use Security Hub central configuration, deletes the
+   *   configuration policies and policy associations. Before you deploy the change, run
+   *   `aws organizations deregister-delegated-administrator --account-id <old-account-id> --service-principal <service-principal>`
+   *   from the organization management account, using `detective.amazonaws.com` or `securityhub.amazonaws.com`. For
+   *   Security Hub, wait until `aws securityhub list-organization-admin-accounts` returns no administrator in each Region
+   *   before you deploy.
+   * - Amazon Macie: the accelerator deregisters the existing delegated administrator in AWS Organizations and attempts to
+   *   enable the new account, but does not remove the existing Macie administrator. Before you deploy the change, remove the existing
+   *   Macie administrator in each Region as described in "Changing the Macie administrator account for an organization"
+   *   in the Amazon Macie User Guide, for example with
+   *   `aws macie2 disable-organization-admin-account --admin-account-id <old-account-id> --region <region>`. The new Macie
+   *   administrator cannot access the statistical data, inventory data, and other information that Macie produced for
+   *   automated sensitive data discovery under the previous administrator.
+   * - Amazon GuardDuty: the accelerator deregisters the existing delegated administrator in AWS Organizations and then, in
+   *   each Region the accelerator manages, removes it as the GuardDuty administrator and enables the new account. For the
+   *   manual procedure, see "Changing the delegated GuardDuty administrator account" in the Amazon GuardDuty User Guide.
+   * - AWS Audit Manager: in each Region where Audit Manager is already enabled, the accelerator deregisters the existing
+   *   delegated administrator and registers the new account. Audit Manager then stops collecting and attaching evidence
+   *   in the previous administrator account. Evidence collected before the change remains accessible. If the previous
+   *   administrator enabled evidence finder, sign in to Audit Manager as that account and disable evidence finder in each
+   *   Region before you deploy the change, which deletes its CloudTrail Lake event data store. Otherwise, delete the
+   *   event data store in CloudTrail Lake manually, because an unused event data store continues to incur CloudTrail Lake
+   *   storage charges. See "Changing a delegated administrator" in the AWS Audit Manager User Guide.
+   *
+   * If the Macie or GuardDuty module is skipped with the `SKIP_MACIE_MODULE`, `SKIP_GUARDDUTY_MODULE`, or
+   * `SKIP_STACK_RESOURCES_RETENTION_MODULE` environment variable, the accelerator does not change the Macie delegated
+   * administrator and fails the GuardDuty deployment instead. In that case, before you deploy the change, remove the
+   * existing administrator in the service in each Region and in AWS Organizations, following the service guides above.
+   * After the deployment, confirm the new administrator in each Region.
    * @type string
    * @default Audit
    *
@@ -3396,8 +3439,14 @@ export interface IAwsConfigAggregation {
   readonly enable: boolean;
   /**
    * The name of the account designated to collect and store aggregated Config data.
+   * The accelerator registers this account as the AWS Config delegated administrator only when `organizationConfig.enable`
+   * is `true` and `globalConfig.controlTower.enable` is `false`.
+   * When you change this value to a different account, the accelerator registers the new account but does not deregister
+   * the previous account.
+   * To remove the previous account, run `aws organizations deregister-delegated-administrator --service-principal config.amazonaws.com --account-id <previous-account-id>`
+   * from the management account after the deployment completes.
+   * When you remove this value or set `enable` to `false`, the accelerator deregisters the previous account.
    *
-   * @remarks
    * If not specified, aggregation will occur in the management account.
    * The delegated admin account must have appropriate permissions to collect Config data from all organization accounts.
    */
@@ -3904,17 +3953,24 @@ export interface ILogGroupsConfig {
   readonly logRetentionInDays: number;
   /**
    * Controls whether the log group should be protected from accidental deletion.
+   * When this property is not set or set to `false`, the accelerator deletes the log group and all of its log data
+   * if you remove it from the solution configuration file, remove an account or Region from its deployment targets, or
+   * change its `logGroupName`. This also applies to a log group that existed before you added it to the configuration.
+   * The value from the last successful deployment applies, so to keep a log group that is not protected, set this
+   * property to `true` and deploy before you remove the log group.
    *
-   * @remarks Set this property to `false` if you would like the log group
-   * to be deleted if it is removed from the solution configuration file.
-   *
-   * @default true
+   * @default false
    */
   readonly terminationProtected?: boolean;
   /**
    * Configuration for encrypting log data at rest using AWS KMS.
    *
-   * @remarks
+   * If you remove this property after deployment, LZA does not disassociate the KMS key from the log group.
+   * To stop using the key for new
+   * log events, run `aws logs disassociate-kms-key --log-group-name <logGroupName>` in each target account and
+   * Region. Log events ingested while the key was associated stay encrypted with that key, so keep the key enabled
+   * and keep its key policy granting CloudWatch Logs access for as long as you need to read that data.
+   *
    * **CAUTION:** When importing an existing encrypted log group, specifying any KMS parameter
    * will cause LZA to associate a new key with the log group. This also applies to existing
    * LZA-managed log groups when changing KMS parameters. Verify that processes and applications

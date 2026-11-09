@@ -478,8 +478,8 @@ export interface IAccountConfig extends IBaseAccountConfig {
    * ### Process Details
    *
    * - Warming occurs during the operations stack deployment phase
-   * - Creates a minimal EC2 instance in the default VPC
-   * - Instance automatically terminates after 15 minutes
+   * - Creates a temporary VPC, subnet, and minimal EC2 instance, and removes them after warming completes
+   * - LZA terminates the instance after it has run for more than 15 minutes
    * - No additional charges beyond the brief EC2 usage
    * - Can be safely removed from configuration after initial deployment
    *

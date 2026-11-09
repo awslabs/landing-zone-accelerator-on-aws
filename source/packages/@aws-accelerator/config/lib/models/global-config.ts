@@ -2702,6 +2702,8 @@ export interface ICloudWatchLogsConfig {
    *
    * Configure encryption for the CloudWatch Logs. If left undefined, an AWS KMS CMK will be used to encrypt the logs.
    *
+   * For existing log groups that LZA does not create and does not configure through `securityConfig.cloudWatch.logGroups`, LZA associates its CloudWatch Logs CMK only with log groups that have no KMS key, and it does not replace a KMS key that is already associated with a log group. When you set `useCMK` to `false`, LZA does not disassociate its CMK from these log groups. To change the key of such a log group, run `aws logs associate-kms-key --log-group-name <name> --kms-key-id <key-arn>`, or run `aws logs disassociate-kms-key --log-group-name <name>` to return to the CloudWatch Logs default encryption. Log events ingested before the change stay encrypted with the previous key, so do not delete or disable that key while those events are retained.
+   *
    * @see {@link IServiceEncryptionConfig} for detailed parameter information
    */
   readonly encryption?: IServiceEncryptionConfig;
@@ -3031,6 +3033,8 @@ export interface ICloudWatchSubscriptionConfig {
    *
    * If omitted, LZA defaults it (in the Log Archive account only) to exclude its own central-logging delivery Lambda log group, `LogGroupName NOT IN ["/aws/lambda/<prefix>-FirehoseRecordsProcessor"]`, which prevents the log-delivery recursion described on {@link ICloudWatchSubscriptionConfig.type}. If you supply a value, LZA applies it verbatim and does NOT merge in that default, so your criteria must itself exclude `/aws/lambda/<prefix>-FirehoseRecordsProcessor` (and any other log group whose events land in a bucket the delivery pipeline writes to) or the recursion loop will form.
    *
+   * When an account-level subscription filter policy already exists, including the LZA policy `ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY`, LZA does not update it with a changed value unless {@link ICloudWatchSubscriptionConfig.overrideExisting} is `true`. To apply the change, set `overrideExisting: true`, or update the policy with `aws logs put-account-policy --policy-name <existing-policy-name> --policy-type SUBSCRIPTION_FILTER_POLICY --policy-document <policy-json> --selection-criteria <criteria>` in each account and Region.
+   *
    * In the following example, log groups with the names /aws/lambda/AWSAccelerator-FirehoseRecordsProcessor, development, or AppA will not have a subscription filter.
    *
    * **Example**
@@ -3050,6 +3054,7 @@ export interface ICloudWatchSubscriptionConfig {
    * If enabled, any existing policy will be updated and renamed to 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY'.
    * Upon deleting the solution or disabling logging for cloudwatch in global config, this policy will be removed.
    * If type is set to 'LOG_GROUP' this parameter will not be used.
+   * When this is `false`, LZA leaves any existing account-level subscription filter policy unchanged, including its own `ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY`, so later changes to {@link ICloudWatchSubscriptionConfig.selectionCriteria} or {@link ICloudWatchSubscriptionConfig.filterPattern} are not applied. Set this to `true` to apply them, or update the policy with `aws logs put-account-policy --policy-name <existing-policy-name> --policy-type SUBSCRIPTION_FILTER_POLICY --policy-document <policy-json> --selection-criteria <criteria>` in each account and Region.
    *
    * @default false
    */
@@ -3059,7 +3064,8 @@ export interface ICloudWatchSubscriptionConfig {
    *
    * The specific filter pattern to apply to the subscription.
    * If no value is provided all logs events will match filter criteria.
-   * Only applicable when {@link ICloudWatchSubscriptionConfig.type} is 'LOG_GROUP'
+   * Only applicable when {@link ICloudWatchSubscriptionConfig.type} is 'ACCOUNT'.
+   * When an account-level subscription filter policy already exists, LZA does not update it with a changed value unless {@link ICloudWatchSubscriptionConfig.overrideExisting} is `true`. To apply the change, set `overrideExisting: true`, or update the policy with `aws logs put-account-policy --policy-name <existing-policy-name> --policy-type SUBSCRIPTION_FILTER_POLICY --policy-document <policy-json> --selection-criteria <criteria>` in each account and Region.
    *
    * @see {@link https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-Account.html | Create an account-level subscription filter policy} for more information
    */
