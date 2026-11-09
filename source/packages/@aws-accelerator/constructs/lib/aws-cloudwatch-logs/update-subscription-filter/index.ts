@@ -42,6 +42,11 @@ const retryStrategy = setRetryStrategy();
 
 const logsClient = new CloudWatchLogsClient({ customUserAgent: solutionId, retryStrategy });
 const policyName = 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY';
+/**
+ * CloudWatch Logs quota: subscription filters per log group
+ * https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/cloudwatch_limits_cwl.html
+ */
+const MAX_SUBSCRIPTION_FILTERS_PER_LOG_GROUP = 5;
 
 /**
  * Type definition for CloudWatch log exclusion settings
@@ -450,38 +455,37 @@ async function updateLogSubscription(
   acceleratorLogSubscriptionRoleArn: string,
   acceleratorCreatedSubscriptFilter?: SubscriptionFilter,
 ): Promise<void> {
-  if (numberOfSubscriptions >= 1 && acceleratorCreatedSubscriptFilter) {
+  if (acceleratorCreatedSubscriptFilter) {
     return;
   }
 
-  if (numberOfSubscriptions <= 1 && !acceleratorCreatedSubscriptFilter) {
-    try {
-      await throttlingBackOff(() =>
-        logsClient.send(
-          new PutSubscriptionFilterCommand({
-            destinationArn: acceleratorCreatedLogDestinationArn,
-            logGroupName: logGroupName,
-            roleArn: acceleratorLogSubscriptionRoleArn,
-            filterName: logGroupName,
-            filterPattern: '',
-            distribution: Distribution.Random,
-          }),
-        ),
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      if (error instanceof ValidationException) {
-        console.warn(`Log group ${logGroupName} unable to apply subscription ${error.message}`);
-      } else {
-        throw new Error(error.message);
-      }
-    }
+  if (numberOfSubscriptions >= MAX_SUBSCRIPTION_FILTERS_PER_LOG_GROUP) {
+    console.warn(
+      `Log group ${logGroupName} already has ${numberOfSubscriptions} subscription filters, the CloudWatch Logs quota of ${MAX_SUBSCRIPTION_FILTERS_PER_LOG_GROUP}. Skipping accelerator subscription destination ${acceleratorCreatedLogDestinationArn}. Remove an existing subscription filter and rerun the pipeline to add it.`,
+    );
+    return;
   }
 
-  if (numberOfSubscriptions === 2 && !acceleratorCreatedSubscriptFilter) {
-    throw new Error(
-      `Cloudwatch log group ${logGroupName} has ${numberOfSubscriptions} subscription destinations, can not add accelerator subscription destination!!!! Remove one of the two existing destination and rerun the pipeline for accelerator to add solution defined log destination ${acceleratorCreatedLogDestinationArn}`,
+  try {
+    await throttlingBackOff(() =>
+      logsClient.send(
+        new PutSubscriptionFilterCommand({
+          destinationArn: acceleratorCreatedLogDestinationArn,
+          logGroupName: logGroupName,
+          roleArn: acceleratorLogSubscriptionRoleArn,
+          filterName: logGroupName,
+          filterPattern: '',
+          distribution: Distribution.Random,
+        }),
+      ),
     );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    if (error instanceof ValidationException) {
+      console.warn(`Log group ${logGroupName} unable to apply subscription ${error.message}`);
+    } else {
+      throw new Error(error.message);
+    }
   }
 }
 

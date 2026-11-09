@@ -129,8 +129,4 @@ export class StaticInput {
   };
 
   static readonly policyName = 'ACCELERATOR_ACCOUNT_SUBSCRIPTION_POLICY';
-
-  static readonly subscriptionError = new Error(
-    `Cloudwatch log group testError has 2 subscription destinations, can not add accelerator subscription destination!!!! Remove one of the two existing destination and rerun the pipeline for accelerator to add solution defined log destination ${StaticInput.newProps.acceleratorCreatedLogDestinationArn}`,
-  );
 }

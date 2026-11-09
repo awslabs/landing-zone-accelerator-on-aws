@@ -644,7 +644,7 @@
         "replaceLogDestinationArn": {
           "$ref": "#/definitions/NonEmptyString",
           "default": "undefined",
-          "description": "**Replace Log Destination** *(Optional)*\n\nThe ARN of the current log subscription filter destination. LZA needs to disassociate this destination before configuring the LZA defined subscription filter destination.\n\n**Notes**\n- When no value is provided, the solution will not attempt to remove the existing subscription filter destination\n- When existing log group(s) have two subscription filter destinations defined, and none are LZA configured, the solution will fail to configure log replication and the pipeline will fail"
+          "description": "**Replace Log Destination** *(Optional)*\n\nThe ARN of the current log subscription filter destination. LZA needs to disassociate this destination before configuring the LZA defined subscription filter destination.\n\n**Notes**\n- When no value is provided, the solution will not attempt to remove the existing subscription filter destination\n- When a log group still has five subscription filters (the CloudWatch Logs quota) after this destination is removed, and none of them is LZA configured, the solution skips that log group with a warning and does not add the LZA subscription filter"
         },
         "skipBulkUpdate": {
           "$ref": "#/definitions/ICloudWatchLogSkipBulkUpdateConfig",

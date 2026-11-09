@@ -2723,7 +2723,7 @@ export interface ICloudWatchLogsConfig {
    *
    * **Notes**
    * - When no value is provided, the solution will not attempt to remove the existing subscription filter destination
-   * - When existing log group(s) have two subscription filter destinations defined, and none are LZA configured, the solution will fail to configure log replication and the pipeline will fail
+   * - When a log group still has five subscription filters (the CloudWatch Logs quota) after this destination is removed, and none of them is LZA configured, the solution skips that log group with a warning and does not add the LZA subscription filter
    *
    * @default
    * undefined

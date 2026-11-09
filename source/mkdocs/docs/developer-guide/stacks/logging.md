@@ -102,4 +102,4 @@ The Logging stack is one of the most resource-intensive stacks. It creates the c
 |-------|-------|------------|
 | Bucket policy size exceeded | Too many account principals in central logs bucket policy | Use organization-level conditions instead of per-account principals |
 | KMS key policy limit | Key policy document exceeds 32KB | Consolidate policy statements |
-| CloudWatch subscription filter limit | More than 2 subscription filters per log group | Review exclusion configuration |
+| CloudWatch subscription filter quota warning in the `Custom::UpdateSubscriptionFilter` logs | Log group already has 5 subscription filters (the CloudWatch Logs quota), so the LZA filter is not added | Remove an unused subscription filter, or exclude the log group, and rerun the pipeline |

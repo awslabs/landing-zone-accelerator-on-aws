@@ -70,6 +70,52 @@ The uninstaller still detaches and deletes these policies when it deletes the Or
 | Accounts show "Update Available" after adding a region | Manually update accounts in Control Tower (5 at a time) before retrying the pipeline |
 | Landing Zone update fails | Ensure Control Tower is managed by LZA via `controlTower/landingZone` in `global-config.yaml` |
 
+### Recovering log groups encrypted with a deleted accelerator CloudWatch Logs key
+
+In versions before 1.17.1, if the first deployment of a `LoggingStack` failed after the accelerator had associated its CloudWatch Logs KMS key with existing log groups, the CloudFormation rollback scheduled that key for deletion. Those log groups then cannot ingest new events or return events encrypted with the key. From version 1.17.1 the key is retained on rollback, so this cannot recur; the retained key stays associated with those log groups and keeps working, so do not delete it. Log groups that are already affected must be recovered manually. The accelerator does not re-point them automatically, because it cannot distinguish a former accelerator key from a customer-managed key.
+
+Run the following in each affected account and region.
+
+1. Find the affected log groups. List every log group's key, then check the state of each distinct key with `aws kms describe-key`. Affected log groups use a key in the `PendingDeletion` or `Disabled` state:
+
+    ```bash
+    aws logs describe-log-groups \
+      --query "logGroups[?kmsKeyId].[logGroupName,kmsKeyId]" \
+      --output text --region <region>
+
+    aws kms describe-key --key-id <key-arn> \
+      --query "KeyMetadata.[KeyState,DeletionDate,Description]" --region <region>
+    ```
+
+    From version 1.15.0, accelerator CloudWatch Logs keys have the description `KMS key for encrypting CloudWatch Log Groups created by LZA`. A description can be copied, so also confirm that you did not create the key yourself before changing anything. If `describe-key` returns `NotFoundException`, the key has already been deleted and events encrypted with it cannot be recovered.
+
+2. Restore each former key before its deletion date. AWS KMS deletes a key permanently at the end of its 7 to 30 day waiting period, after which events encrypted with it cannot be recovered. A cancelled key is `Disabled`, so enable it as well:
+
+    ```bash
+    aws kms cancel-key-deletion --key-id <old-key-arn> --region <region>
+    aws kms enable-key --key-id <old-key-arn> --region <region>
+    ```
+
+    Once the key is enabled, CloudWatch Logs can use it again for those log groups. You can stop here, or continue to move the log groups to the current accelerator key.
+
+3. Look up the current accelerator CloudWatch Logs key, which the `LoggingStack` stores in Parameter Store. Replace `/accelerator` with `/<prefix>` if you use a custom accelerator prefix:
+
+    ```bash
+    aws ssm get-parameter --name /accelerator/kms/cloudwatch/key-arn \
+      --query "Parameter.Value" --output text --region <region>
+    ```
+
+4. Re-associate the affected log groups with the full ARN of the current key in small batches. Only change log groups that you confirmed in step 1 were on a former accelerator key; do not change log groups that use your own keys:
+
+    ```bash
+    aws logs associate-kms-key --log-group-name <log-group-name> \
+      --kms-key-id <current-key-arn> --region <region>
+    ```
+
+    The change can take up to five minutes to take effect. After each batch, confirm that new events arrive and that older events can still be read.
+
+5. Keep the former keys enabled until every event encrypted with them has expired under the log group's retention period, which is indefinitely for a log group whose events never expire. Newly ingested events use the current key, but existing events stay encrypted with the key that was in use when they were ingested.
+
 ## Removing the deprecated Diagnostics Pack
 
 The installer-deployed Diagnostics Pack has been removed. Failure diagnostics are now collected automatically by the pipeline on every failed run — see [Pipeline Diagnostics](pipeline-diagnostics.md).

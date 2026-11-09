@@ -742,7 +742,7 @@ exports[`LoggingStack > Construct(LoggingStack):  Snapshot Test 1`] = `
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "RetainExceptOnCreate",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
@@ -11982,7 +11982,7 @@ exports[`LoggingStackDelegatedAdmin > Construct(LoggingStacKDelegatedAdmin):  Sn
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "RetainExceptOnCreate",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,
@@ -16707,7 +16707,7 @@ exports[`LoggingStackOuTargets > Construct(LoggingStackOuTargets):  Snapshot Tes
       "Type": "AWS::KMS::Alias",
     },
     "AcceleratorCloudWatchKeyF93B6E17": {
-      "DeletionPolicy": "RetainExceptOnCreate",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Description": "KMS key for encrypting CloudWatch Log Groups created by LZA",
         "EnableKeyRotation": true,

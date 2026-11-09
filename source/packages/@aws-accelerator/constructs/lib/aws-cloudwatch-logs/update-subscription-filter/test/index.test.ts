@@ -110,17 +110,127 @@ describe('update-subscription-policy lambda handler', () => {
     expect(response).toEqual({ Status: 'SUCCESS' });
   });
 
-  test('Create event with LOG_GROUP subscription type with too many subscriptions', async () => {
+  test.each([0, 1, 2, 3, 4])(
+    'Create event with LOG_GROUP subscription type adds accelerator filter when log group has %i existing filters',
+    async existingFilters => {
+      const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+
+      cloudWatchLogsMock.on(DescribeLogGroupsCommand).resolves({
+        logGroups: [{ logGroupName: 'test-log-group', retentionInDays: 365 }],
+      });
+      cloudWatchLogsMock.on(DescribeSubscriptionFiltersCommand).resolves({
+        subscriptionFilters: Array.from({ length: existingFilters }, (_, i) => ({
+          filterName: `filter-${i}`,
+          destinationArn: `destination-arn${i}`,
+        })),
+      });
+      cloudWatchLogsMock.on(PutSubscriptionFilterCommand).resolves({});
+      cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
+      cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
+
+      const response = await handler(event);
+      expect(response).toEqual({ Status: 'SUCCESS' });
+      expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+      expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)[0].args[0].input).toMatchObject({
+        logGroupName: 'test-log-group',
+        destinationArn: StaticInput.newProps.acceleratorCreatedLogDestinationArn,
+      });
+    },
+  );
+
+  test('Create event with LOG_GROUP subscription type skips accelerator filter when log group is at the 5 filter quota', async () => {
     const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
 
     cloudWatchLogsMock.on(DescribeLogGroupsCommand).resolves({
-      logGroups: [{ logGroupName: 'testError', retentionInDays: 365 }],
+      logGroups: [{ logGroupName: 'test-log-group', retentionInDays: 365 }],
     });
     cloudWatchLogsMock.on(DescribeSubscriptionFiltersCommand).resolves({
-      subscriptionFilters: [{ destinationArn: 'destination-arn1' }, { destinationArn: 'destination-arn2' }],
+      subscriptionFilters: Array.from({ length: 5 }, (_, i) => ({
+        filterName: `filter-${i}`,
+        destinationArn: `destination-arn${i}`,
+      })),
     });
+    cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
+    cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    await expect(handler(event)).rejects.toThrow(StaticInput.subscriptionError);
+    const response = await handler(event);
+    expect(response).toEqual({ Status: 'SUCCESS' });
+    expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('already has 5 subscription filters'));
+    warnSpy.mockRestore();
+  });
+
+  test('Create event with LOG_GROUP subscription type does not add a duplicate when accelerator filter exists', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+
+    cloudWatchLogsMock.on(DescribeLogGroupsCommand).resolves({
+      logGroups: [{ logGroupName: 'test-log-group', retentionInDays: 365 }],
+    });
+    cloudWatchLogsMock.on(DescribeSubscriptionFiltersCommand).resolves({
+      subscriptionFilters: [
+        { filterName: 'filter-0', destinationArn: 'destination-arn0' },
+        { filterName: 'test-log-group', destinationArn: StaticInput.newProps.acceleratorCreatedLogDestinationArn },
+      ],
+    });
+    cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
+    cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
+
+    const response = await handler(event);
+    expect(response).toEqual({ Status: 'SUCCESS' });
+    expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(0);
+  });
+
+  // The accelerator names its filter after the log group, so a same-name filter with another destination
+  // is treated as an earlier accelerator filter and updated in place (PutSubscriptionFilter creates or updates by name).
+  test('Create event with LOG_GROUP subscription type updates a same-name filter that has another destination', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+
+    cloudWatchLogsMock.on(DescribeLogGroupsCommand).resolves({
+      logGroups: [{ logGroupName: 'test-log-group', retentionInDays: 365 }],
+    });
+    cloudWatchLogsMock.on(DescribeSubscriptionFiltersCommand).resolves({
+      subscriptionFilters: [
+        { filterName: 'filter-0', destinationArn: 'destination-arn0' },
+        { filterName: 'test-log-group', destinationArn: 'previous-destination-arn' },
+      ],
+    });
+    cloudWatchLogsMock.on(PutSubscriptionFilterCommand).resolves({});
+    cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
+    cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
+
+    const response = await handler(event);
+    expect(response).toEqual({ Status: 'SUCCESS' });
+    expect(cloudWatchLogsMock.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(0);
+    expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
+    expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)[0].args[0].input).toMatchObject({
+      logGroupName: 'test-log-group',
+      filterName: 'test-log-group',
+      destinationArn: StaticInput.newProps.acceleratorCreatedLogDestinationArn,
+    });
+  });
+
+  test('Create event with LOG_GROUP subscription type replaces the replaceLogDestinationArn filter at the quota', async () => {
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+
+    cloudWatchLogsMock.on(DescribeLogGroupsCommand).resolves({
+      logGroups: [{ logGroupName: 'test-log-group', retentionInDays: 365 }],
+    });
+    cloudWatchLogsMock.on(DescribeSubscriptionFiltersCommand).resolves({
+      subscriptionFilters: [
+        ...Array.from({ length: 4 }, (_, i) => ({ filterName: `filter-${i}`, destinationArn: `destination-arn${i}` })),
+        { filterName: 'old-filter', destinationArn: StaticInput.newProps.replaceLogDestinationArn },
+      ],
+    });
+    cloudWatchLogsMock.on(DeleteSubscriptionFilterCommand).resolves({});
+    cloudWatchLogsMock.on(PutSubscriptionFilterCommand).resolves({});
+    cloudWatchLogsMock.on(PutRetentionPolicyCommand).resolves({});
+    cloudWatchLogsMock.on(AssociateKmsKeyCommand).resolves({});
+
+    const response = await handler(event);
+    expect(response).toEqual({ Status: 'SUCCESS' });
+    expect(cloudWatchLogsMock.commandCalls(DeleteSubscriptionFilterCommand)).toHaveLength(1);
+    expect(cloudWatchLogsMock.commandCalls(PutSubscriptionFilterCommand)).toHaveLength(1);
   });
 
   test('Create event with ACCOUNT subscription type', async () => {

@@ -566,7 +566,9 @@ export class LoggingStack extends AcceleratorStack {
         alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
         description: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.description,
         enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
+        // RETAIN (not RETAIN_ON_UPDATE_OR_DELETE): log groups may already be associated with this key
+        // before a first deploy fails, so the key must survive a create rollback too.
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
       cloudwatchKey.addToResourcePolicy(
