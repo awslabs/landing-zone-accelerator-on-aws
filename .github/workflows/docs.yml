@@ -44,3 +44,26 @@ jobs:
           git config user.email github-actions@github.com
           mike deploy --push --update-aliases ${{ steps.s3.outputs.commit_tag }} latest
           mike set-default --push latest
+      - name: Download release SBOMs
+        env:
+          COMMIT_TAG: ${{ steps.s3.outputs.commit_tag }}
+        run: |
+          mkdir -p release-sbom
+          aws s3 cp "s3://${{ secrets.BUCKET_NAME }}/${COMMIT_TAG}/sbom/lza-${COMMIT_TAG}-source.cdx.json" "release-sbom/lza-${COMMIT_TAG}-source.cdx.json"
+          aws s3 cp "s3://${{ secrets.BUCKET_NAME }}/${COMMIT_TAG}/sbom/lza-${COMMIT_TAG}-container.cdx.json" "release-sbom/lza-${COMMIT_TAG}-container.cdx.json"
+          aws s3 cp "s3://${{ secrets.BUCKET_NAME }}/${COMMIT_TAG}/sbom/lza-${COMMIT_TAG}-sbom-SHA256SUMS" "release-sbom/lza-${COMMIT_TAG}-sbom-SHA256SUMS"
+      - name: Verify release SBOMs
+        env:
+          COMMIT_TAG: ${{ steps.s3.outputs.commit_tag }}
+        working-directory: ./release-sbom
+        run: sha256sum --check "lza-${COMMIT_TAG}-sbom-SHA256SUMS"
+      - name: Attach SBOMs to the GitHub release
+        env:
+          COMMIT_TAG: ${{ steps.s3.outputs.commit_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$COMMIT_TAG" \
+            "release-sbom/lza-${COMMIT_TAG}-source.cdx.json" \
+            "release-sbom/lza-${COMMIT_TAG}-container.cdx.json" \
+            "release-sbom/lza-${COMMIT_TAG}-sbom-SHA256SUMS" \
+            --clobber

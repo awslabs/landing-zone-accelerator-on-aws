@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.1] -
+
+### Added
+
+- feat(release): generate, retain, and publish CycloneDX SBOMs for the installed source tree and final container archive with each release
+
 ## [1.17.0] - 2026-10-28
 
 ### Added

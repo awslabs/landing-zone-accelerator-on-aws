@@ -1,0 +1,116 @@
+# Release SBOM jobs
+# Generate from the exact dependency tree and final image produced by the release DAG,
+# then scan the stored SBOMs in a separate job.
+
+release:sbom-unit-tests:
+  stage: pipeline
+  needs: []
+  tags:
+    - arch:amd64
+  variables:
+    KUBERNETES_CPU_REQUEST: "1"
+    KUBERNETES_CPU_LIMIT: "1"
+    KUBERNETES_MEMORY_REQUEST: "2Gi"
+    KUBERNETES_MEMORY_LIMIT: "2Gi"
+  before_script:
+    - apt-get update && apt-get install -y jq
+  script:
+    - bash .gitlab/scripts/test-release-sbom.sh
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_MERGE_REQUEST_IID != null
+      when: never
+    - when: always
+
+release:generate-sbom:
+  stage: pipeline
+  needs:
+    - job: accelerator:build
+      artifacts: true
+    - job: release:artifact-al2023-build
+      artifacts: true
+  tags:
+    - arch:amd64
+  variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
+  before_script:
+    - apt-get update && apt-get install -y jq unzip wget ca-certificates
+  script:
+    - bash .gitlab/scripts/release-sbom.sh generate
+  artifacts:
+    name: "release-sbom-${CI_COMMIT_TAG}-${CI_COMMIT_SHA}"
+    access: developer
+    when: on_success
+    paths:
+      - release-sbom/
+    expire_in: never
+  rules:
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:scan-sbom:
+  stage: pipeline
+  needs:
+    - job: release:generate-sbom
+      artifacts: true
+  tags:
+    - arch:amd64
+  variables:
+    KUBERNETES_CPU_REQUEST: "4"
+    KUBERNETES_CPU_LIMIT: "4"
+    KUBERNETES_MEMORY_REQUEST: "16Gi"
+    KUBERNETES_MEMORY_LIMIT: "16Gi"
+  before_script:
+    - apt-get update && apt-get install -y jq wget ca-certificates
+  script:
+    - bash .gitlab/scripts/release-sbom.sh scan
+  artifacts:
+    name: "release-sbom-evidence-${CI_COMMIT_TAG}-${CI_COMMIT_SHA}"
+    access: developer
+    when: on_success
+    paths:
+      - release-sbom/
+    expire_in: never
+  rules:
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never
+
+release:publish-sbom:
+  stage: pipeline
+  needs:
+    - job: release:scan-sbom
+      artifacts: true
+  image:
+    name: public.ecr.aws/aws-cli/aws-cli:2.39.3
+    entrypoint: [""]
+  tags:
+    - arch:amd64
+  variables:
+    KUBERNETES_CPU_REQUEST: "1"
+    KUBERNETES_CPU_LIMIT: "1"
+    KUBERNETES_MEMORY_REQUEST: "2Gi"
+    KUBERNETES_MEMORY_LIMIT: "2Gi"
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_CREDS_TARGET_ROLE: "${GITLAB_S3_ROLE}"
+    PUBLIC_SBOM_S3_PATH: "s3://${BUCKET_NAME}/${CI_COMMIT_TAG}/sbom"
+  before_script:
+    - aws --version
+  script:
+    - |
+      for file in \
+        "lza-${CI_COMMIT_TAG}-source.cdx.json" \
+        "lza-${CI_COMMIT_TAG}-container.cdx.json" \
+        "lza-${CI_COMMIT_TAG}-sbom-SHA256SUMS"; do
+        test -f "release-sbom/${file}" || { echo "ERROR: release-sbom/${file} not found"; exit 1; }
+        aws s3 cp "release-sbom/${file}" "${PUBLIC_SBOM_S3_PATH}/${file}" --only-show-errors
+      done
+  rules:
+    - if: $CI_PROJECT_ID == "21753" && $CI_COMMIT_TAG =~ /v(\d.+){2}\d/
+      when: always
+    - when: never

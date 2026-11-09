@@ -121,6 +121,8 @@ include:
   # - '.gitlab/jobs/ci-job-definitions.yml'
   # Module integration test jobs
   - '.gitlab/jobs/security/integ-test.yaml'
+  # Release SBOM generation and scanning
+  - '.gitlab/jobs/security/release-sbom.yaml'
   # Mirror jobs for CodeCommit replication
   - '.gitlab/jobs/mirror-job.yaml'
   - '.gitlab/jobs/mirror-universal-config-repo.yaml'
@@ -840,6 +842,8 @@ release:build-typedocs:
   needs:
     - job: accelerator:build
       artifacts: true
+    - job: release:publish-sbom
+      artifacts: false
   tags:
     - arch:amd64
   variables:
@@ -1019,7 +1023,12 @@ integ:artifact-al2023-upload:
 # upload artifact into package for release
 release:artifact-al2023-upload:
   stage: pipeline
-  needs: ["release:artifact-al2023-build"]
+  needs:
+    - job: release:artifact-al2023-build
+      artifacts: true
+    - job: release:publish-sbom
+      artifacts: false
+      optional: true
   tags:
     - arch:amd64
   variables:
@@ -1058,6 +1067,9 @@ release:templates-upload:
       artifacts: true
     - job: govcloud-account-vending
       artifacts: true
+    - job: release:publish-sbom
+      artifacts: false
+      optional: true
   tags:
     - arch:amd64
   variables:
@@ -1200,6 +1212,8 @@ release:upload-to-cornerstone:
   needs:
     - job: release:package-artifact
       artifacts: true
+    - job: release:publish-sbom
+      artifacts: false
   tags:
     - arch:amd64
   variables:
