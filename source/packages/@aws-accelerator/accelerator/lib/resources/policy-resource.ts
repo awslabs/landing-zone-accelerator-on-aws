@@ -94,6 +94,22 @@ interface PolicyConfig {
   items: policyItem[];
 }
 
+/**
+ * Options for {@link PolicyResource}
+ */
+export interface PolicyResourceOptions {
+  /**
+   * Whether this stack is a secondary owner of the policies and attachments it declares.
+   *
+   * The AccountsStack and the FinalizeStack both declare every SCP, RCP and declarative policy, and
+   * share the same policy IDs. The AccountsStack owns them. The FinalizeStack sets this to true so its
+   * Delete events (for example a rollback) never detach or delete a policy the AccountsStack still owns.
+   *
+   * @default false
+   */
+  readonly secondaryOwner?: boolean;
+}
+
 export class PolicyResource {
   readonly stack: AcceleratorStack;
   protected logger: winston.Logger;
@@ -103,15 +119,22 @@ export class PolicyResource {
   readonly lambdaKey: cdk.aws_kms.IKey | undefined;
   readonly generatedFilePathList: generatedFilePath[] = [];
   private readonly policyTypeMap: Map<PolicyTypeEnum, EnablePolicyType> = new Map();
+  /**
+   * Whether this stack is a secondary owner of the policies and attachments it declares.
+   * See {@link PolicyResourceOptions.secondaryOwner}.
+   */
+  private readonly secondaryOwner: boolean;
 
   constructor(
     stack: AcceleratorStack,
     cloudwatchKey: cdk.aws_kms.IKey | undefined,
     lambdaKey: cdk.aws_kms.IKey | undefined,
     props: AcceleratorStackProps,
+    options?: PolicyResourceOptions,
   ) {
     this.stack = stack;
     this.logger = createLogger(['policy']);
+    this.secondaryOwner = options?.secondaryOwner ?? false;
     this.props = props;
     this.cloudwatchKey = cloudwatchKey;
     this.lambdaKey = lambdaKey;
@@ -205,6 +228,7 @@ export class PolicyResource {
       acceleratorPrefix: props.prefixes.accelerator,
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      secondaryOwner: this.secondaryOwner,
     });
 
     if (serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName) {
@@ -228,6 +252,7 @@ export class PolicyResource {
       acceleratorPrefix: props.prefixes.accelerator,
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      secondaryOwner: this.secondaryOwner,
     });
     return rcp;
   }
@@ -242,6 +267,7 @@ export class PolicyResource {
       acceleratorPrefix: props.prefixes.accelerator,
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      secondaryOwner: this.secondaryOwner,
     });
   }
 
@@ -322,6 +348,7 @@ export class PolicyResource {
             acceleratorPrefix: this.props.prefixes.accelerator,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            secondaryOwner: this.secondaryOwner,
           },
         );
         ouPolicyAttachment.node.addDependency(policy);
@@ -343,6 +370,7 @@ export class PolicyResource {
             acceleratorPrefix: this.props.prefixes.accelerator,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            secondaryOwner: this.secondaryOwner,
           },
         );
         accountPolicyAttachment.node.addDependency(enablePolicyType);

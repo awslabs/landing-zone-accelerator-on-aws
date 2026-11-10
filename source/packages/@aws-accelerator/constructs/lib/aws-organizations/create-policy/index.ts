@@ -93,6 +93,17 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
     case 'Delete':
+      // A secondary owner stack shares this policy with the stack that owns it. Its Delete events
+      // (rollback of a failed create or update, stack deletion, resource removal) must never
+      // detach or delete the shared policy; the owning stack handles every real removal.
+      if (process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] === 'true') {
+        console.log(`Skipping detach and delete of ${type} ${name}: this stack is a secondary owner of the policy`);
+        return {
+          PhysicalResourceId: event.PhysicalResourceId,
+          Status: 'SUCCESS',
+        };
+      }
+
       const deleteEventPolicyId = event.PhysicalResourceId;
       const deletePolicyId = await getPolicyId(organizationsClient, name, type);
 

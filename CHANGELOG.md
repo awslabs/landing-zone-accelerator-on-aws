@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - feat(release): generate, retain, and publish CycloneDX SBOMs for the installed source tree and final container archive with each release
 
+### Fixed
+
+- fix(organizations): stop a stack that shares an AWS Organizations policy with the stack that owns it from detaching or deleting that policy during a rollback, a stack deletion or a resource removal. The home Region OrganizationsStack owns tag policies, and the AccountsStack owns service control policies, resource control policies and declarative policies. Previously a rollback in another stack, such as the OrganizationsStack of a newly added Region that failed to create, deleted the policy for the whole organization, and later pipeline runs failed with `PolicyNotFoundException`. Affected deployments must recover as described in Troubleshooting > Recovering shared AWS Organizations policies after a rollback
+
 ## [1.17.0] - 2026-10-28
 
 ### Added

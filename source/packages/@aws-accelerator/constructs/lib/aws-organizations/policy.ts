@@ -20,6 +20,7 @@ import { readFileSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
+import { getSecondaryOwnerProviderEnvironment } from './secondary-owner';
 
 const logger = createLogger(['constructs-organization-policy']);
 
@@ -50,6 +51,17 @@ export interface Tag {
  * Initialized Policy properties
  */
 export interface PolicyProps {
+  /**
+   * Whether this stack is a secondary owner of the policy. Another stack declares the same policy
+   * and owns its lifecycle, so Delete events in this stack (rollback, stack deletion, resource
+   * removal) skip every detach and delete. Create and Update events are unchanged.
+   *
+   * All constructs of this type in a stack must use the same value, because they share one provider Lambda.
+   *
+   * @default false
+   */
+  readonly secondaryOwner?: boolean;
+
   /**
    * Custom resource lambda log group encryption key, when undefined default AWS managed key will be used
    */
@@ -141,6 +153,11 @@ export class Policy extends Construct {
     // Function definition for the custom resource
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
+      environment: getSecondaryOwnerProviderEnvironment(
+        cdk.Stack.of(this),
+        'Custom::OrganizationsCreatePolicy',
+        props.secondaryOwner,
+      ),
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       description: 'Organizations create policy',

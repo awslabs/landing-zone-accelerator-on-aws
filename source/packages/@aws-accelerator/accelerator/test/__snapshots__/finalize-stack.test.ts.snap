@@ -530,6 +530,8 @@ exports[`FinalizeStack > Construct(FinalizeStack):  Snapshot Test 1`] = `
         },
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "SKIP_ORGANIZATIONS_POLICY_DELETE": "true",
             "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },
@@ -623,6 +625,8 @@ exports[`FinalizeStack > Construct(FinalizeStack):  Snapshot Test 1`] = `
         "Description": "Organizations create policy",
         "Environment": {
           "Variables": {
+            "AWS_STS_REGIONAL_ENDPOINTS": "regional",
+            "SKIP_ORGANIZATIONS_POLICY_DELETE": "true",
             "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
           },
         },

@@ -24,6 +24,7 @@ import {
   CloudFormationClient,
   DeleteStackCommand,
   DescribeStacksCommand,
+  GetTemplateCommand,
   ListStackResourcesCommand,
   ListStacksCommand,
   Stack,
@@ -56,10 +57,17 @@ import {
 } from '@aws-sdk/client-kms';
 import {
   AccountState,
+  DeletePolicyCommand,
+  DescribePolicyCommand,
+  DetachPolicyCommand,
   ListAccountsCommand,
   ListParentsCommand,
+  ListTargetsForPolicyCommand,
   DescribeOrganizationalUnitCommand,
   OrganizationsClient,
+  PolicyNotAttachedException,
+  PolicyNotFoundException,
+  TargetNotFoundException,
 } from '@aws-sdk/client-organizations';
 import {
   DeleteBucketCommand,
@@ -2779,6 +2787,14 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
           item.region,
         );
 
+        if (this.mayBeSecondaryPolicyOwner(acceleratorPrefix, item.stackName, item.accountID)) {
+          await this.deleteSecondaryOwnerOrganizationsPolicies(
+            item.clients.cloudFormation,
+            this.getManagementOrganizationsClient(),
+            fullyQualifiedStackName,
+          );
+        }
+
         // Prepare list of resources to be deleted before and after stack deletion
         await this.prepareStackResourcesForDelete(
           fullyQualifiedStackName,
@@ -2807,6 +2823,186 @@ Once it is resolved rerun uninstaller. Additional error details:\n\n\n\n\n\n`,
       await this.delay(360000);
     }
     this.deleteStackLists = [];
+  }
+
+  /**
+   * Whether a stack can be a secondary owner of AWS Organizations policies. Only the FinalizeStack and the
+   * OrganizationsStack in the management account declare policies that another stack also declares.
+   * The FinalizeStack only qualifies when this run also deletes the owning AccountsStack; a partial uninstall
+   * keeps the AccountsStack, which must keep valid policy IDs.
+   * @param acceleratorPrefix Accelerator prefix
+   * @param stackName Stack name without the account and Region suffix
+   * @param accountId Account the stack is deployed in
+   */
+  private mayBeSecondaryPolicyOwner(acceleratorPrefix: string, stackName: string, accountId: string): boolean {
+    if (accountId !== this.pipelineManagementAccount?.accountId) {
+      return false;
+    }
+    if (stackName === `${acceleratorPrefix}-FinalizeStack`) {
+      return this.acceleratorCloudFormationStacks.some(
+        stack => stack.stackName === `${acceleratorPrefix}-AccountsStack`,
+      );
+    }
+    return stackName === `${acceleratorPrefix}-OrganizationsStack`;
+  }
+
+  /**
+   * Returns an AWS Organizations client for the management account in the global Region.
+   */
+  private getManagementOrganizationsClient(): OrganizationsClient {
+    const credentials = this.pipelineManagementAccount?.credentials;
+    return new OrganizationsClient({
+      region: this.globalRegion,
+      credentials: credentials
+        ? {
+            secretAccessKey: credentials.SecretAccessKey!,
+            accessKeyId: credentials.AccessKeyId!,
+            sessionToken: credentials.SessionToken!,
+            expiration: credentials.Expiration!,
+          }
+        : undefined,
+    });
+  }
+
+  /**
+   * Detaches and deletes the AWS Organizations policies of a stack that is a secondary owner of them.
+   *
+   * A secondary owner stack shares its policies with the stack that owns them, so its custom resources skip
+   * every detach and delete when CloudFormation deletes the stack. Before that change, deleting such a stack
+   * removed the policies for the whole organization. An uninstall has no later run to clean up, so the
+   * uninstaller removes them here, before deleting the stack, with the same check the custom resource used:
+   * the policy ID the stack holds must still exist under the name the stack declares.
+   *
+   * Stacks without the secondary owner marker are left alone, because their own deletion removes the policies.
+   *
+   * @param cloudFormationClient CloudFormation client for the stack's account and Region
+   * @param organizationsClient AWS Organizations client for the management account
+   * @param stackName Full CloudFormation stack name
+   */
+  private async deleteSecondaryOwnerOrganizationsPolicies(
+    cloudFormationClient: CloudFormationClient,
+    organizationsClient: OrganizationsClient,
+    stackName: string,
+  ): Promise<void> {
+    const template = await throttlingBackOff(() =>
+      cloudFormationClient.send(new GetTemplateCommand({ StackName: stackName, TemplateStage: 'Original' })),
+    );
+    const resources: Record<string, { Type?: string; Properties?: Record<string, unknown> }> =
+      JSON.parse(template.TemplateBody ?? '{}')['Resources'] ?? {};
+
+    const isSecondaryOwner = Object.values(resources).some(resource => {
+      const environment = resource.Properties?.['Environment'] as { Variables?: Record<string, unknown> } | undefined;
+      return (
+        resource.Type === 'AWS::Lambda::Function' &&
+        environment?.Variables?.['SKIP_ORGANIZATIONS_POLICY_DELETE'] === 'true'
+      );
+    });
+    if (!isSecondaryOwner) {
+      return;
+    }
+
+    const policyNames = new Map<string, string>();
+    for (const [logicalId, resource] of Object.entries(resources)) {
+      if (resource.Type === 'Custom::CreatePolicy' && typeof resource.Properties?.['name'] === 'string') {
+        policyNames.set(logicalId, resource.Properties['name']);
+      }
+    }
+
+    const policies: { id: string; name: string }[] = [];
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudFormationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
+      for (const summary of page.StackResourceSummaries ?? []) {
+        const name = policyNames.get(summary.LogicalResourceId ?? '');
+        if (name && summary.PhysicalResourceId) {
+          policies.push({ id: summary.PhysicalResourceId, name });
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+
+    for (const policy of policies) {
+      await this.deleteOrganizationsPolicy(organizationsClient, policy, stackName);
+    }
+  }
+
+  /**
+   * Detaches a policy from every target and deletes it, if the policy ID still exists under the expected name.
+   * @param organizationsClient AWS Organizations client for the management account
+   * @param policy Policy ID and expected name
+   * @param stackName Stack that declares the policy, for logging
+   */
+  private async deleteOrganizationsPolicy(
+    organizationsClient: OrganizationsClient,
+    policy: { id: string; name: string },
+    stackName: string,
+  ): Promise<void> {
+    let currentName: string | undefined;
+    try {
+      const response = await throttlingBackOff(() =>
+        organizationsClient.send(new DescribePolicyCommand({ PolicyId: policy.id })),
+      );
+      currentName = response.Policy?.PolicySummary?.Name;
+    } catch (error: unknown) {
+      if (error instanceof PolicyNotFoundException) {
+        this.debugLog(`Policy ${policy.name} (${policy.id}) of stack ${stackName} no longer exists`, 'info');
+        return;
+      }
+      throw error;
+    }
+    if (currentName !== policy.name) {
+      this.debugLog(
+        `Policy ${policy.id} of stack ${stackName} is now named ${currentName}, not ${policy.name}; leaving it in place`,
+        'warn',
+      );
+      return;
+    }
+
+    // The owning stack can delete the same policy while this runs, because the uninstaller deletes stacks of
+    // the same stage in parallel. A policy that disappears here has already been removed.
+    const targetIds: string[] = [];
+    let nextToken: string | undefined = undefined;
+    try {
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.send(new ListTargetsForPolicyCommand({ PolicyId: policy.id, NextToken: nextToken })),
+        );
+        targetIds.push(...(page.Targets ?? []).map(target => target.TargetId!));
+        nextToken = page.NextToken;
+      } while (nextToken);
+
+      for (const targetId of targetIds) {
+        try {
+          await throttlingBackOff(() =>
+            organizationsClient.send(new DetachPolicyCommand({ PolicyId: policy.id, TargetId: targetId })),
+          );
+        } catch (error: unknown) {
+          if (!(error instanceof PolicyNotAttachedException) && !(error instanceof TargetNotFoundException)) {
+            throw error;
+          }
+        }
+      }
+    } catch (error: unknown) {
+      if (error instanceof PolicyNotFoundException) {
+        this.debugLog(
+          `Policy ${policy.name} (${policy.id}) of stack ${stackName} was deleted by another stack`,
+          'info',
+        );
+        return;
+      }
+      throw error;
+    }
+
+    try {
+      await throttlingBackOff(() => organizationsClient.send(new DeletePolicyCommand({ PolicyId: policy.id })));
+      this.debugLog(`Deleted policy ${policy.name} (${policy.id}) of stack ${stackName}`, 'info');
+    } catch (error: unknown) {
+      if (!(error instanceof PolicyNotFoundException)) {
+        throw error;
+      }
+    }
   }
 
   /**

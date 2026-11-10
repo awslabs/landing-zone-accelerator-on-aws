@@ -40,7 +40,9 @@ export class FinalizeStack extends AcceleratorStack {
 
       const cloudwatchKey = this.getAcceleratorKey(AcceleratorKeyType.CLOUDWATCH_KEY);
       const lambdaKey = this.getAcceleratorKey(AcceleratorKeyType.LAMBDA_KEY);
-      const policy = new PolicyResource(this, cloudwatchKey, lambdaKey, props);
+      // The AccountsStack owns every SCP, RCP and declarative policy this stack also declares.
+      // Mark this stack as a secondary owner so its Delete events never remove those policies.
+      const policy = new PolicyResource(this, cloudwatchKey, lambdaKey, props, { secondaryOwner: true });
 
       policy.loadPolicyReplacements(props);
       policy.createAndAttachPolicies(props);

@@ -25,11 +25,43 @@ These errors occur during the Prepare stage when the `validate-environment` Lamb
 | `NoAvailableConfigurationRecorder` | Security Resources | Ensure AWS Config is enabled; for Control Tower, update accounts first |
 | `Export with name already exists` | Any | Check for stack name collisions from previous deployments |
 | `The Route Table Id 'rtb-...' does not exist` | Network VPC Endpoints | Removed a route table used by an S3/DynamoDB gateway endpoint in one run. Remove the gateway endpoint routes first, then delete the route table on a second run (see below) |
+| `Error while trying to attach policy: p-<id>` with `PolicyNotFoundException` | Organization, Accounts or Finalize | A rollback before version 1.17.1 deleted a policy that another stack still references. See [Recovering shared AWS Organizations policies after a rollback](#recovering-shared-aws-organizations-policies-after-a-rollback) |
 | `Role arn:aws:iam::<account>:role/<prefix>-Management-Deployment-Role is invalid or cannot be assumed` | Prepare (bootstrap) | `cdkOptions.centralizeBuckets` was set to `false`, so the accelerator bootstraps with the default CDK template instead of its custom template and never creates the deployment roles the Prepare stage assumes. This is not supported in version 1.14.0 and later. Set `cdkOptions.centralizeBuckets: true` in `global-config.yaml` |
 
 ### Removing a route table used by a gateway endpoint
 
 Deleting a route table (or subnet and route table) that an S3 or DynamoDB gateway endpoint routes into causes the `Network-VpcEndpoints` stack to fail, because the `Network-Vpc` stack deletes the route table before the endpoint can drop the association. Split the change across two pipeline runs: first remove the `s3`/`dynamodb` route entries, then delete the route table. If a stack is already stuck in `UPDATE_ROLLBACK_FAILED` from a single-pass attempt, recover it with `continue-update-rollback` before re-running the pipeline. See [Removing a route table that a gateway endpoint routes into](../faq/networking/general.md#how-do-i-remove-a-route-table-that-a-gateway-endpoint-s3-or-dynamodb-routes-into) in the Networking FAQ for the full procedure and recovery steps.
+
+### Recovering shared AWS Organizations policies after a rollback
+
+Before version 1.17.1, more than one stack managed the same AWS Organizations policy. The OrganizationsStack in every enabled Region managed each tag policy, and both the AccountsStack and the FinalizeStack managed each service control policy, resource control policy and declarative policy. When one of these stacks rolled back, for example the OrganizationsStack of a newly added Region that failed to create, it detached and deleted the policy for the whole organization. The other stacks kept the ID of the deleted policy.
+
+A deployment in this state shows these symptoms:
+
+- A later pipeline run fails in the Organization, Accounts or Finalize stage with `Error while trying to attach policy: p-<id>` and `PolicyNotFoundException`.
+- The rollback of that update fails the same way, and the stack is left in `UPDATE_ROLLBACK_FAILED`.
+
+Version 1.17.1 and later no longer delete a shared policy from a stack that does not own it, but they do not repair a deployment that is already in this state.
+
+!!!warning
+    Recover before you remove an affected policy, or one of its targets, from `organization-config.yaml`. Only the owning stack removes a policy. While the owning stack still holds the ID of the deleted policy, it cannot find the policy that replaced it, so that policy stays attached and the accelerator no longer removes it.
+
+1. **Return failed stacks to a stable state.** In the management account, check the OrganizationsStack in every enabled Region and the AccountsStack and FinalizeStack in the global Region (`us-east-1` in the commercial partition). For each stack in `UPDATE_ROLLBACK_FAILED`, open the **Events** tab and note the logical IDs of the `Custom::AttachPolicy` resources whose `UPDATE_FAILED` status reason contains `PolicyNotFoundException`. Other attachments in the same stack can also show `UPDATE_FAILED` with the reason `Resource update cancelled`; do not skip those, because CloudFormation rolls them back normally. Continue the rollback, skipping only the attachments you noted (separate several logical IDs with spaces):
+
+    ```bash
+    aws cloudformation continue-update-rollback \
+      --stack-name <stack-name> \
+      --resources-to-skip <AttachPolicyLogicalId> \
+      --region <region>
+    ```
+
+2. **Force the policy resources to update.** On the toolkit CodeBuild project in the home Region, add the environment variable `ACCELERATOR_FORCED_UPDATE` with the value `true`. The project is named `<prefix>-ToolkitProject`, or `<qualifier>-toolkit-project` for external pipeline account deployments. Replace `<prefix>` with your accelerator prefix (`AWSAccelerator` by default) and `<qualifier>` with the installer `AcceleratorQualifier` parameter.
+
+3. **Re-run the pipeline.** Release the pipeline once. Every `Custom::CreatePolicy` resource looks up its policy by name, creates it again if it no longer exists, and records the current policy ID. The `Custom::AttachPolicy` resources then attach that policy to the configured targets. Cleaning up a stale policy ID finds nothing to delete, because the IDs no longer match.
+
+4. **Remove the environment variable.** Remove `ACCELERATOR_FORCED_UPDATE` from the toolkit project. While it is set, every pipeline run updates every policy and policy attachment.
+
+The uninstaller still detaches and deletes these policies when it deletes the OrganizationsStack of a Region other than the home Region, and when it deletes the FinalizeStack in the same run as the AccountsStack. A partial uninstall that keeps the AccountsStack, for example with `--action-name Finalize`, leaves the service control policies, resource control policies and declarative policies in place for the AccountsStack. If the home Region is not listed in `enabledRegions`, every OrganizationsStack keeps the earlier behavior and deletes the tag policies itself.
 
 ### Control Tower Specific
 

@@ -323,3 +323,97 @@ function stringToStream(input: string) {
   // wrap the Stream with SDK mixin
   return sdkStreamMixin(stream);
 }
+
+describe('Delete Event - secondary owner stack', () => {
+  const OLD_ENV = process.env;
+  beforeEach(() => {
+    process.env = { ...OLD_ENV };
+  });
+  afterEach(() => {
+    process.env = OLD_ENV;
+  });
+
+  test('skips detach and delete and makes no AWS calls when SKIP_ORGANIZATIONS_POLICY_DELETE is true', async () => {
+    process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = 'true';
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
+
+    const response = await handler(event);
+
+    expect(response).toStrictEqual({ PhysicalResourceId: 'PhysicalResourceId', Status: 'SUCCESS' });
+    expect(orgClient.calls()).toHaveLength(0);
+    expect(s3Client.calls()).toHaveLength(0);
+  });
+
+  test.each(['false', 'TRUE', 'yes', ''])(
+    'detaches and deletes as before when SKIP_ORGANIZATIONS_POLICY_DELETE is %j',
+    async value => {
+      process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = value;
+      const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
+      orgClient
+        .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
+        .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'PhysicalResourceId' }] });
+      orgClient
+        .on(ListTargetsForPolicyCommand, { PolicyId: 'PhysicalResourceId' })
+        .resolves({ Targets: [{ TargetId: 'targetId' }] });
+      orgClient.on(DetachPolicyCommand, { PolicyId: 'PhysicalResourceId', TargetId: 'targetId' }).resolves({});
+      orgClient.on(DeletePolicyCommand, { PolicyId: 'PhysicalResourceId' }).resolves({});
+
+      const response = await handler(event);
+
+      expect(response?.Status).toStrictEqual('SUCCESS');
+      expect(orgClient.commandCalls(DetachPolicyCommand)).toHaveLength(1);
+      expect(orgClient.commandCalls(DeletePolicyCommand, { PolicyId: 'PhysicalResourceId' })).toHaveLength(1);
+    },
+  );
+
+  test('detaches and deletes as before when SKIP_ORGANIZATIONS_POLICY_DELETE is not set', async () => {
+    delete process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'];
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.newProps] });
+    orgClient
+      .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
+      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'PhysicalResourceId' }] });
+    orgClient.on(ListTargetsForPolicyCommand, { PolicyId: 'PhysicalResourceId' }).resolves({ Targets: [] });
+    orgClient.on(DeletePolicyCommand, { PolicyId: 'PhysicalResourceId' }).resolves({});
+
+    const response = await handler(event);
+
+    expect(response?.Status).toStrictEqual('SUCCESS');
+    expect(orgClient.commandCalls(DeletePolicyCommand)).toHaveLength(1);
+  });
+
+  test('still creates the policy on Create when SKIP_ORGANIZATIONS_POLICY_DELETE is true', async () => {
+    process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = 'true';
+    const event = AcceleratorUnitTest.getEvent(EventType.CREATE, { new: [StaticInput.newProps] });
+    s3Client
+      .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .resolves({ Body: stringToStream(StaticInput.policyContent) as any });
+    orgClient.on(CreatePolicyCommand).resolves({ Policy: { PolicySummary: { Id: 'p-created' } } });
+
+    const response = await handler(event);
+
+    expect(response).toStrictEqual({ PhysicalResourceId: 'p-created', Status: 'SUCCESS' });
+    expect(orgClient.commandCalls(CreatePolicyCommand)).toHaveLength(1);
+  });
+
+  test('still updates the existing policy on Update when SKIP_ORGANIZATIONS_POLICY_DELETE is true', async () => {
+    process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = 'true';
+    const event = AcceleratorUnitTest.getEvent(EventType.UPDATE, { new: [StaticInput.newProps] });
+    s3Client
+      .on(GetObjectCommand, { Bucket: StaticInput.newProps.bucket, Key: StaticInput.newProps.key })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .resolves({ Body: stringToStream(StaticInput.policyContent) as any });
+    orgClient
+      .on(CreatePolicyCommand)
+      .rejects(new DuplicatePolicyException({ $metadata: { httpStatusCode: 400 }, message: 'Duplicate policy' }));
+    orgClient
+      .on(ListPoliciesCommand, { Filter: StaticInput.newProps.type })
+      .resolves({ Policies: [{ Name: StaticInput.newProps.name, Id: 'p-existing' }] });
+    orgClient.on(UpdatePolicyCommand).resolves({});
+
+    const response = await handler(event);
+
+    expect(response).toStrictEqual({ PhysicalResourceId: 'p-existing', Status: 'SUCCESS' });
+    expect(orgClient.commandCalls(UpdatePolicyCommand, { PolicyId: 'p-existing' })).toHaveLength(1);
+  });
+});

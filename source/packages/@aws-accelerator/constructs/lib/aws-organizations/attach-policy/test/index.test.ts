@@ -293,3 +293,83 @@ describe('Delete Event', () => {
     expect(detachedIds).toContain('p-specific123');
   });
 });
+
+describe('Delete Event - secondary owner stack', () => {
+  const OLD_ENV = process.env;
+  beforeEach(() => {
+    orgClient.reset();
+    process.env = { ...OLD_ENV };
+  });
+  afterEach(() => {
+    process.env = OLD_ENV;
+  });
+
+  test('skips detach and makes no Organizations calls when SKIP_ORGANIZATIONS_POLICY_DELETE is true', async () => {
+    process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = 'true';
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.attachProps] });
+
+    const response = await handler(event);
+
+    expect(response).toStrictEqual({ PhysicalResourceId: 'PhysicalResourceId', Status: 'SUCCESS' });
+    expect(orgClient.calls()).toHaveLength(0);
+  });
+
+  test.each(['false', 'TRUE', 'yes', ''])(
+    'detaches as before when SKIP_ORGANIZATIONS_POLICY_DELETE is %j',
+    async value => {
+      process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = value;
+      const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.attachProps] });
+      orgClient.on(ListPoliciesCommand).resolves({
+        Policies: [{ Name: 'configPolicy1', Id: StaticInput.attachProps.policyId }],
+      });
+      orgClient.on(DetachPolicyCommand).resolves({});
+
+      const response = await handler(event);
+
+      expect(response?.Status).toStrictEqual('SUCCESS');
+      expect(
+        orgClient.commandCalls(DetachPolicyCommand, {
+          PolicyId: StaticInput.attachProps.policyId,
+          TargetId: StaticInput.attachProps.targetId,
+        }),
+      ).toHaveLength(1);
+    },
+  );
+
+  test('detaches as before when SKIP_ORGANIZATIONS_POLICY_DELETE is not set', async () => {
+    delete process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'];
+    const event = AcceleratorUnitTest.getEvent(EventType.DELETE, { new: [StaticInput.attachProps] });
+    orgClient.on(ListPoliciesCommand).resolves({
+      Policies: [{ Name: 'configPolicy1', Id: StaticInput.attachProps.policyId }],
+    });
+    orgClient.on(DetachPolicyCommand).resolves({});
+
+    const response = await handler(event);
+
+    expect(response?.Status).toStrictEqual('SUCCESS');
+    expect(orgClient.commandCalls(DetachPolicyCommand)).toHaveLength(1);
+  });
+
+  test.each([EventType.CREATE, EventType.UPDATE])(
+    'still attaches on %s when SKIP_ORGANIZATIONS_POLICY_DELETE is true',
+    async eventType => {
+      process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] = 'true';
+      const event = AcceleratorUnitTest.getEvent(eventType, { new: [StaticInput.attachProps] });
+      orgClient.on(ListPoliciesForTargetCommand).resolves({});
+      orgClient.on(AttachPolicyCommand).resolves({});
+
+      const response = await handler(event);
+
+      expect(response).toStrictEqual({
+        PhysicalResourceId: `${StaticInput.attachProps.policyId}_${StaticInput.attachProps.targetId}`,
+        Status: 'SUCCESS',
+      });
+      expect(
+        orgClient.commandCalls(AttachPolicyCommand, {
+          PolicyId: StaticInput.attachProps.policyId,
+          TargetId: StaticInput.attachProps.targetId,
+        }),
+      ).toHaveLength(1);
+    },
+  );
+});

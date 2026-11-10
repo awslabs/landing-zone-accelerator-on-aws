@@ -18,6 +18,7 @@ import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { createLogger } from '@aws-accelerator/utils/lib/logger';
 import { CUSTOM_RESOURCE_PROVIDER_RUNTIME } from '@aws-accelerator/utils/lib/lambda';
+import { getSecondaryOwnerProviderEnvironment } from './secondary-owner';
 
 const logger = createLogger(['constructs-organization-policy-attachment']);
 import * as path from 'path';
@@ -26,6 +27,17 @@ import * as path from 'path';
  * Initialized Policy properties
  */
 export interface PolicyAttachmentProps {
+  /**
+   * Whether this stack is a secondary owner of the policy attachment. Another stack declares the same
+   * attachment and owns its lifecycle, so Delete events in this stack (rollback, stack deletion, resource
+   * removal) skip the detach. Create and Update events are unchanged.
+   *
+   * All constructs of this type in a stack must use the same value, because they share one provider Lambda.
+   *
+   * @default false
+   */
+  readonly secondaryOwner?: boolean;
+
   readonly policyId: string;
   readonly targetId?: string;
   readonly type: PolicyType;
@@ -64,6 +76,11 @@ export class PolicyAttachment extends Construct {
     // Function definition for the custom resource
     //
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsAttachPolicy', {
+      environment: getSecondaryOwnerProviderEnvironment(
+        cdk.Stack.of(this),
+        'Custom::OrganizationsAttachPolicy',
+        props.secondaryOwner,
+      ),
       codeDirectory: path.join(__dirname, 'attach-policy/dist'),
       runtime: CUSTOM_RESOURCE_PROVIDER_RUNTIME,
       policyStatements: [

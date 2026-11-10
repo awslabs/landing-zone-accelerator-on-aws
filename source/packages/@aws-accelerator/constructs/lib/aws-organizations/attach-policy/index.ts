@@ -99,6 +99,19 @@ export async function handler(event: CloudFormationCustomResourceEvent): Promise
       };
 
     case 'Delete':
+      // A secondary owner stack shares this attachment with the stack that owns it. Its Delete events
+      // (rollback of a failed create or update, stack deletion, resource removal) must never detach
+      // the shared policy; the owning stack handles every real removal.
+      if (process.env['SKIP_ORGANIZATIONS_POLICY_DELETE'] === 'true') {
+        console.log(
+          `Skipping detach of policy ${policyId} from target ${targetId}: this stack is a secondary owner of the attachment`,
+        );
+        return {
+          PhysicalResourceId: event.PhysicalResourceId,
+          Status: 'SUCCESS',
+        };
+      }
+
       //
       // Detach policy, let CDK manage where it's deployed,
       //

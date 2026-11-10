@@ -716,6 +716,14 @@ export class OrganizationsStack extends AcceleratorStack {
   private addTaggingPolicies() {
     if (this.stackProperties.organizationConfig.taggingPolicies.length > 0) {
       this.logger.info(`Adding Tagging Policies`);
+      // Every enabled region declares the same organization-wide tag policies. The home region stack
+      // owns them. The other regions are secondary owners, so their Delete events (for example the
+      // rollback of a failed new region) never detach or delete a tag policy the home region still owns.
+      // If the home region is not an enabled region, no stack owns the policies, so every region keeps
+      // the original delete behavior.
+      const secondaryOwner =
+        cdk.Stack.of(this).region !== this.stackProperties.globalConfig.homeRegion &&
+        this.stackProperties.globalConfig.enabledRegions.includes(this.stackProperties.globalConfig.homeRegion);
       const enablePolicyTypeTag = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
         kmsKey: this.cloudwatchKey,
@@ -735,6 +743,7 @@ export class OrganizationsStack extends AcceleratorStack {
           acceleratorPrefix: this.props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
+          secondaryOwner,
         });
         policy.node.addDependency(enablePolicyTypeTag);
         for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits ?? []) {
@@ -749,6 +758,7 @@ export class OrganizationsStack extends AcceleratorStack {
               acceleratorPrefix: this.props.prefixes.accelerator,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
+              secondaryOwner,
             },
           );
           tagPolicyAttachment.node.addDependency(policy);
