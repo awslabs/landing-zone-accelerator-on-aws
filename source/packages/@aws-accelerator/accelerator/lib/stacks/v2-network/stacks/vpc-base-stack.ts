@@ -1043,7 +1043,8 @@ export class VpcBaseStack extends AcceleratorStack {
   private createCloudWatchLogVpcFlowLogs(vpcFlowLogsConfig: VpcFlowLogsConfig, logFormat?: string): void {
     const logGroup = new cdk.aws_logs.LogGroup(this, 'FlowLogsGroup', {
       encryptionKey: this.cloudwatchKey,
-      retention: this.logRetentionInDays,
+      // if customer specifies retention use that or else use globalConfig cloudwatchLogRetentionInDays
+      retention: vpcFlowLogsConfig.destinationsConfig?.cloudWatchLogs?.retentionInDays ?? this.logRetentionInDays,
       removalPolicy: cdk.RemovalPolicy.RETAIN_ON_UPDATE_OR_DELETE,
     });
 

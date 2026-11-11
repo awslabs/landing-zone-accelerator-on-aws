@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - fix(organizations): stop a stack that shares an AWS Organizations policy with the stack that owns it from detaching or deleting that policy during a rollback, a stack deletion or a resource removal. The home Region OrganizationsStack owns tag policies, and the AccountsStack owns service control policies, resource control policies and declarative policies. Previously a rollback in another stack, such as the OrganizationsStack of a newly added Region that failed to create, deleted the policy for the whole organization, and later pipeline runs failed with `PolicyNotFoundException`. Affected deployments must recover as described in Troubleshooting > Recovering shared AWS Organizations policies after a rollback
+- fix(networking): when useV2Stacks is enabled, apply `vpcFlowLogs.destinationsConfig.cloudWatchLogs.retentionInDays` to the CloudWatch Logs log group of VPC flow logs created by the V2 VPC stacks; previously these log groups always used the global-config `cloudwatchLogRetentionInDays`. When `retentionInDays` is not set, the global value is still used, matching the V1 network stacks. On the next pipeline run, existing V2 flow log groups change to the configured retention, and lowering it permanently deletes log events older than the new period
 
 ## [1.17.0] - 2026-10-28
 
