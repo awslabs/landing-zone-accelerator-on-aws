@@ -80,6 +80,7 @@ import { IRetainResourceModuleRequest, retainResources, RetentionErrorCode } fro
 import { RESOURCE_RETENTION_REGISTRY } from './registry';
 import { getAllRetentionStates, getRetentionState, saveRetentionState, updateRetentionStatus } from './retention-state';
 import {
+  RESOURCE_RETENTION_STATE_VERSION,
   RetentionStatus,
   type IResourceRetentionState,
   type IRetentionResult,
@@ -172,6 +173,19 @@ async function needsRetention(
     // If no state exists, retention is needed
     if (!state) {
       logger.info(`No retention state found for ${serviceName} stack ${stackName} - retention needed`, logPrefix);
+      return { needed: true };
+    }
+
+    // Re-evaluate legacy NOT_FOUND rows once under the current credential-routing semantics.
+    // Earlier external deployments could query a pipeline-account stack with management-account
+    // credentials and persist a false terminal result. Updating the state version before the
+    // attempt makes this migration bounded even when the stack is genuinely absent.
+    const stateVersion = state.stateVersion ?? 1;
+    if (state.retentionStatus === RetentionStatus.NOT_FOUND && stateVersion < RESOURCE_RETENTION_STATE_VERSION) {
+      logger.info(
+        `Retention state version ${stateVersion} for ${serviceName} stack ${stackName} predates version ${RESOURCE_RETENTION_STATE_VERSION} - re-processing`,
+        logPrefix,
+      );
       return { needed: true };
     }
 
@@ -360,7 +374,10 @@ async function retainStackResources(
         status: finalStatus,
         error: resultStatus === 'FAILED' ? response.message : undefined,
         dryRun: params.runnerParameters.dryRun,
-        resourceTypes: finalStatus === RetentionStatus.COMPLETED ? resourceTypes : undefined,
+        resourceTypes:
+          finalStatus === RetentionStatus.COMPLETED || finalStatus === RetentionStatus.NOT_FOUND
+            ? resourceTypes
+            : undefined,
       },
       params,
       logPrefix,

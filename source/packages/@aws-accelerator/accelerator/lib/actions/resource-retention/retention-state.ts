@@ -59,7 +59,7 @@ import { createLogger, createStatusLogger, queryDynamoDBTable } from 'aws-lza';
 import path from 'node:path';
 import type { ModuleParams } from '../../types';
 import { createDynamoDBClient, getItem, getModuleResourcePrefix, putItem } from '../utils/dynamodb';
-import { IResourceRetentionState, RetentionStatus } from './types';
+import { IResourceRetentionState, RESOURCE_RETENTION_STATE_VERSION, RetentionStatus } from './types';
 
 /**
  * Logger instance for retention state operations.
@@ -191,6 +191,7 @@ export async function getRetentionState(
 
     // Map DynamoDB item to interface
     const state: IResourceRetentionState = {
+      stateVersion: item['stateVersion'] as number | undefined,
       serviceName: item['serviceName'] as string,
       accountId: item['accountId'] as string,
       region: item['region'] as string,
@@ -270,6 +271,7 @@ export async function saveRetentionState(
     const item = {
       PK: `RETENTION#${state.serviceName}`,
       SK: sortKey,
+      stateVersion: state.stateVersion ?? RESOURCE_RETENTION_STATE_VERSION,
       serviceName: state.serviceName,
       accountId: state.accountId,
       region: state.region,
@@ -401,6 +403,7 @@ export async function updateRetentionStatus(
   // Build updated state
   const updatedState: IResourceRetentionState = {
     ...existingState,
+    stateVersion: RESOURCE_RETENTION_STATE_VERSION,
     retentionStatus: config.status,
     retentionTime:
       config.status === RetentionStatus.COMPLETED || config.status === RetentionStatus.NOT_FOUND
@@ -502,6 +505,7 @@ export async function getAllRetentionStates(
     // Convert DynamoDB items to IResourceRetentionState and add to Map
     for (const item of result.items) {
       const state: IResourceRetentionState = {
+        stateVersion: item['stateVersion'] as number | undefined,
         serviceName: item['serviceName'] as string,
         accountId: item['accountId'] as string,
         region: item['region'] as string,
