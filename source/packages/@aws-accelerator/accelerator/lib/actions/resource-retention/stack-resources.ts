@@ -289,17 +289,18 @@ async function retainStackResources(
     );
 
     // Build retention request
-    // In external deployments, invokingAccountId is the pipeline account. For management account
-    // stacks, we already hold managementAccountCredentials — set invokingAccountId to the
-    // management account so cfn-retention treats it as same-account and skips role assumption.
+    // The account ID used for cross-account detection must describe the supplied credentials,
+    // not the account where the module process is running. External deployments run in the
+    // pipeline account but supply management-account credentials. Treat the management account
+    // as the credential account so a pipeline account that is also an LZA target is reached by
+    // assuming the configured account access role.
     const managementAccountId = params.moduleRunnerParameters.configs.accountsConfig.getManagementAccountId();
-    const resolvedInvokingAccountId =
-      accountId === managementAccountId
-        ? managementAccountId
-        : params.runnerParameters.sessionContext.invokingAccountId;
+    const credentialAccountId = params.moduleRunnerParameters.managementAccountCredentials
+      ? managementAccountId
+      : params.runnerParameters.sessionContext.invokingAccountId;
 
     const retentionRequest: IRetainResourceModuleRequest = {
-      invokingAccountId: resolvedInvokingAccountId,
+      invokingAccountId: credentialAccountId,
       region: params.runnerParameters.sessionContext.region,
       globalRegion: params.runnerParameters.sessionContext.globalRegion,
       partition: params.runnerParameters.sessionContext.partition,

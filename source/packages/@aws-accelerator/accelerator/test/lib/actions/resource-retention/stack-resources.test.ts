@@ -172,6 +172,151 @@ describe('StackResources', () => {
       );
     });
 
+    it('should identify the management account as the credential account in external deployments', async () => {
+      const managementAccountId = '111111111111';
+      const pipelineAccountId = mockParams.runnerParameters.sessionContext.invokingAccountId;
+      const managementCredentials = mockParams.moduleRunnerParameters.managementAccountCredentials;
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          {
+            serviceName: AcceleratorModules.GUARDDUTY,
+            resourceTypes: ['Custom::GuardDutyCreatePublishingDestinationCommand'],
+          },
+        ],
+        'AWSAccelerator-SecurityAuditStack': [
+          {
+            serviceName: AcceleratorModules.MACIE,
+            resourceTypes: ['Custom::MacieCreateMember'],
+          },
+        ],
+        'AWSAccelerator-NetworkAssociationsStack': [
+          {
+            serviceName: AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
+            resourceTypes: [
+              'AWS::EC2::TransitGatewayRouteTableAssociation',
+              'AWS::EC2::TransitGatewayRouteTablePropagation',
+              'AWS::EC2::TransitGatewayConnect',
+            ],
+          },
+        ],
+      };
+      vi.mocked(mockParams.moduleRunnerParameters.configs.accountsConfig.getAuditAccountId).mockReturnValueOnce(
+        pipelineAccountId,
+      );
+      vi.mocked(mockParams.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds).mockReturnValueOnce([
+        managementAccountId,
+        pipelineAccountId,
+      ]);
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(new Map());
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'Resources retained successfully',
+        requestedResourceTypes: ['Custom::GuardDutyCreatePublishingDestinationCommand'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'SUCCEEDED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 1,
+        },
+      });
+
+      const result = await StackResources.retain(mockParams);
+      const requests = vi.mocked(cfnRetention.retainResources).mock.calls.map(([request]) => request);
+      const pipelineAccountRequests = requests.filter(request => request.configuration.accountId === pipelineAccountId);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      expect(pipelineAccountRequests).toHaveLength(6);
+      expect(requests.every(request => request.invokingAccountId === managementAccountId)).toBe(true);
+      expect(requests.every(request => request.credentials === managementCredentials)).toBe(true);
+      expect(pipelineAccountRequests.map(request => request.configuration.stackName).sort()).toEqual(
+        [
+          `AWSAccelerator-NetworkAssociationsStack-${pipelineAccountId}-us-east-1`,
+          `AWSAccelerator-NetworkAssociationsStack-${pipelineAccountId}-us-west-2`,
+          `AWSAccelerator-SecurityAuditStack-${pipelineAccountId}-us-east-1`,
+          `AWSAccelerator-SecurityAuditStack-${pipelineAccountId}-us-west-2`,
+          `AWSAccelerator-SecurityStack-${pipelineAccountId}-us-east-1`,
+          `AWSAccelerator-SecurityStack-${pipelineAccountId}-us-west-2`,
+        ].sort(),
+      );
+      expect(pipelineAccountRequests).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            invokingAccountId: managementAccountId,
+            credentials: managementCredentials,
+            configuration: expect.objectContaining({ accountId: pipelineAccountId }),
+          }),
+        ]),
+      );
+    });
+
+    it('should preserve the session account as the credential account in internal deployments', async () => {
+      const managementAccountId = '111111111111';
+      const workloadAccountId = '333333333333';
+      const internalParams = {
+        ...mockParams,
+        runnerParameters: {
+          ...mockParams.runnerParameters,
+          sessionContext: {
+            ...mockParams.runnerParameters.sessionContext,
+            invokingAccountId: managementAccountId,
+          },
+        },
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          managementAccountCredentials: undefined,
+        },
+      } as ModuleParams;
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-NetworkAssociationsStack': [
+          {
+            serviceName: AcceleratorModules.TGW_ASSOCIATIONS_AND_PROPAGATIONS,
+            resourceTypes: ['AWS::EC2::TransitGatewayRouteTableAssociation'],
+          },
+        ],
+      };
+      vi.mocked(mockParams.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds).mockReturnValueOnce([
+        managementAccountId,
+        workloadAccountId,
+      ]);
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(new Map());
+      vi.mocked(retentionState.getRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.saveRetentionState).mockResolvedValue(undefined);
+      vi.mocked(retentionState.updateRetentionStatus).mockResolvedValue(undefined);
+      vi.mocked(cfnRetention.retainResources).mockResolvedValue({
+        message: 'Resources retained successfully',
+        requestedResourceTypes: ['AWS::EC2::TransitGatewayRouteTableAssociation'],
+        resourceRetentionStatus: {
+          stackName: 'test-stack',
+          stackModificationStatus: 'SUCCEEDED',
+          modifiedResources: [],
+          notFoundResources: [],
+          totalModifiedResources: 1,
+        },
+      });
+
+      const result = await StackResources.retain(internalParams);
+      const requests = vi.mocked(cfnRetention.retainResources).mock.calls.map(([request]) => request);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      expect(requests).toHaveLength(4);
+      expect(requests.every(request => request.invokingAccountId === managementAccountId)).toBe(true);
+      expect(requests.every(request => request.credentials === undefined)).toBe(true);
+      expect(requests).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            invokingAccountId: managementAccountId,
+            configuration: expect.objectContaining({
+              accountId: workloadAccountId,
+              stackName: `AWSAccelerator-NetworkAssociationsStack-${workloadAccountId}-us-east-1`,
+            }),
+          }),
+        ]),
+      );
+    });
+
     it('should handle retention failures', async () => {
       vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
         'AWSAccelerator-SecurityStack': [

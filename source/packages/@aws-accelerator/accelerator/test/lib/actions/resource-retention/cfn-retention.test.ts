@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { CloudFormationClient } from '@aws-sdk/client-cloudformation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   IRetainResourceModuleRequest,
@@ -74,17 +75,22 @@ vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock node:path
-vi.mock('node:path', () => ({
-  default: {
-    parse: vi.fn(function () {
-      return { name: 'cfn-retention' };
-    }),
-    basename: vi.fn(() => 'cfn-retention.ts'),
-    join: vi.fn((...args: string[]) => args.join('/')),
-    dirname: vi.fn(() => '/mock/dir'),
-  },
-}));
+// Mock node:path for consumers using both default and named imports
+vi.mock('node:path', () => {
+  const parse = vi.fn(function () {
+    return { name: 'cfn-retention' };
+  });
+  const basename = vi.fn(() => 'cfn-retention.ts');
+  const join = vi.fn((...args: string[]) => args.join('/'));
+  const dirname = vi.fn(() => '/mock/dir');
+  return {
+    default: { parse, basename, join, dirname },
+    parse,
+    basename,
+    join,
+    dirname,
+  };
+});
 
 // Mock the entire @aws-lza module
 vi.mock('aws-lza', () => ({
@@ -202,8 +208,10 @@ describe('retainResources', () => {
     );
   });
 
-  it('should successfully complete the function', async () => {
-    const response = await retainResources(input);
+  it('should use supplied credentials directly for same-account operations', async () => {
+    const sourceCredentials = { accessKeyId: 'source', secretAccessKey: 'source' };
+    const response = await retainResources({ ...input, credentials: sourceCredentials });
+    const { getCredentials } = await import('aws-lza');
 
     expect(response).toBeDefined();
     expect(response.requestedResourceTypes).toEqual(input.configuration.resourceTypes);
@@ -212,6 +220,8 @@ describe('retainResources', () => {
     expect(response.deploymentAttempted).toBe(true);
     expect(response.resourceRetentionStatus?.stackName).toBe(input.configuration.stackName);
     expect(response.resourceRetentionStatus?.modifiedResources).toBeDefined();
+    expect(getCredentials).not.toHaveBeenCalled();
+    expect(CloudFormationClient).toHaveBeenCalledWith(expect.objectContaining({ credentials: sourceCredentials }));
   });
 
   it('should handle stack not found scenario', async () => {
@@ -244,10 +254,12 @@ describe('retainResources', () => {
 
   // Additional test cases for 100% coverage
 
-  it('should handle cross-account operations', async () => {
+  it('should assume the target role when the credential account differs from the target account', async () => {
+    const sourceCredentials = { accessKeyId: 'source', secretAccessKey: 'source' };
     const crossAccountInput = {
       ...input,
       invokingAccountId: 'YYYYYYYYYYYY',
+      credentials: sourceCredentials,
       configuration: {
         ...input.configuration,
         accountId: 'XXXXXXXXXXXX',
@@ -256,9 +268,18 @@ describe('retainResources', () => {
     };
 
     const response = await retainResources(crossAccountInput);
+    const { getCredentials } = await import('aws-lza');
 
     expect(response).toBeDefined();
     expect(response.message).toBe('Resource retention and deployment completed successfully');
+    expect(getCredentials).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accountId: 'XXXXXXXXXXXX',
+        assumeRoleName: 'CrossAccountRole',
+        credentials: sourceCredentials,
+      }),
+    );
+    expect(CloudFormationClient).toHaveBeenCalledWith(expect.objectContaining({ credentials: mockCredentials }));
   });
 
   it('should throw error for cross-account operations without role name', async () => {
