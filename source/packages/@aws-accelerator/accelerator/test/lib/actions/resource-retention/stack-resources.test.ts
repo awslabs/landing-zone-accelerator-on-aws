@@ -17,11 +17,7 @@ import * as cfnRetention from '../../../../lib/actions/resource-retention/cfn-re
 import * as registry from '../../../../lib/actions/resource-retention/registry';
 import * as retentionState from '../../../../lib/actions/resource-retention/retention-state';
 import { StackResources } from '../../../../lib/actions/resource-retention/stack-resources';
-import {
-  RESOURCE_RETENTION_STATE_VERSION,
-  RetentionStatus,
-  type IResourceRetentionState,
-} from '../../../../lib/actions/resource-retention/types';
+import { RetentionStatus, type IResourceRetentionState } from '../../../../lib/actions/resource-retention/types';
 import { AcceleratorModules, ModuleParams } from '../../../../lib/types';
 
 // Mock dependencies
@@ -388,14 +384,6 @@ describe('StackResources', () => {
 
       expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
       expect(result.summary).toContain('not found');
-      expect(retentionState.updateRetentionStatus).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: RetentionStatus.NOT_FOUND,
-          resourceTypes: ['Custom::MacieExportConfigClassification'],
-        }),
-        expect.anything(),
-        expect.anything(),
-      );
     });
 
     it('should defer REGION_NOT_AVAILABLE targets without persisting terminal state', async () => {
@@ -789,7 +777,7 @@ describe('StackResources', () => {
       expect(cfnRetention.retainResources).not.toHaveBeenCalled();
     });
 
-    it('should retry legacy NOT_FOUND states once under current retention semantics', async () => {
+    it('should retry NOT_FOUND states for pipeline account targets in external deployments', async () => {
       const pipelineAccountId = mockParams.runnerParameters.sessionContext.invokingAccountId;
       const resourceTypes = ['Custom::GuardDutyCreatePublishingDestinationCommand'];
       vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
@@ -846,8 +834,8 @@ describe('StackResources', () => {
       );
     });
 
-    it('should keep current-version NOT_FOUND states terminal', async () => {
-      const pipelineAccountId = mockParams.runnerParameters.sessionContext.invokingAccountId;
+    it('should keep NOT_FOUND states terminal for non-pipeline targets', async () => {
+      const targetAccountId = '333333333333';
       const resourceTypes = ['Custom::GuardDutyCreatePublishingDestinationCommand'];
       vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
         'AWSAccelerator-SecurityStack': [
@@ -858,16 +846,15 @@ describe('StackResources', () => {
         ],
       };
       vi.mocked(mockParams.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds).mockReturnValueOnce([
-        pipelineAccountId,
+        targetAccountId,
       ]);
 
       const allStates = new Map<string, IResourceRetentionState>();
       for (const region of ['us-east-1', 'us-west-2']) {
-        const stackName = `AWSAccelerator-SecurityStack-${pipelineAccountId}-${region}`;
-        allStates.set(`${pipelineAccountId}:${region}:${stackName}`, {
-          stateVersion: RESOURCE_RETENTION_STATE_VERSION,
+        const stackName = `AWSAccelerator-SecurityStack-${targetAccountId}-${region}`;
+        allStates.set(`${targetAccountId}:${region}:${stackName}`, {
           serviceName: AcceleratorModules.STACK_RESOURCES_RETENTION,
-          accountId: pipelineAccountId,
+          accountId: targetAccountId,
           region,
           stackName,
           resourceTypes,
@@ -879,6 +866,50 @@ describe('StackResources', () => {
       vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(allStates);
 
       const result = await StackResources.retain(mockParams);
+
+      expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
+      expect(cfnRetention.retainResources).not.toHaveBeenCalled();
+    });
+
+    it('should keep NOT_FOUND states terminal for the session account in internal deployments', async () => {
+      const sessionAccountId = mockParams.runnerParameters.sessionContext.invokingAccountId;
+      const internalParams = {
+        ...mockParams,
+        moduleRunnerParameters: {
+          ...mockParams.moduleRunnerParameters,
+          managementAccountCredentials: undefined,
+        },
+      } as ModuleParams;
+      const resourceTypes = ['Custom::GuardDutyCreatePublishingDestinationCommand'];
+      vi.mocked(registry).RESOURCE_RETENTION_REGISTRY = {
+        'AWSAccelerator-SecurityStack': [
+          {
+            serviceName: AcceleratorModules.GUARDDUTY,
+            resourceTypes,
+          },
+        ],
+      };
+      vi.mocked(mockParams.moduleRunnerParameters.configs.accountsConfig.getActiveAccountIds).mockReturnValueOnce([
+        sessionAccountId,
+      ]);
+
+      const allStates = new Map<string, IResourceRetentionState>();
+      for (const region of ['us-east-1', 'us-west-2']) {
+        const stackName = `AWSAccelerator-SecurityStack-${sessionAccountId}-${region}`;
+        allStates.set(`${sessionAccountId}:${region}:${stackName}`, {
+          serviceName: AcceleratorModules.STACK_RESOURCES_RETENTION,
+          accountId: sessionAccountId,
+          region,
+          stackName,
+          resourceTypes,
+          retentionStatus: RetentionStatus.NOT_FOUND,
+          retentionAttempts: 0,
+          resourcesRetained: true,
+        });
+      }
+      vi.mocked(retentionState.getAllRetentionStates).mockResolvedValue(allStates);
+
+      const result = await StackResources.retain(internalParams);
 
       expect(result.status).toBe(MODULE_STATE_CODE.COMPLETED);
       expect(cfnRetention.retainResources).not.toHaveBeenCalled();

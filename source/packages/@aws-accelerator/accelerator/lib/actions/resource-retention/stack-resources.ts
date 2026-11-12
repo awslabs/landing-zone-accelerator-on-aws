@@ -80,7 +80,6 @@ import { IRetainResourceModuleRequest, retainResources, RetentionErrorCode } fro
 import { RESOURCE_RETENTION_REGISTRY } from './registry';
 import { getAllRetentionStates, getRetentionState, saveRetentionState, updateRetentionStatus } from './retention-state';
 import {
-  RESOURCE_RETENTION_STATE_VERSION,
   RetentionStatus,
   type IResourceRetentionState,
   type IRetentionResult,
@@ -162,6 +161,7 @@ async function needsRetention(
   logPrefix: string,
   allStates: Map<string, IResourceRetentionState>,
   currentResourceTypes?: string[],
+  retryPipelineAccountNotFound = false,
 ): Promise<{ needed: boolean; reason?: string }> {
   try {
     logger.info(`Checking if retention needed for ${serviceName} stack ${stackName}`, logPrefix);
@@ -176,16 +176,11 @@ async function needsRetention(
       return { needed: true };
     }
 
-    // Re-evaluate legacy NOT_FOUND rows once under the current credential-routing semantics.
-    // Earlier external deployments could query a pipeline-account stack with management-account
-    // credentials and persist a false terminal result. Updating the state version before the
-    // attempt makes this migration bounded even when the stack is genuinely absent.
-    const stateVersion = state.stateVersion ?? 1;
-    if (state.retentionStatus === RetentionStatus.NOT_FOUND && stateVersion < RESOURCE_RETENTION_STATE_VERSION) {
-      logger.info(
-        `Retention state version ${stateVersion} for ${serviceName} stack ${stackName} predates version ${RESOURCE_RETENTION_STATE_VERSION} - re-processing`,
-        logPrefix,
-      );
+    // A prior external deployment could persist a false NOT_FOUND when the pipeline account was
+    // also an LZA target: the lookup used management-account credentials in the pipeline account.
+    // Retry only that target so the corrected credential routing can repair the poisoned state.
+    if (state.retentionStatus === RetentionStatus.NOT_FOUND && retryPipelineAccountNotFound) {
+      logger.info(`Re-processing prior NOT_FOUND state for external pipeline account stack ${stackName}`, logPrefix);
       return { needed: true };
     }
 
@@ -374,10 +369,7 @@ async function retainStackResources(
         status: finalStatus,
         error: resultStatus === 'FAILED' ? response.message : undefined,
         dryRun: params.runnerParameters.dryRun,
-        resourceTypes:
-          finalStatus === RetentionStatus.COMPLETED || finalStatus === RetentionStatus.NOT_FOUND
-            ? resourceTypes
-            : undefined,
+        resourceTypes: finalStatus === RetentionStatus.COMPLETED ? resourceTypes : undefined,
       },
       params,
       logPrefix,
@@ -609,6 +601,8 @@ async function retainStackResourcesBatch(
       logPrefix,
       allStates,
       stackConfig.resourceTypes,
+      !!params.moduleRunnerParameters.managementAccountCredentials &&
+        stackConfig.accountId === params.runnerParameters.sessionContext.invokingAccountId,
     );
 
     if (result.needed) {

@@ -43,12 +43,6 @@
  *
  * @enum {string}
  */
-/**
- * Current retention state schema and routing semantics version.
- * Existing rows without this attribute are treated as version 1.
- */
-export const RESOURCE_RETENTION_STATE_VERSION = 2;
-
 export enum RetentionStatus {
   /**
    * Retention has not been attempted yet.
@@ -188,12 +182,6 @@ export interface IRetentionResult {
  * Tracks the retention status of CloudFormation stacks to avoid redundant operations.
  */
 export interface IResourceRetentionState {
-  /**
-   * Version of the retention routing semantics used to produce this state.
-   * Rows without a version predate credential-account routing.
-   */
-  readonly stateVersion?: number;
-
   /**
    * Service name (e.g., 'MACIE', 'GUARDDUTY', 'SECURITYHUB', 'DETECTIVE', 'S3')
    */

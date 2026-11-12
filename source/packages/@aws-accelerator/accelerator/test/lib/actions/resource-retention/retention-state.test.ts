@@ -18,11 +18,7 @@ import {
   saveRetentionState,
   updateRetentionStatus,
 } from '../../../../lib/actions/resource-retention/retention-state.js';
-import {
-  RESOURCE_RETENTION_STATE_VERSION,
-  RetentionStatus,
-  type IResourceRetentionState,
-} from '../../../../lib/actions/resource-retention/types.js';
+import { RetentionStatus, type IResourceRetentionState } from '../../../../lib/actions/resource-retention/types.js';
 import * as dynamodb from '../../../../lib/actions/utils/dynamodb.js';
 import type { ModuleParams } from '../../../../lib/types.js';
 
@@ -115,7 +111,7 @@ describe('retention-state utils', () => {
         'test-prefix',
       );
 
-      expect(result).toEqual({ ...mockState, stateVersion: undefined });
+      expect(result).toEqual(mockState);
       expect(dynamodb.getItem).toHaveBeenCalledWith(
         expect.anything(),
         'AWSAccelerator-Resource-Retention-123456789012-us-east-1',
@@ -183,7 +179,6 @@ describe('retention-state utils', () => {
         {
           PK: 'RETENTION#macie',
           SK: 'STACK#111111111111#us-west-2#AWSAccelerator-SecurityStack-111111111111-us-west-2',
-          stateVersion: RESOURCE_RETENTION_STATE_VERSION,
           serviceName: 'macie',
           accountId: '111111111111',
           region: 'us-west-2',
@@ -285,7 +280,6 @@ describe('retention-state utils', () => {
         'AWSAccelerator-Resource-Retention-123456789012-us-east-1',
         expect.objectContaining({
           retentionStatus: RetentionStatus.COMPLETED,
-          stateVersion: RESOURCE_RETENTION_STATE_VERSION,
           retentionAttempts: 0,
           resourcesRetained: true,
         }),
@@ -374,7 +368,6 @@ describe('retention-state utils', () => {
         'AWSAccelerator-Resource-Retention-123456789012-us-east-1',
         expect.objectContaining({
           retentionStatus: RetentionStatus.NOT_FOUND,
-          stateVersion: RESOURCE_RETENTION_STATE_VERSION,
           resourcesRetained: true,
         }),
         'test-prefix',
