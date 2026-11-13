@@ -36,6 +36,7 @@ import {
   warnOnUnrecognizedKeys,
 } from '@aws-accelerator/config';
 import { createLogger, setExternalManagementAccountCredentials } from '@aws-accelerator/utils';
+import { getEndpointPolicyNotAppliedWarnings } from './stacks/network-stacks/network-vpc-endpoints-stack/endpoint-policy-support';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
@@ -354,6 +355,13 @@ function runValidators(
       );
     } catch (e) {
       configErrors.push(e);
+    }
+  }
+
+  // Endpoint policies that are configured but not applied, because the service does not support them
+  if (networkConfig) {
+    for (const warning of getEndpointPolicyNotAppliedWarnings(networkConfig)) {
+      logger.warn(warning);
     }
   }
 

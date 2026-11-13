@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { getEndpointPolicyNotAppliedWarning, isVpcEndpointPolicySupported } from './endpoint-policy-support';
 import { getGlobalRegion } from '../../../../../../@aws-accelerator/utils/lib/common-functions';
 
 import {
@@ -968,39 +969,12 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     endpointItem: GatewayEndpointServiceConfig | InterfaceEndpointServiceConfig,
     isGatewayEndpoint?: boolean,
   ): cdk.aws_iam.PolicyDocument | undefined {
-    // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
-    // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
-    const policiesUnsupported = [
-      'appmesh-envoy-management',
-      'appstream.api',
-      'appstream.streaming',
-      'cloudtrail',
-      'codeguru-profiler',
-      'codeguru-reviewer',
-      'codepipeline',
-      'datasync',
-      'deviceadvisor.iot',
-      'ebs',
-      'elastic-inference.runtime',
-      'iot.data',
-      'iotwireless.api',
-      'lorawan.cups',
-      'lorawan.lns',
-      'iotsitewise.api',
-      'iotsitewise.data',
-      'macie2',
-      'aps',
-      'aps-workspaces',
-      'awsconnector',
-      'sms',
-      'sms-fips',
-      'email-smtp',
-      'storagegateway',
-      'transfer',
-      'transfer.server',
-    ];
-
-    if (policiesUnsupported.includes(endpointItem.service)) {
+    if (!isVpcEndpointPolicySupported(endpointItem.service)) {
+      // The endpoint is deployed without a policy. Warn when a policy was configured for it.
+      const warning = getEndpointPolicyNotAppliedWarning(vpcItem, endpointItem, isGatewayEndpoint);
+      if (warning) {
+        this.logger.warn(warning);
+      }
       return undefined;
     }
 
