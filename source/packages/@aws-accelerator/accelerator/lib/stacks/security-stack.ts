@@ -292,7 +292,7 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
         this,
         pascalCase(ebsEncryptionConfig.kmsKey) + `-KmsKey`,
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
+        cdk.aws_ssm.StringParameter.valueFromLookup(
           this,
           `${this.props.prefixes.ssmParamName}/kms/${ebsEncryptionConfig.kmsKey}/key-arn`,
         ),
