@@ -219,7 +219,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         const key = cdk.aws_kms.Key.fromKeyArn(
           this,
           pascalCase(`${managedActiveDirectory.name}AdminSecretKeyLookup`),
-          cdk.aws_ssm.StringParameter.valueForStringParameter(
+          cdk.aws_ssm.StringParameter.valueFromLookup(
             this,
             this.acceleratorResourceNames.parameters.secretsManagerCmkArn,
           ),
@@ -1315,7 +1315,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       return cdk.aws_kms.Key.fromKeyArn(
         this,
         pascalCase(ruleName) + '-AcceleratorGetS3Key',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(this, this.acceleratorResourceNames.parameters.s3CmkArn),
+        cdk.aws_ssm.StringParameter.valueFromLookup(this, this.acceleratorResourceNames.parameters.s3CmkArn),
       ).keyArn;
     } else {
       // When specific Key ID is given
