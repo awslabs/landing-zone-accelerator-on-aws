@@ -300,6 +300,9 @@ export class InstallerStack extends cdk.Stack {
         'aws-cn': {
           regionName: 'cn-northwest-1',
         },
+        'aws-eusc': {
+          regionName: 'eusc-de-east-1',
+        },
       },
     });
 

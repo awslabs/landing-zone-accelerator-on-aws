@@ -226,6 +226,59 @@ describe('PipelineStack customS3Path', () => {
   }
 });
 
+describe('PipelineStack approval review link', () => {
+  it('uses the aws-eusc console domain in the aws-eusc partition', () => {
+    const app = new cdk.App();
+    const stack = new PipelineStack(app, 'PipelineStackEusc', {
+      sourceRepository: 'codecommit',
+      sourceRepositoryOwner: 'awslabs',
+      sourceRepositoryName: 'accelerator-source',
+      sourceBranchName: 'main',
+      sourceBucketName: 'my-accelerator-source-bucket',
+      sourceBucketObject: 'release/v9.8.7.zip',
+      sourceBucketKmsKeyArn: 'arn:aws:kms:us-east-1:000000000000:key/aaaaaaaa-1111-bbbb-2222-cccccc333333',
+      enableApprovalStage: true,
+      qualifier: 'aws-accelerator',
+      managementAccountId: app.account,
+      managementAccountRoleName: 'AcceleratorAccountAccessRole',
+      managementAccountEmail: 'accelerator-root@example.com',
+      logArchiveAccountEmail: 'accelerator-log-archive@example.com',
+      auditAccountEmail: 'accelerator-audit@example.com',
+      controlTowerEnabled: 'Yes',
+      partition: 'aws-eusc',
+      env: {
+        account: '000000000000',
+        region: 'eusc-de-east-1',
+      },
+      useExistingConfigRepo: false,
+      configRepositoryLocation: 'codecommit',
+      configRepositoryName: 'aws-accelerator-config',
+      configRepositoryBranchName: 'main',
+      configRepositoryOwner: '',
+      prefixes: {
+        accelerator: 'AWSAccelerator',
+        kmsAlias: 'alias/accelerator',
+        bucketName: 'aws-accelerator',
+        ssmParamName: '/accelerator',
+        snsTopicName: 'accelerator',
+        repoName: 'aws-accelerator',
+        secretName: '/accelerator',
+        trailLogName: 'aws-accelerator',
+        databaseName: 'aws-accelerator',
+      },
+      enableSingleAccountMode: false,
+      pipelineAccountId: '000000000000',
+      useExistingRoles: false,
+      codeconnectionArn: '',
+      installerStackName: 'AWSAccelerator-InstallerStack',
+      secureBucketName: 'test-bucket',
+    });
+    const templateJson = JSON.stringify(cdk.assertions.Template.fromStack(stack).toJSON());
+
+    expect(templateJson).toContain('https://eusc-de-east-1.console.amazonaws-eusc.eu/s3/buckets/');
+  });
+});
+
 describe('PipelineStack post_build diagnostics', () => {
   it('ToolkitProject buildspec includes post_build phase with collect-diagnostics', () => {
     const stack = getStacks()[0];

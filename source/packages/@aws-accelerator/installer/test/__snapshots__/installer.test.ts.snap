@@ -40,6 +40,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
       "aws-cn": {
         "regionName": "cn-northwest-1",
       },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
+      },
       "aws-iso": {
         "regionName": "us-iso-east-1",
       },
@@ -4119,6 +4122,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
       "aws-cn": {
         "regionName": "cn-northwest-1",
       },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
+      },
       "aws-iso": {
         "regionName": "us-iso-east-1",
       },
@@ -8187,6 +8193,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",
@@ -12288,6 +12297,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
       "aws-cn": {
         "regionName": "cn-northwest-1",
       },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
+      },
       "aws-iso": {
         "regionName": "us-iso-east-1",
       },
@@ -16377,6 +16389,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",
@@ -20472,6 +20487,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",
@@ -24572,6 +24590,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",
@@ -29052,6 +29073,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",
@@ -33581,6 +33605,9 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
       },
       "aws-cn": {
         "regionName": "cn-northwest-1",
+      },
+      "aws-eusc": {
+        "regionName": "eusc-de-east-1",
       },
       "aws-iso": {
         "regionName": "us-iso-east-1",

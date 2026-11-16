@@ -1163,6 +1163,7 @@ export class AcceleratorPipeline extends Construct {
     const partitions: { [key: string]: string } = {
       aws: 'aws.amazon.com',
       'aws-cn': 'amazonaws.com.cn',
+      'aws-eusc': 'amazonaws-eusc.eu',
       'aws-iso': 'c2s.ic.gov',
       'aws-iso-b': 'sc2s.sgov.gov',
       'aws-iso-e': 'cloud.adc-e.uk',

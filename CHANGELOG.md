@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - feat(release): generate, retain, and publish CycloneDX SBOMs for the installed source tree and final container archive with each release
+- feat(installer): support the AWS European Sovereign Cloud (`aws-eusc`) partition in the CodePipeline installer stack and the pipeline approval stage review link
 
 ### Fixed
 
