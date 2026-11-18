@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.17.1] -
+## [1.17.1] - 2026-11-20
 
 ### Added
 
@@ -18,13 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- fix(logging): restrict the central logs bucket KMS ARN parameter access role's trust policy to accelerator-prefixed roles in the organization; previously any principal in the organization could assume the role because the caller restriction was evaluated after role assumption
+- fix(metadata): use the configured bucket name prefix for Accelerator Metadata Lambda access when the pipeline qualifier defaults to `aws-accelerator`, while preserving custom qualifiers that name buckets in external-pipeline deployments
 - fix(prepare): in external deployments, use the management account as the credential account for stack resource retention so an external pipeline account that is also an LZA deployment target is accessed through the configured account role; previously its SecurityStack and NetworkAssociationsStack were queried with management-account credentials, falsely recorded as `NOT_FOUND`, and left without retention policies before migrated GuardDuty, Macie, or Transit Gateway resources were removed. Existing `NOT_FOUND` retention records for the external pipeline account are retried with the corrected credentials; `NOT_FOUND` stays final for all other accounts
 - fix(organizations): stop a stack that shares an AWS Organizations policy with the stack that owns it from detaching or deleting that policy during a rollback, a stack deletion or a resource removal. The home Region OrganizationsStack owns tag policies, and the AccountsStack owns service control policies, resource control policies and declarative policies. Previously a rollback in another stack, such as the OrganizationsStack of a newly added Region that failed to create, deleted the policy for the whole organization, and later pipeline runs failed with `PolicyNotFoundException`. Affected deployments must recover as described in Troubleshooting > Recovering shared AWS Organizations policies after a rollback
 - fix(networking): when useV2Stacks is enabled, apply `vpcFlowLogs.destinationsConfig.cloudWatchLogs.retentionInDays` to the CloudWatch Logs log group of VPC flow logs created by the V2 VPC stacks; previously these log groups always used the global-config `cloudwatchLogRetentionInDays`. When `retentionInDays` is not set, the global value is still used, matching the V1 network stacks. On the next pipeline run, existing V2 flow log groups change to the configured retention, and lowering it permanently deletes log events older than the new period
 - fix(networking): log a warning during config validation and during synthesis when a gateway or interface endpoint's `policy`, or the VPC's `defaultPolicy`, is not applied because the accelerator treats the endpoint's service as not supporting VPC endpoint policies; previously the policy was dropped without a message and the endpoint was deployed without it. The endpoint is still deployed without the policy, so no deployed resource changes. The warning does not fail the pipeline. To stop it, set `applyPolicy: false` on the endpoint
 - fix(logging): add the accelerator subscription filter to `LOG_GROUP` subscription log groups with up to four existing filters (the CloudWatch Logs quota is five), and retain the CloudWatch Logs KMS key when a first `LoggingStack` deployment fails. Previously two existing filters failed the deployment and the rollback scheduled the key for deletion, leaving log groups encrypted with it unusable. A log group with five filters is skipped with a warning. To recover affected log groups, see Troubleshooting > Recovering log groups encrypted with a deleted accelerator CloudWatch Logs key
 - fix(identity-center): delete the previous account assignment when an Identity Center assignment's principal is removed, swapped, or changed between `principals` and the deprecated `principalId`; previously only removed accounts were cleaned up, so the old principal kept access. This also deletes a matching assignment created outside the accelerator. A removed principal that no longer exists in the identity store is skipped. Assignments left behind by earlier updates must be deleted manually. Swapping principals on an assignment that targets a very large number of accounts can reach the 15 minute Lambda timeout; split such a change across deployments
-
 
 ## [1.17.0] - 2026-10-28
 
@@ -51,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- fix(metadata): use the configured bucket name prefix for Accelerator Metadata Lambda access when the pipeline qualifier defaults to `aws-accelerator`, while preserving custom qualifiers that name buckets in external-pipeline deployments
 - fix(control-tower): include the operation status message in the error and warning when an AWS Control Tower landing zone create, update or reset operation fails, so the pipeline log shows why the operation failed
 - fix(guardduty): grant `organizations:ListRoots` to the GuardDuty delegated-admin enablement principal, which GuardDuty now requires for `EnableOrganizationAdminAccount`; without it greenfield installs with `guardduty.enable: true` failed at the Organization stage with an `organizations:ListRoots` AccessDeniedException
 - fix(iam): set `SAML:aud` to the regional sign-in endpoint (`https://<region>.signin.amazonaws-eusc.eu/saml`) for `iam-config.yaml` `roleSets[].roles[].assumedBy[].type: provider` roles in the `aws-eusc` partition; previously the trust policy rendered an empty `SAML:aud` and `AssumeRoleWithSAML` could not succeed. Configure the identity provider with the regional SAML metadata from the same Region as the LZA home Region

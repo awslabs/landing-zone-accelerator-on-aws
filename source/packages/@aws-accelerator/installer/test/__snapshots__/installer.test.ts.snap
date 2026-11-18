@@ -258,7 +258,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 1`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -1954,7 +1954,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -3055,7 +3055,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4340,7 +4340,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 2`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -6026,7 +6026,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -7127,7 +7127,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -8445,7 +8445,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 3`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -10161,7 +10161,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -11247,7 +11247,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -12548,7 +12548,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 4`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -14254,7 +14254,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -15340,7 +15340,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -16641,7 +16641,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 5`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -18352,7 +18352,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -19438,7 +19438,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -20718,7 +20718,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 6`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -22411,7 +22411,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -23512,7 +23512,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -24818,7 +24818,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -24832,7 +24832,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 7`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.17.0.zip",
+      "Default": "release/v1.17.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -26540,7 +26540,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -27995,7 +27995,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -29316,7 +29316,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -29330,7 +29330,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 8`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.17.0.zip",
+      "Default": "release/v1.17.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -31045,7 +31045,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -32500,7 +32500,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -33845,7 +33845,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
     "RepositoryBranchName": {
       "AllowedPattern": ".+",
       "ConstraintDescription": "The repository branch name must not be empty",
-      "Default": "release/v1.17.0",
+      "Default": "release/v1.17.1",
       "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
@@ -33859,7 +33859,7 @@ exports[`InstallerStack > Stack(installer):  Snapshot Test 9`] = `
       "Type": "String",
     },
     "RepositoryBucketObject": {
-      "Default": "release/v1.17.0.zip",
+      "Default": "release/v1.17.1.zip",
       "Description": "The full path to the accelerator code zip S3 Object. (S3 Only)",
       "Type": "String",
     },
@@ -35582,7 +35582,7 @@ phases:
                 {
                   "Ref": "AWS::Region",
                 },
-                "/lza/v1.17.0.zip --region ",
+                "/lza/v1.17.1.zip --region ",
                 {
                   "Ref": "AWS::Region",
                 },
@@ -37059,7 +37059,7 @@ phases:
           },
         },
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

@@ -110,7 +110,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -221,7 +221,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "SKIP_ORGANIZATIONS_POLICY_DELETE": "true",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -313,7 +313,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
           "Variables": {
             "AWS_STS_REGIONAL_ENDPOINTS": "regional",
             "SKIP_ORGANIZATIONS_POLICY_DELETE": "true",
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -422,7 +422,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -570,7 +570,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
         },
         "Environment": {
           "Variables": {
-            "SOLUTION_ID": "AwsSolution/SO0199/1.17.0",
+            "SOLUTION_ID": "AwsSolution/SO0199/1.17.1",
           },
         },
         "Handler": "__entrypoint__.handler",
@@ -696,7 +696,7 @@ exports[`OrganizationsStack non-home region > Construct(OrganizationsStack us-we
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-OrganizationsStack-111111111111-us-west-2/version",
         "Type": "String",
-        "Value": "1.17.0",
+        "Value": "1.17.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
