@@ -93,6 +93,9 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
       case 'eks-auth':
         hostedZoneName = `eks-auth.${region}.api.aws`;
         break;
+      case 'oidc-eks':
+        hostedZoneName = `oidc.eks.${region}.amazonaws.com`;
+        break;
       case 'codeartifact.api':
         hostedZoneName = `codeartifact.${region}.amazonaws.com`;
         break;
